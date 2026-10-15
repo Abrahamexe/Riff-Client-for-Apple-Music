@@ -1,0 +1,38 @@
+/*
+ * İlk boyama (arayüz CSS'i arayüz modülüyle birlikte sonradan yüklenir): pencere ilk karede de
+ * temanın zemin rengiyle açılır, kenar boşluğu ve beyaz sayfa görünmez. Renkler ui.css `--bg`.
+ */
+html {
+  background: #f3f3f6;
+}
+
+@media (prefers-color-scheme: dark) {
+  html {
+    background: #0b0b0e;
+  }
+}
+
+body {
+  font-family: system-ui, sans-serif;
+  margin: 0;
+}
+
+pre {
+  background: #111;
+  color: #ddd;
+  padding: 12px;
+  min-height: 200px;
+  white-space: pre-wrap;
+}
+
+/* B1: debug paneli (yalnızca dev) arayüzün üstünde gizli katman; Ctrl+Shift+D. */
+.debug-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  overflow: auto;
+  padding: 16px;
+  background: #fff;
+  color: #000;
+  font-family: system-ui, sans-serif;
+}

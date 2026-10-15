@@ -1,0 +1,19 @@
+node_modules/
+out/
+dist/
+*.tsbuildinfo
+# Derlemede üretilir (scripts/third-party-notices.mjs)
+build/THIRD_PARTY_NOTICES.txt
+
+# Gizli bilgiler (CLAUDE.md güvenlik kuralı 1): asla commit edilmez
+.env
+.env.*
+!.env.example
+*.p8
+*.pem
+*.key
+secrets/
+
+# Belgeler yalnızca bu bilgisayarda (geliştirici kararı 2026-10-14); README'ler GitHub'da kalır.
+*.md
+!README.md

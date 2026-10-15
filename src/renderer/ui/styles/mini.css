@@ -1,0 +1,229 @@
+/*
+ * MiniPlayer (B12b): kapak tüm pencereyi kaplar; kontroller üzerine gelince alttan cam katman.
+ * Pencere hep koyu (kapak üstünde beyaz metin), uygulama temasından bağımsız.
+ */
+html.mini-root,
+html.mini-root body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+  color: #fff;
+  font-family: 'Inter Variable', system-ui, sans-serif;
+  user-select: none;
+}
+
+#mini-root {
+  height: 100%;
+}
+
+.mini {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  background: #111;
+}
+
+.mini__art,
+.mini__empty {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mini__empty {
+  display: grid;
+  place-items: center;
+  color: rgb(255 255 255 / 0.35);
+  background: linear-gradient(160deg, #2a2a33, #111116);
+}
+
+/* Üst şerit: pencereyi sürükler (Windows'ta burada fare olayı yok → yalnızca şerit). */
+.mini__grip {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 36px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0 6px;
+  -webkit-app-region: drag;
+  background: linear-gradient(to bottom, rgb(0 0 0 / 0.45), transparent);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.mini__grip .mini__icon {
+  -webkit-app-region: no-drag;
+}
+
+.mini__controls {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 12px 14px 12px;
+  display: grid;
+  gap: 6px;
+  background: rgb(18 18 22 / 0.42);
+  backdrop-filter: blur(24px) saturate(160%);
+  border-top: 1px solid rgb(255 255 255 / 0.12);
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 0.25s ease,
+    transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  pointer-events: none;
+}
+
+.mini:hover .mini__grip,
+.mini:focus-within .mini__grip {
+  opacity: 1;
+}
+
+.mini:hover .mini__controls,
+.mini:focus-within .mini__controls {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.mini__meta {
+  min-width: 0;
+  text-shadow: 0 1px 6px rgb(0 0 0 / 0.5);
+}
+
+.mini__title,
+.mini__artist {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.mini__title {
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.mini__artist {
+  font-size: 12.5px;
+  color: rgb(255 255 255 / 0.72);
+}
+
+.mini__buttons {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+}
+
+.mini__icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: #fff;
+  background: transparent;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease;
+}
+
+.mini__icon:hover:not(:disabled) {
+  background: rgb(255 255 255 / 0.16);
+}
+
+.mini__icon:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
+.mini__icon:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.mini__icon:focus-visible {
+  outline: 2px solid rgb(255 255 255 / 0.8);
+  outline-offset: 1px;
+}
+
+.mini__icon--play {
+  width: 44px;
+  height: 44px;
+  color: #111;
+  background: rgb(255 255 255 / 0.92);
+}
+
+.mini__icon--play:hover:not(:disabled) {
+  background: #fff;
+}
+
+.mini__seek {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  color: rgb(255 255 255 / 0.7);
+}
+
+.mini__range {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 14px;
+  margin: 0;
+  background: transparent;
+}
+
+.mini__range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    #fff 0 var(--fill, 0%),
+    rgb(255 255 255 / 0.28) var(--fill, 0%)
+  );
+}
+
+.mini__range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  margin-top: -4px;
+  border-radius: 50%;
+  background: #fff;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.mini__range:hover::-webkit-slider-thumb,
+.mini__range:focus-visible::-webkit-slider-thumb {
+  opacity: 1;
+}
+
+/* Alt kenarda hep görünen ince ilerleme çizgisi (kontroller açıkken gizlenir). */
+.mini__line {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 3px;
+  background: rgb(255 255 255 / 0.85);
+  transform-origin: left;
+  transition: opacity 0.2s ease;
+}
+
+.mini:hover .mini__line {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mini__controls,
+  .mini__grip,
+  .mini__line {
+    transition: none;
+  }
+}
