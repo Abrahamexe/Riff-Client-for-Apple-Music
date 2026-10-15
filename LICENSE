@@ -1,11 +1,48 @@
+Riff Client — Source-Available License (View Only)
+
 Copyright (c) 2026 Abrahamexe. All rights reserved.
 
-This software and its source code are proprietary. No permission is granted to use, copy, modify,
-merge, publish, distribute, sublicense or sell copies of this software, in whole or in part, without
-the prior written permission of the copyright holder.
+The source code of Riff Client is published so that it can be read and reviewed. It is NOT open
+source software and is NOT licensed under any open-source license.
 
-Third-party components included in this software are licensed under their own terms; see
-THIRD_PARTY_NOTICES.txt.
+1. What is covered ("the Work")
+   Everything in this repository and every build made from it, including but not limited to: source
+   code, scripts, tests, build configuration, the user interface and its visual design (layouts,
+   animations, interactions, styles, colour and typography choices), icons and logos, images and
+   screenshots, texts and translations, and the names "Riff Client" and "Riff".
 
-Apple, Apple Music and MusicKit are trademarks of Apple Inc. This software is not affiliated with,
-endorsed or sponsored by Apple Inc.
+2. What you may do
+   a) View and read the Work on GitHub.
+   b) Report bugs or security issues to the copyright holder.
+   Forking the repository within GitHub is permitted only to the extent required by the GitHub Terms
+   of Service; a fork grants no rights beyond viewing.
+
+3. What you may NOT do without prior written permission from the copyright holder
+   a) Use, run, compile or build the Work, in whole or in part, for any purpose (personal,
+      educational, commercial or otherwise).
+   b) Copy, reproduce, modify, translate, adapt or create derivative works from the Work, including
+      re-implementing or imitating its user interface or visual design.
+   c) Distribute, publish, sublicense, sell, rent, host or otherwise make the Work or any part of it
+      available to others, in source or binary form.
+   d) Use any part of the Work (including code snippets, assets or designs) in another project.
+   e) Use the names "Riff Client", "Riff" or the Riff Client icon/logo.
+   f) Use the Work to train, fine-tune or evaluate machine-learning models.
+
+4. No implied rights
+   No license or right is granted by implication, estoppel or otherwise, except as expressly stated in
+   section 2. All rights not expressly granted are reserved by the copyright holder.
+
+5. Third-party components
+   Third-party libraries and assets used by the Work remain under their own licenses (see
+   THIRD_PARTY_NOTICES.txt). This license does not restrict rights those licenses grant for the
+   third-party components themselves.
+
+6. Trademarks
+   Apple, Apple Music and MusicKit are trademarks of Apple Inc. Riff Client is not affiliated with,
+   endorsed or sponsored by Apple Inc.
+
+7. No warranty
+   THE WORK IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED. IN NO EVENT SHALL
+   THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY ARISING FROM THE WORK.
+
+For permission requests, contact the copyright holder via https://github.com/Abrahamexe.

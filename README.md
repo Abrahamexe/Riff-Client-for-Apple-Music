@@ -6,7 +6,8 @@
 
 <p align="center">
   A fast, modern Apple Music desktop client for Windows.<br />
-  <sub>Unofficial · not affiliated with, endorsed or sponsored by Apple Inc.</sub>
+  <sub>Unofficial · not affiliated with, endorsed or sponsored by Apple Inc.</sub><br />
+  <sub><b>Source-available, not open source</b> — all rights reserved. You may read the code; you may not use it.</sub>
 </p>
 
 <p align="center">
@@ -86,6 +87,9 @@ subscription.
 
 ### Building from source
 
+> The commands below document how the project is developed. **Building or running the code requires
+> written permission** from the author (see [License](#license)).
+
 ```powershell
 npm install
 copy .env.example .env      # fill in APPLE_TEAM_ID, APPLE_KEY_ID, APPLE_PRIVATE_KEY_PATH
@@ -133,8 +137,12 @@ lyrics come from [LRCLIB](https://lrclib.net). The public API cannot delete or r
 
 ### License
 
-Copyright © 2026 Abrahamexe. **All rights reserved.** See [LICENSE](LICENSE). Third-party licenses
-are listed in `THIRD_PARTY_NOTICES.txt` next to the installed app.
+**Source-available, not open source.** Copyright © 2026 Abrahamexe, **all rights reserved**. The code,
+the user interface and its visual design, icons, images, texts and the "Riff Client" name all belong to
+the author. You may **view** the code on GitHub and report bugs or security issues. You may **not** use,
+build, run, copy, modify, redistribute, re-implement the design of, or train AI models on any part of
+it without written permission. Full terms: [LICENSE](LICENSE). Third-party components keep their own
+licenses (`THIRD_PARTY_NOTICES.txt` next to the installed app).
 
 Apple, Apple Music and MusicKit are trademarks of Apple Inc., registered in the U.S. and other
 countries. This project is not affiliated with Apple Inc.
@@ -142,6 +150,8 @@ countries. This project is not affiliated with Apple Inc.
 ---
 
 ## Türkçe
+
+> **Kaynak kodu görülebilir, açık kaynak değildir:** kodu okuyabilirsin, kullanamazsın (bkz. Lisans).
 
 Riff Client, Apple Music aboneliğini Windows'a liquid glass bir arayüz, akıcı animasyonlar ve hız
 odağıyla getirir. Kendi Apple ID'nle giriş yaparsın; her şey kendi aboneliğinden çalar.
@@ -195,6 +205,9 @@ odağıyla getirir. Kendi Apple ID'nle giriş yaparsın; her şey kendi aboneli�
 
 ### Kaynaktan derleme
 
+> Aşağıdaki komutlar projenin nasıl geliştirildiğini belgeler. **Kodu derlemek veya çalıştırmak için
+> yazarın yazılı izni gerekir** (bkz. [Lisans](#lisans)).
+
 ```powershell
 npm install
 copy .env.example .env      # APPLE_TEAM_ID, APPLE_KEY_ID, APPLE_PRIVATE_KEY_PATH doldur
@@ -219,8 +232,13 @@ vermez.
 
 ### Lisans
 
-Telif hakkı © 2026 Abrahamexe. **Tüm hakları saklıdır.** Bkz. [LICENSE](LICENSE). Üçüncü taraf
-lisansları kurulu uygulamanın yanındaki `THIRD_PARTY_NOTICES.txt` dosyasındadır.
+**Kaynak kodu görülebilir (source-available), açık kaynak lisanslı değildir.** Telif hakkı © 2026
+Abrahamexe, **tüm hakları saklıdır**. Kod, arayüz ve görsel tasarımı, ikonlar, görseller, metinler ve
+"Riff Client" adı yazara aittir. Kodu GitHub'da **görüntüleyebilir**, hata veya güvenlik açığı
+bildirebilirsin. Yazılı izin olmadan herhangi bir kısmını **kullanamaz**, derleyemez, çalıştıramaz,
+kopyalayamaz, değiştiremez, dağıtamaz, tasarımını taklit edemez ve yapay zekâ eğitiminde kullanamazsın.
+Tam metin: [LICENSE](LICENSE). Üçüncü taraf bileşenler kendi lisanslarına tabidir (kurulu uygulamanın
+yanındaki `THIRD_PARTY_NOTICES.txt`).
 
 Apple, Apple Music ve MusicKit, Apple Inc.'in ABD'de ve diğer ülkelerde tescilli ticari markalarıdır.
 Bu proje Apple Inc. ile bağlantılı değildir.
