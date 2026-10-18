@@ -9,6 +9,7 @@ import type {
   PlaylistSort
 } from '@shared/ipc-contract'
 import { CoreError, toCoreError } from '@shared/errors'
+import { filterTracks, queryTerms } from '@shared/trackQuery'
 import type { AppleMusicApi } from '../net/appleApi'
 import type { LibraryRepository } from '../db/repositories/library'
 import type { LibraryCollectionsRepository } from '../db/repositories/libraryCollections'
@@ -20,6 +21,8 @@ import type { SyncMetaRepository } from '../db/repositories/syncMeta'
 
 const DEFAULT_TTL_MS = 5 * 60_000
 const DEFAULT_RANGE_LIMIT = 100
+/** Liste içinde aramada okunan en fazla satır (Apple playlist sınırı 100.000'in de üstü). */
+const PLAYLIST_SCAN_LIMIT = 1_000_000
 
 export interface LibrarySyncDeps {
   api: Pick<
@@ -78,9 +81,22 @@ export class LibrarySync {
     playlistId: string,
     offset = 0,
     limit = DEFAULT_RANGE_LIMIT,
-    sort?: PlaylistSort
+    sort?: PlaylistSort,
+    query?: string
   ): { items: Track[]; offset: number; total: number; syncedAt: number | null } {
     const syncedAt = this.revalidateIfStale({ scope: 'playlistTracks', playlistId })
+    if (query && queryTerms(query).length > 0) {
+      // Liste içinde arama: tüm liste (en fazla birkaç bin satır, < 10 ms) okunup süzülür; Türkçe
+      // harf/aksan katlaması SQLite LIKE'ta yok (yalnızca ASCII).
+      const all = this.deps.library.playlistTracks(playlistId, 0, PLAYLIST_SCAN_LIMIT, sort)
+      const matches = filterTracks(all, query)
+      return {
+        items: matches.slice(offset, offset + limit),
+        offset,
+        total: matches.length,
+        syncedAt
+      }
+    }
     return {
       items: this.deps.library.playlistTracks(playlistId, offset, limit, sort),
       offset,

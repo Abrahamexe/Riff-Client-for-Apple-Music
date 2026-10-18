@@ -63,6 +63,10 @@ vi.mock('@core/background/background', () => ({
   BackgroundClient: class {},
   connectBackgroundPrefetch: vi.fn()
 }))
+vi.mock('@core/background/lyrics', () => ({
+  connectLyricsPrefetch: vi.fn(),
+  lyricsClient: vi.fn()
+}))
 vi.mock('@core/data/library', () => ({
   LibraryClient: class {
     onWriteFailed = () => () => {}

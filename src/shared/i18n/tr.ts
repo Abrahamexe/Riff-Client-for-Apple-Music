@@ -405,6 +405,9 @@ export const tr = {
   'collection.songCount': '{count} şarkı',
   'collection.play': 'Çal',
   'collection.shuffle': 'Karıştır',
+  'playlist.search': 'Listede ara',
+  'playlist.searchClear': 'Aramayı temizle',
+  'playlist.noMatches': 'Bu listede eşleşen şarkı yok.',
   // --- Ana Sayfa (PLAN_v5 B4 ek) ---------------------------------------------------------------
   'home.heavyRotation': 'Sık Çaldıkların',
   'home.loadFailed': 'Öneriler yüklenemedi.',

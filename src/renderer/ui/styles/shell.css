@@ -661,8 +661,83 @@
   margin: 0;
 }
 
-.slider--seek {
+/* İlerleme: dolu kısım ayrı katmanın `scaleX`'i (alt piksel kayar; degrade piksele oturuyordu).
+   Kaydırıcının kendi izi saydam; tutamaç ve etkileşim kaydırıcıda. */
+.seek {
+  position: relative;
   flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  /* Fare kapsayıcıda (pointerRange.ts); ince çubuğa basmak kolay olsun diye dikey pay. */
+  padding: 4px 0;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.seek--disabled {
+  cursor: default;
+}
+
+.seek .slider--seek {
+  pointer-events: none;
+}
+
+.seek:hover .slider--seek::-webkit-slider-thumb {
+  opacity: 1;
+}
+
+.seek__track {
+  position: absolute;
+  inset: 50% 0 auto;
+  height: 4px;
+  margin-top: -2px;
+  border-radius: 2px;
+  overflow: hidden;
+  background: rgb(var(--glass-tint) / 0.7);
+  box-shadow: inset 0 0 0 1px var(--glass-edge);
+  pointer-events: none;
+  transition:
+    height 120ms ease,
+    margin-top 120ms ease;
+}
+
+.seek:hover .seek__track {
+  height: 6px;
+  margin-top: -3px;
+}
+
+.seek__fill {
+  position: absolute;
+  inset: 0;
+  background: var(--text);
+  transform-origin: left center;
+  will-change: transform;
+}
+
+.seek--disabled {
+  opacity: 0.5;
+}
+
+.slider--seek {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.seek .slider--seek::-webkit-slider-runnable-track {
+  height: 6px;
+  background: transparent;
+  box-shadow: none;
+  transition: none;
+}
+
+.seek .slider--seek::-webkit-slider-thumb {
+  margin-top: -3px;
+}
+
+.seek .slider--seek:disabled {
+  opacity: 1;
 }
 
 .slider--volume {
@@ -1273,7 +1348,8 @@
   .icon-button,
   .bubble__ring-fill,
   .window-drop,
-  .slider::-webkit-slider-runnable-track {
+  .slider::-webkit-slider-runnable-track,
+  .seek__track {
     transition: none;
   }
 }
@@ -1286,6 +1362,43 @@
 .page-stack > .page {
   grid-area: 1 / 1;
   min-width: 0;
+  /* Sayfa tonu (PageTint) sayfanın arkasında ama uygulama arka planının önünde kalsın. */
+  position: relative;
+  isolation: isolate;
+}
+
+/* Sayfa tonu (2026-10-18, iOS Apple Music gibi): kapağın / sanatçı fotoğrafının rengi üstten başlar,
+   aşağı doğru arka plana erir. Ana pencerenin kenarlarına kadar taşar (main yatayda kırpar). */
+.page-tint {
+  position: absolute;
+  z-index: -1;
+  top: -180px;
+  left: -100vw;
+  right: -60px;
+  height: 860px;
+  pointer-events: none;
+  background:
+    radial-gradient(55% 65% at 72% 8%, rgb(var(--tint-b) / 0.42), transparent 70%),
+    linear-gradient(
+      180deg,
+      rgb(var(--tint-a) / 0.62),
+      rgb(var(--tint-a) / 0.3) 45%,
+      rgb(var(--tint-a) / 0.08) 78%,
+      transparent
+    );
+  animation: page-tint-in 0.6s ease both;
+}
+
+@keyframes page-tint-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-tint {
+    animation: none;
+  }
 }
 
 /* ==== Arşiv sayfaları (PLAN_v5 B4) ============================================================ */
@@ -1592,6 +1705,82 @@
   display: flex;
   gap: 10px;
   margin-top: 16px;
+}
+
+/* Liste içinde arama (2026-10-18): Çal / Karıştır / Sırala satırının sağ ucunda. */
+.collection-header__search {
+  margin-left: auto;
+  display: flex;
+}
+
+/* `.pill-button` sonra tanımlı: iç boşluğu ezmek için iki sınıf (yoksa ikona 0 px kalıyordu). */
+.pill-button.playlist-search__toggle {
+  width: 36px;
+  padding: 0;
+  justify-content: center;
+}
+
+.playlist-search__toggle svg {
+  flex: none;
+}
+
+.playlist-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: min(260px, 40vw);
+  height: 36px;
+  padding: 0 8px 0 14px;
+  box-sizing: border-box;
+  border-radius: 18px;
+  background: var(--press);
+  color: var(--text-secondary);
+  animation: playlist-search-open 180ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.playlist-search:focus-within {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+@keyframes playlist-search-open {
+  from {
+    width: 36px;
+    opacity: 0.6;
+  }
+}
+
+.playlist-search__input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+}
+
+.playlist-search__clear {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--hover);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.playlist-search__empty {
+  margin: 24px 0;
+  color: var(--text-secondary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .playlist-search {
+    animation: none;
+  }
 }
 
 .pill-button {
@@ -3371,6 +3560,17 @@
     linear-gradient(180deg, rgb(0 0 0 / 0.35), transparent 18%);
 }
 
+/* Sanatçı modu (geliştirici 2026-10-18: "arka çok net olunca tuşları seçmek zor"): oynatıcı şeridinin
+   arkası bulanık; üst kenar maskeyle yumuşakça netleşir. */
+.np__dock-blur {
+  position: absolute;
+  inset: auto 0 0;
+  height: 40%;
+  backdrop-filter: blur(22px) saturate(140%);
+  mask-image: linear-gradient(0deg, #000 55%, transparent);
+  pointer-events: none;
+}
+
 .np__top {
   position: absolute;
   top: 12px;
@@ -3507,7 +3707,8 @@
 
 .np__body {
   position: absolute;
-  inset: 70px 56px 40px;
+  /* Üstte düğmeler (12 + 40 px): kapak onlara yapışmasın (geliştirici 2026-10-18). */
+  inset: 84px 56px 36px;
   z-index: 2;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
@@ -3530,6 +3731,8 @@
 
 .np__body--artist .np__left {
   flex: 1;
+  /* Uzun şarkı adı sütunu genişletip oynatıcıyı pencereden taşırıyordu (2026-10-18). */
+  min-width: 0;
   align-items: stretch;
   gap: 22px;
 }
@@ -3542,7 +3745,7 @@
 }
 
 .np__body--artist .np__art {
-  width: min(18vh, 13vw);
+  width: min(17vh, 12vw);
   flex: none;
   border-radius: 10px;
 }
@@ -3564,6 +3767,11 @@
   gap: 28px;
 }
 
+.np__body--artist .np__volume {
+  align-self: center;
+  width: min(360px, 100%);
+}
+
 .np__body--artist .np__title {
   font-size: 34px;
 }
@@ -3577,11 +3785,13 @@
   flex-direction: column;
   align-items: center;
   gap: 26px;
+  min-width: 0;
   min-height: 0;
 }
 
+/* Ölçek 2026-10-18'de biraz küçüldü (ses satırı eklendi; kapak üst düğmelere çok yakındı). */
 .np__art {
-  width: min(60vh, 40vw);
+  width: min(50vh, 36vw);
   aspect-ratio: 1;
   border-radius: 18px;
   object-fit: cover;
@@ -3589,11 +3799,13 @@
 }
 
 .np__body--center .np__art {
-  width: min(62vh, 56vw);
+  width: min(52vh, 50vw);
 }
 
 .np__meta {
-  width: min(60vh, 40vw);
+  width: min(50vh, 36vw);
+  max-width: 100%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -3611,6 +3823,60 @@
   display: flex;
   flex-direction: column;
   gap: 8px;
+  min-width: 0;
+}
+
+/* Büyük oynatıcıda ses: kontrollerin altında, iki yanda hoparlör (Apple Music iOS gibi). */
+.np__volume {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 6px;
+  color: rgb(255 255 255 / 0.7);
+}
+
+.np__volume .slider--volume {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+}
+
+/* Kayan yazı (Marquee.tsx): sığmayan metin sola kayar; iki kopya arası `MARQUEE_GAP_PX`. */
+.marquee {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.marquee__track {
+  display: inline-flex;
+  gap: 56px;
+}
+
+.marquee--on {
+  text-overflow: clip;
+  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+}
+
+.marquee--on .marquee__track {
+  animation: marquee var(--marquee-duration, 12s) linear infinite;
+}
+
+/* %20 bekleme: `MARQUEE_HOLD_PERCENT` ile aynı. */
+@keyframes marquee {
+  0%,
+  20% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(var(--marquee-shift, 0));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee--on .marquee__track {
+    animation: none;
+  }
 }
 
 .np__artist-name {
@@ -3655,7 +3921,7 @@
 }
 
 .lyrics--stage .lyrics__line {
-  font-size: calc(40px * var(--lyrics-scale, 1));
+  font-size: calc(36px * var(--lyrics-scale, 1));
   line-height: 1.2;
   color: #fff;
   text-shadow: 0 2px 18px rgb(0 0 0 / 0.35);

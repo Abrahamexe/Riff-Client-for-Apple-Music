@@ -12,6 +12,14 @@ const APPLE_CONNECT = [
   'https://js-cdn.music.apple.com',
   // V4 (2026-10-12) gözlem: tam şarkının HLS manifesti/segmentleri ("Could not fetch manifest").
   'https://aod-ssl.itunes.apple.com',
+  // 2026-10-18 gözlem: canlı radyo (Apple Music 1 vb.) HLS manifesti/segmentleri; engellenince
+  // çalma MEDIA_PLAYBACK hatasıyla düşüyordu (Radyo sayfası "donuyor").
+  'https://itsliveradio.apple.com',
+  // Aynı gözlem: manifest varyant listelerini bu iki CDN'e (asıl + yedek) yönlendiriyor.
+  'https://liveradio.music.apple.com',
+  'https://liveradiobackup.music.apple.com',
+  // Aynı gözlem: canlı radyonun şifre anahtarı (`/v1/radio/streaming-key-delivery`).
+  'https://linear.tv.apple.com',
   // V4 gözlem: MusicKit'in çalma etkinliği bildirimi (Apple hesabındaki "son çalınanlar"/dinleme
   // geçmişi). Veri kullanıcının kendi Apple hesabına gider; resmi istemcilerle aynı (PRIVACY.md).
   'https://universal-activity-service.itunes.apple.com'
@@ -28,6 +36,9 @@ export function buildCsp(devServer: boolean): string {
     // app://renderer: kapak önbelleği (2.2, /__art); dev server'da 'self' localhost olduğu için açıkça.
     "img-src 'self' app://renderer data: blob: https://*.mzstatic.com",
     "media-src 'self' blob:",
+    // 2026-10-18 gözlem: canlı radyoda MusicKit akışı `blob:` worker'ında çözer; engellenince akış
+    // `seeking`te takılı kalıyordu. Worker'ın kodu izinli MusicKit script'inden üretilir.
+    "worker-src 'self' blob:",
     `connect-src 'self' ${APPLE_CONNECT.join(' ')}${devServer ? ' ws://localhost:*' : ''}`,
     "object-src 'none'",
     "base-uri 'none'",

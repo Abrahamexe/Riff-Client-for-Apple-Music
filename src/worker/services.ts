@@ -113,8 +113,8 @@ export function createWorkerServices({
 
   const handlers: WorkerHandlers = {
     getPlaylists: () => sync.getPlaylists(),
-    getPlaylistTracks: ({ playlistId, offset, limit, sort }) =>
-      sync.getPlaylistTracks(playlistId, offset, limit, sort),
+    getPlaylistTracks: ({ playlistId, offset, limit, sort, query }) =>
+      sync.getPlaylistTracks(playlistId, offset, limit, sort, query),
     syncLibrary: (scope) => sync.sync(scope),
     getRecentlyPlayed: ({ limit }) => api.getRecentlyPlayed(limit),
     searchCatalog: ({ term, limit, storefront }) => api.searchCatalog(term, limit, storefront),

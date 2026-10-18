@@ -16,6 +16,7 @@ import { SongCell } from '../components/SongCell'
 import { isCurrent } from '../components/TrackTable'
 import { releaseYear } from '../format'
 import { ShelvesSkeleton } from './HomePage'
+import { PageTint } from '../components/PageTint'
 
 // Sanatçı sayfası (B5; geliştirici kararı: "Geniş kapak görseli"): üstte sanatçının geniş görseli,
 // üzerinde adı ve çal düğmesi (popüler parçaları çalar). Altında Son Çıkan + Popüler Parçalar
@@ -41,6 +42,7 @@ export function ArtistPage({ id, title }: { id: string; title: string }) {
 
   return (
     <>
+      <PageTint artwork={detail?.artist.artworkUrl} />
       <ArtistHero
         name={detail?.artist.name ?? title}
         artworkUrl={detail?.artist.artworkUrl ?? null}

@@ -3,6 +3,7 @@ import type { WorkerApi } from '@shared/ipc-contract'
 import { TypedEmitter } from '../emitter'
 import type { NowPlaying, PlayerEvents, PlayerSnapshot } from '../musickit/player'
 import { BackgroundClient, connectBackgroundPrefetch, toTrackRef } from './background'
+import { connectLyricsPrefetch } from './lyrics'
 
 const item = (id: string, over: Partial<NowPlaying> = {}): NowPlaying => ({
   id,
@@ -55,36 +56,47 @@ describe('toTrackRef (3.A7)', () => {
   })
 })
 
-describe('sıradaki şarkı ön yüklemesi (3.A7)', () => {
-  it('bağlanınca ve şarkı değişince SIRADAKİ şarkıyı ön yükler; aynısını tekrarlamaz', async () => {
+describe('çalan ve sıradaki şarkı ön yüklemesi (3.A7, 2026-10-18)', () => {
+  const titles = (fn: ReturnType<typeof vi.fn>) =>
+    fn.mock.calls.map((c) => (c[0] as { title: string }).title)
+
+  it('bağlanınca ve şarkı değişince ÇALAN ve SIRADAKİ şarkıyı ön yükler; aynısını tekrarlamaz', async () => {
     const player = new FakePlayer()
-    const client = { prefetch: vi.fn(async () => {}) }
+    const client = { prefetch: vi.fn<(...args: unknown[]) => Promise<void>>(async () => {}) }
     const off = connectBackgroundPrefetch(player, client, { lang: () => 'tr' })
-    expect(client.prefetch).toHaveBeenCalledTimes(1)
+    expect(titles(client.prefetch)).toEqual(['Şarkı 1', 'Şarkı 2'])
     expect(client.prefetch).toHaveBeenLastCalledWith(
       expect.objectContaining({ title: 'Şarkı 2', isrc: 'GBUM71029604' }),
       'tr'
     )
     player.fire('queueItemsDidChange', player.queue)
-    expect(client.prefetch).toHaveBeenCalledTimes(1)
+    expect(client.prefetch).toHaveBeenCalledTimes(2)
 
     player.queue = { items: [item('1'), item('2'), item('3')], position: 1, autoplayIndex: null }
     player.fire('nowPlayingItemDidChange', item('2'))
-    expect(client.prefetch).toHaveBeenLastCalledWith(
-      expect.objectContaining({ title: 'Şarkı 3' }),
-      'tr'
-    )
+    // "Şarkı 2" ISRC'siz yeni kimlik; "Şarkı 3" sıradaki.
+    expect(titles(client.prefetch).slice(2)).toEqual(['Şarkı 2', 'Şarkı 3'])
 
-    // Kuyruğun sonu: sıradaki yok.
+    // Kuyruğun sonu: sıradaki yok, çalan zaten hazır.
     player.queue = { ...player.queue, position: 2 }
     player.fire('nowPlayingItemDidChange', item('3'))
-    expect(client.prefetch).toHaveBeenCalledTimes(2)
+    expect(client.prefetch).toHaveBeenCalledTimes(4)
 
     off()
     player.queue = { items: [item('9'), item('10')], position: 0, autoplayIndex: null }
     player.fire('nowPlayingItemDidChange', item('9'))
-    expect(client.prefetch).toHaveBeenCalledTimes(2)
+    expect(client.prefetch).toHaveBeenCalledTimes(4)
     await Promise.resolve()
+  })
+
+  it('sözler de aynı kurala göre ön yüklenir (connectLyricsPrefetch)', () => {
+    const player = new FakePlayer()
+    const client = { prefetch: vi.fn<(...args: unknown[]) => Promise<void>>(async () => {}) }
+    const off = connectLyricsPrefetch(player, client)
+    expect(titles(client.prefetch)).toEqual(['Şarkı 1', 'Şarkı 2'])
+    player.fire('queueItemsDidChange', player.queue)
+    expect(client.prefetch).toHaveBeenCalledTimes(2)
+    off()
   })
 
   it('hata çalmayı etkilemez: bildirilir ve sonraki değişiklikte yeniden denenir', async () => {
@@ -95,7 +107,8 @@ describe('sıradaki şarkı ön yüklemesi (3.A7)', () => {
     await new Promise((r) => setTimeout(r, 0))
     expect(onError).toHaveBeenCalledWith(expect.objectContaining({ code: 'BG_SOURCE_UNAVAILABLE' }))
     player.fire('queueItemsDidChange', player.queue)
-    expect(client.prefetch).toHaveBeenCalledTimes(2)
+    // Çalan + sıradaki ilk denemede düştü; ikisi de yeniden denenir.
+    expect(client.prefetch).toHaveBeenCalledTimes(4)
   })
 })
 

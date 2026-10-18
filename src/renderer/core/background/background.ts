@@ -84,29 +84,54 @@ export interface PrefetchOptions {
   onError?: (err: CoreError) => void
 }
 
+/** Ön yüklenmiş sayılan şarkı kimliklerinin üst sınırı (aşılınca baştan başlanır). */
+const PREFETCHED_MAX = 64
+
 /**
- * Kuyruktaki SIRADAKİ şarkının arka planını düşük öncelikle ön yükler (PLAN 3.A7). Şarkı veya
- * kuyruk değişince tetiklenir; aynı şarkı tekrar istenmez. Döndürülen fonksiyon dinleyicileri söker.
+ * ÇALAN ve SIRADAKİ şarkıyı (bu sırayla) `prefetch` ile önden hazırlatır. Şarkı veya kuyruk değişince
+ * tetiklenir; aynı şarkı (`idOf`) tekrar istenmez, hata alan bir sonraki değişiklikte yeniden denenir.
+ * 2026-10-18: yalnızca sıradaki hazırlanıyordu; ilk şarkının ve panel açılmadan çalan şarkının bilgisi
+ * ve sözleri panel açılınca isteniyor, LRCLIB/MusicBrainz yavaşken saniyelerce "yükleniyor" kalıyordu.
+ * Döndürülen fonksiyon dinleyicileri söker.
  */
+export function connectUpcomingPrefetch(
+  player: Pick<Player, 'on' | 'snapshot'>,
+  prefetch: (ref: TrackRef) => Promise<void>,
+  idOf: (ref: TrackRef) => string,
+  onError?: (err: unknown) => void
+): () => void {
+  const done = new Set<string>()
+  const run = (): void => {
+    const { items, position } = player.snapshot().queue
+    for (const item of [items[position], items[position + 1]]) {
+      const ref = toTrackRef(item)
+      if (!ref) continue
+      const id = idOf(ref)
+      if (done.has(id)) continue
+      if (done.size >= PREFETCHED_MAX) done.clear()
+      done.add(id)
+      prefetch(ref).catch((err: unknown) => {
+        done.delete(id) // bir sonraki değişiklikte yeniden denensin
+        onError?.(err)
+      })
+    }
+  }
+  const offs = [player.on('nowPlayingItemDidChange', run), player.on('queueItemsDidChange', run)]
+  run()
+  return () => offs.forEach((off) => off())
+}
+
+/** Çalan ve sıradaki şarkının arka planını düşük öncelikle ön yükler (PLAN 3.A7). */
 export function connectBackgroundPrefetch(
   player: Pick<Player, 'on' | 'snapshot'>,
   client: Pick<BackgroundClient, 'prefetch'>,
   { lang, onError }: PrefetchOptions
 ): () => void {
-  let last: string | null = null
-  const run = (): void => {
-    const { items, position } = player.snapshot().queue
-    const ref = toTrackRef(items[position + 1])
-    if (!ref) return
-    const id = JSON.stringify([ref.title, ref.artist, ref.album ?? '', ref.isrc ?? '', lang()])
-    if (id === last) return
-    last = id
-    client.prefetch(ref, lang()).catch((err: unknown) => {
-      last = null // bir sonraki değişiklikte yeniden denensin
+  return connectUpcomingPrefetch(
+    player,
+    (ref) => client.prefetch(ref, lang()),
+    (ref) => JSON.stringify([ref.title, ref.artist, ref.album ?? '', ref.isrc ?? '', lang()]),
+    (err) =>
       onError?.(toCoreError(err, 'BG_SOURCE_UNAVAILABLE', 'Arka plan ön yüklemesi başarısız.'))
-    })
-  }
-  const offs = [player.on('nowPlayingItemDidChange', run), player.on('queueItemsDidChange', run)]
-  run()
-  return () => offs.forEach((off) => off())
+  )
 }

@@ -11,18 +11,23 @@ import {
   Shuffle,
   SkipBack,
   SkipForward,
-  UserRound
+  UserRound,
+  Volume,
+  Volume2
 } from 'lucide-react'
 import { cachedArtworkUrl } from '@core/data/artwork'
 import { i18n } from '@core/i18n'
 import { useApp, useSettings } from '../context'
 import { displayedTrack, usePlayer } from '../hooks/usePlayer'
 import { LyricsPanel } from '../shell/LyricsPanel'
-import { SeekBar } from '../shell/PlayerDock'
+import { Marquee } from '../components/Marquee'
+import { SeekBar, VolumeSlider } from '../shell/PlayerDock'
 import { QualityBadge } from '../shell/QualityBadge'
 import { TitleBar } from '../window/TitleBar'
 import { NP_ART_LAYOUT_ID } from './ids'
-import { extractPalette, rgbCss, type Rgb } from './palette'
+import { artistImage, prefetchArtistImage, readyArtistImage } from './artistImage'
+import { rgbCss, type Rgb } from './palette'
+import { useArtworkPalette } from '../hooks/useArtworkPalette'
 
 // Büyük oynatıcı (B12, geliştirici kararları 2026-10-14). İki mod (geçiş düğmesi, bu bilgisayarda
 // hatırlanır):
@@ -69,68 +74,16 @@ function saveLyricsOpen(open: boolean): void {
   }
 }
 
-/** Kapağın küçük (48 px) önbellekli kopyasından palet; yüklenemezse koyu nötr. */
-function usePalette(template: string | null | undefined): Rgb[] | null {
-  const [palette, setPalette] = useState<Rgb[] | null>(null)
-  const src = cachedArtworkUrl(template, 48)
-  useEffect(() => {
-    if (!src) return
-    let live = true
-    const img = new Image()
-    img.onload = () => {
-      if (!live) return
-      try {
-        const canvas = document.createElement('canvas')
-        canvas.width = 32
-        canvas.height = 32
-        const ctx = canvas.getContext('2d', { willReadFrequently: true })
-        if (!ctx) return
-        ctx.drawImage(img, 0, 0, 32, 32)
-        setPalette(extractPalette(ctx.getImageData(0, 0, 32, 32).data))
-      } catch {
-        setPalette(null)
-      }
-    }
-    img.src = src
-    return () => {
-      live = false
-    }
-  }, [src])
-  return palette
-}
-
-// Şarkı (katalog id / sanatçı adı) → sanatçı görseli. Üç ardışık istek yavaş DNS'te ~4 sn sürüyor;
-// mod tekrar açıldığında veya şarkı tekrar çaldığında anında gelsin.
-const artistImageCache = new Map<string, string | null>()
-const ARTIST_IMAGE_CACHE_MAX = 200
-
-/** Sanatçı fotoğrafı: şarkının sanatçısı (Apple katalog) → büyük görsel. */
+/** Sanatçı fotoğrafı (sanatçı modu): hazırsa anında, değilse çözülünce (`artistImage.ts`). */
 function useArtistImage(catalogId: string | undefined, artist: string, enabled: boolean) {
   const app = useApp()
   const [url, setUrl] = useState<string | null>(null)
   useEffect(() => {
-    const key = catalogId ?? `name:${artist}`
-    setUrl(enabled ? (artistImageCache.get(key) ?? null) : null)
-    if (!enabled || artistImageCache.has(key)) return
+    const track = { catalogId, artist }
+    setUrl(enabled ? (readyArtistImage(track) ?? null) : null)
+    if (!enabled || readyArtistImage(track) !== undefined) return
     let live = true
-    const fromLinks = catalogId
-      ? app.library
-          .getSongLinks(catalogId)
-          .then((l) => (l.artistId ? app.library.getArtist(l.artistId) : null))
-      : Promise.resolve(null)
-    void fromLinks
-      .then(async (detail) => {
-        if (detail?.artist.artworkUrl) return detail.artist.artworkUrl
-        const r = await app.library.lookupInfoMedia([artist], [])
-        return r.artists[0]?.artworkUrl ?? null
-      })
-      .then((u) => {
-        const resolved = cachedArtworkUrl(u, 1600)
-        if (artistImageCache.size >= ARTIST_IMAGE_CACHE_MAX) artistImageCache.clear()
-        artistImageCache.set(key, resolved)
-        if (live) setUrl(resolved)
-      })
-      .catch(() => {})
+    void artistImage(app.library, track).then((u) => live && setUrl(u))
     return () => {
       live = false
     }
@@ -191,8 +144,17 @@ export function NowPlaying({ onClose }: { onClose: () => void }) {
     return () => clearTimeout(t)
   }, [])
   const bg = useRef<HTMLDivElement>(null)
-  const palette = usePalette(track?.artworkTemplate)
-  const artistImage = useArtistImage(track?.catalogId, track?.artist ?? '', mode === 'artist')
+  const palette = useArtworkPalette(track?.artworkTemplate)
+  const artistPhoto = useArtistImage(track?.catalogId, track?.artist ?? '', mode === 'artist')
+  // Büyük oynatıcı açıkken çalan ve sıradaki şarkının sanatçı fotoğrafı mod kapalıyken de hazırlanır:
+  // sanatçı moduna geçince ve şarkı değişince anında gelir.
+  const app = useApp()
+  const queue = snapshot?.queue
+  const next = queue ? queue.items[Math.max(0, queue.position) + 1] : undefined
+  useEffect(() => {
+    prefetchArtistImage(app.library, track)
+    prefetchArtistImage(app.library, next)
+  }, [app, track?.catalogId, track?.artist, next?.catalogId, next?.artist])
   const settings = useSettings()
   const pulseStrength = (settings?.tweaks.pulseStrength ?? 100) / 100
   usePulse(bg, playing && !reduced && mode === 'colors' && pulseStrength > 0, pulseStrength)
@@ -247,7 +209,7 @@ export function NowPlaying({ onClose }: { onClose: () => void }) {
   )
   const head = (
     <div className="np__head">
-      <div className="np__title">{track?.title ?? i18n.t('player.nothingPlaying')}</div>
+      <Marquee className="np__title" text={track?.title ?? i18n.t('player.nothingPlaying')} />
       <div className="np__artist-name">
         {track ? `${track.artist}${track.album ? ` — ${track.album}` : ''}` : ''}
       </div>
@@ -265,11 +227,11 @@ export function NowPlaying({ onClose }: { onClose: () => void }) {
     >
       <div className="np__bg" ref={bg}>
         <AnimatePresence initial={false}>
-          {mode === 'artist' && artistImage ? (
+          {mode === 'artist' && artistPhoto ? (
             <motion.img
-              key={artistImage}
+              key={artistPhoto}
               className="np__artist"
-              src={artistImage}
+              src={artistPhoto}
               alt=""
               draggable={false}
               initial={{ opacity: 0, scale: 1.04 }}
@@ -295,6 +257,7 @@ export function NowPlaying({ onClose }: { onClose: () => void }) {
           ) : null}
         </AnimatePresence>
         <div className={`np__scrim${mode === 'artist' ? ' np__scrim--artist' : ''}`} />
+        {mode === 'artist' ? <div className="np__dock-blur" /> : null}
       </div>
 
       <TitleBar />
@@ -428,6 +391,12 @@ export function NowPlaying({ onClose }: { onClose: () => void }) {
                   <Repeat size={20} strokeWidth={1.9} aria-hidden="true" />
                 )}
               </button>
+            </div>
+            {/* Ses (geliştirici kararı 2026-10-18): kontrollerin altında, iki yanda hoparlör. */}
+            <div className="np__volume">
+              <Volume size={16} strokeWidth={2} aria-hidden="true" />
+              <VolumeSlider player={player} volume={snapshot?.volume ?? 1} />
+              <Volume2 size={16} strokeWidth={2} aria-hidden="true" />
             </div>
           </motion.div>
         </motion.div>

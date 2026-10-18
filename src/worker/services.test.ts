@@ -79,6 +79,24 @@ describe('worker RPC', () => {
     expect(items.map((t) => t.id)).toEqual(songs(100, 130))
   })
 
+  it('liste içinde arama: eşleşenler sırayla, total eşleşen sayısı, sayfalama süzülmüş listede', async () => {
+    const { call } = setup()
+    await call('syncLibrary', { scope: 'playlistTracks', playlistId: 'p.1' })
+    // "Şarkı i.12", "i.112", "i.120"…"i.129": büyük/küçük harf ve aksan duyarsız ("sarki").
+    const res = await call('getPlaylistTracks', {
+      playlistId: 'p.1',
+      offset: 1,
+      limit: 2,
+      query: 'SARKI 12'
+    })
+    expect(res.result).toMatchObject({ ok: true, value: { offset: 1, total: 12 } })
+    const items = (res.result as { value: { items: { id: string }[] } }).value.items
+    expect(items.map((t) => t.id)).toEqual(['i.112', 'i.120'])
+    // Boş (yalnızca boşluk) sorgu süzmez.
+    const all = await call('getPlaylistTracks', { playlistId: 'p.1', limit: 1, query: '  ' })
+    expect(all.result).toMatchObject({ ok: true, value: { total: 150 } })
+  })
+
   it('büyük kütüphane (V5): 5.000 şarkılık playlist senkronize edilir, sayfalar doğru ve hızlı okunur', async () => {
     const many = Array.from({ length: 5_000 }, (_, i) => songResource(`i.${i}`))
     const { fetch, requests } = fakeFetch((url) => {
@@ -280,6 +298,7 @@ describe('worker RPC: reddedilen istekler (1.3a)', () => {
 
   it.each<[string, string, unknown]>([
     ['sayfa limiti çok büyük', 'getPlaylistTracks', { playlistId: 'p.1', limit: 100_000 }],
+    ['arama çok uzun', 'getPlaylistTracks', { playlistId: 'p.1', query: 'a'.repeat(201) }],
     ['negatif offset', 'getPlaylistTracks', { playlistId: 'p.1', offset: -1 }],
     ['boş id', 'getPlaylistTracks', { playlistId: '' }],
     ['SQL enjeksiyonu denemesi alanı', 'getPlaylists', { orderBy: '1; DROP TABLE tracks' }],

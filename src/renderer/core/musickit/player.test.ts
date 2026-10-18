@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { CoreError } from '../errors'
 import { setGuardHandlers } from './guard'
-import { Player, resolveArtwork, toNowPlaying } from './player'
+import { Player, PREVIOUS_RESTART_S, preciseTime, resolveArtwork, toNowPlaying } from './player'
 import {
   PlaybackState,
   PlaybackType,
@@ -453,6 +453,19 @@ describe('kontroller', () => {
     expect(raw.changeToMediaAtIndex).toHaveBeenCalledWith(2)
   })
 
+  it('önceki: PREVIOUS_RESTART_S sonrasında başa sarar, ilk saniyelerde önceki şarkıya geçer', async () => {
+    const { music, raw } = fakeMusic()
+    const p = new Player(music, { mediaElements: () => [] })
+    raw.nowPlayingItem = item()
+    raw.currentPlaybackTime = 60
+    await p.previous()
+    expect(raw.seekToTime).toHaveBeenCalledWith(0)
+    expect(raw.skipToPreviousItem).not.toHaveBeenCalled()
+    raw.currentPlaybackTime = PREVIOUS_RESTART_S
+    await p.previous()
+    expect(raw.skipToPreviousItem).toHaveBeenCalledTimes(1)
+  })
+
   it('seek negatifi 0’a, ses düzeyini 0..1’e kırpar', async () => {
     const { music, raw } = fakeMusic()
     const p = new Player(music)
@@ -600,9 +613,48 @@ describe('karıştırma açıkken başlangıç şarkısı (2026-10-15 hatası)',
     expect(raw.changeToMediaAtIndex).toHaveBeenCalledWith(0)
   })
 
+  it('albüm / playlist + hedef kimlik (2026-10-18): basılan şarkı nereye düştüyse oradan başlar', async () => {
+    const { music, raw } = shuffledMusic()
+    // MusicKit hedefi başa değil 1. sıraya koymuş olsun; kütüphane öğesi katalog id'siyle tanınır.
+    raw.setQueue.mockImplementation(async () => {
+      raw.queue = {
+        items: [
+          item({ id: 'i.9' }),
+          item({ id: 'i.7', attributes: { name: 'Hedef', playParams: { catalogId: '777' } } }),
+          item({ id: 'i.8' })
+        ],
+        position: 2
+      }
+      raw.nowPlayingItemIndex = 2
+    })
+    await new Player(music).playAlbum('l.1', 2, ['777'])
+    expect(raw.changeToMediaAtIndex).toHaveBeenCalledWith(1)
+    raw.changeToMediaAtIndex.mockClear()
+    await new Player(music).playPlaylist('p.1', 2, ['i.7'])
+    expect(raw.changeToMediaAtIndex).toHaveBeenCalledWith(1)
+  })
+
+  it('karıştırma kapalı + çalınamayan şarkılar kuyruktan atılmış (GTA VI, 2026-10-18): hedef aranır', async () => {
+    const { music, raw } = fakeMusic()
+    // Sayfada 6 şarkı; MusicKit 1. ve 3. sırayı (çıkmamış) atmış, konum yine startWith'te.
+    raw.setQueue.mockImplementation(async () => {
+      raw.queue = { items: ['s0', 's2', 's4', 's5'].map((id) => item({ id })), position: 3 }
+      raw.nowPlayingItemIndex = 3
+    })
+    await new Player(music).playAlbum('a.1', 3, ['s3'])
+    // s3 kuyrukta yok (çalınamaz): karıştırma kapalıyken MusicKit'in seçimine dokunulmaz.
+    expect(raw.play).toHaveBeenCalledTimes(1)
+    await new Player(music).playAlbum('a.1', 4, ['s4'])
+    expect(raw.changeToMediaAtIndex).toHaveBeenCalledWith(2)
+  })
+
   it('karıştırma kapalıyken ya da baştan çalarken dokunulmaz', async () => {
-    const off = shuffledMusic()
-    off.raw.shuffleMode = ShuffleMode.off
+    const off = fakeMusic()
+    off.raw.setQueue.mockImplementation(async (options: unknown) => {
+      const { songs = [], startWith = 0 } = options as { songs?: string[]; startWith?: number }
+      off.raw.queue = { items: songs.map((id) => item({ id })), position: startWith }
+      off.raw.nowPlayingItemIndex = startWith
+    })
     await new Player(off.music).playSongs(['a', 'b', 'c'], 2)
     expect(off.raw.play).toHaveBeenCalledTimes(1)
     expect(off.raw.changeToMediaAtIndex).not.toHaveBeenCalled()
@@ -636,5 +688,33 @@ describe('karıştırma açıkken başlangıç şarkısı (2026-10-15 hatası)',
     await p.play()
     expect(raw.changeToMediaAtIndex).not.toHaveBeenCalled()
     expect(raw.play).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('kesirli konum (preciseTime)', () => {
+  const audio = (currentTime: number, paused = false) => ({ currentTime, paused })
+
+  it('yuvarlanmış bildirime yakın çalan <audio> konumunu kullanır', () => {
+    expect(preciseTime(2, [audio(1.851)])).toBe(1.851)
+    // Önden yüklenmiş duraklatılmış öğe yerine çalan öğe.
+    expect(preciseTime(2, [audio(2.2, true), audio(1.9)])).toBe(1.9)
+    expect(preciseTime(2, [audio(2.2, true)])).toBe(2.2)
+  })
+
+  it('uyan öğe yoksa bildirilen konum döner', () => {
+    expect(preciseTime(30, [audio(0), audio(Number.NaN)])).toBe(30)
+    expect(preciseTime(30, [])).toBe(30)
+  })
+
+  it('Player konum olayında ve anlık durumda kesirli konumu yayınlar', () => {
+    const { music, raw, fire } = fakeMusic()
+    const p = new Player(music, { mediaElements: () => [audio(12.38)] })
+    const times: unknown[] = []
+    p.on('playbackTimeDidChange', (e) => times.push(e))
+    raw.currentPlaybackTime = 12
+    raw.currentPlaybackDuration = 200
+    fire('playbackTimeDidChange')
+    expect(times).toEqual([{ currentTime: 12.38, duration: 200 }])
+    expect(p.snapshot().currentTime).toBe(12.38)
   })
 })

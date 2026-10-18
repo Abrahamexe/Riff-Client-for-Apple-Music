@@ -2,6 +2,8 @@ import type { TrackRef } from '@shared/background'
 import type { WorkerApi } from '@shared/ipc-contract'
 import type { LyricLine, Lyrics } from '@shared/lyrics'
 import { fromWireError } from '../errors'
+import type { Player } from '../musickit/player'
+import { connectUpcomingPrefetch } from './background'
 
 // Şarkı sözleri istemcisi (B11b). Sözler worker'dan gelir (LRCLIB; renderer dış kaynağa çıkmaz).
 // UI'dan bağımsızdır; satırlar yalnızca metin olarak gösterilir.
@@ -24,13 +26,28 @@ export class LyricsClient {
   }
 }
 
+const lyricsKeyOf = (ref: TrackRef): string =>
+  JSON.stringify([ref.title, ref.artist, ref.album ?? '', ref.durationMs ?? 0])
+
+/**
+ * Çalan ve sıradaki şarkının sözleri panel kapalıyken de düşük öncelikle önden yüklenir (geliştirici
+ * kararı 2026-10-18: "her şarkıda"; LRCLIB çalınan her şarkının adını görür, docs/PRIVACY.md). Panel
+ * veya büyük oynatıcı açılınca sözler worker cache'inden anında gelir.
+ */
+export function connectLyricsPrefetch(
+  player: Pick<Player, 'on' | 'snapshot'>,
+  client: Pick<LyricsClient, 'prefetch'>
+): () => void {
+  return connectUpcomingPrefetch(player, (ref) => client.prefetch(ref), lyricsKeyOf)
+}
+
 let shared: LyricsClient | null = null
 /** Uygulama genelinde tek istemci (panel ve oynatıcı düğmesi paylaşır). */
 export const lyricsClient = (): LyricsClient => (shared ??= new LyricsClient())
 
 /** Aynı şarkıyı tanıyan anahtar (istek tekrarı ve kaydırma sıfırlaması için). */
 export function lyricsKey(ref: TrackRef | null): string | null {
-  return ref ? JSON.stringify([ref.title, ref.artist, ref.album ?? '', ref.durationMs ?? 0]) : null
+  return ref ? lyricsKeyOf(ref) : null
 }
 
 /**

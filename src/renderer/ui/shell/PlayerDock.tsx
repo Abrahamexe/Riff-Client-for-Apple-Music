@@ -27,6 +27,8 @@ import { i18n } from '@core/i18n'
 import type { Player } from '@core/musickit/player'
 import { displayedTrack, formatTime, usePlayer } from '../hooks/usePlayer'
 import { useSmoothTime } from '../hooks/smoothTime'
+import { usePendingSeek } from '../hooks/pendingSeek'
+import { usePointerRange } from '../hooks/pointerRange'
 import { useTrackActions } from '../hooks/useTrackActions'
 import { useApp, useSettings } from '../context'
 import { stepVolume } from '../theme/tweaks'
@@ -34,8 +36,7 @@ import { Glass } from '../glass/Glass'
 import type { Rect } from './layout'
 import { dropletTransition, shownWhen } from './motion'
 import { NP_ART_LAYOUT_ID } from '../nowplaying/ids'
-import { lyricsClient } from '@core/background/lyrics'
-import { toTrackRef } from '@core/background/background'
+import { prefetchArtistImage } from '../nowplaying/artistImage'
 import { openSongArtist } from './artistLink'
 import { useOverlays } from '../overlays/Overlays'
 import { useGo } from './scroll'
@@ -159,11 +160,6 @@ export function PlayerDock({
   const settings = useSettings()
   const go = useGo()
   const { toast } = useOverlays()
-  /** Sözler düğmesinin üzerine gelince çalan şarkının sözleri önden istenir (panel açılınca hazır). */
-  const prefetchLyrics = (): void => {
-    const ref = rightPanel === 'lyrics' ? null : toTrackRef(now)
-    if (ref) void lyricsClient().prefetch(ref)
-  }
   const openArtist = (): void => {
     if (!now) return
     const lookup = {
@@ -306,7 +302,10 @@ export function PlayerDock({
               title={i18n.t('player.openNowPlaying')}
               disabled={!now}
               onClick={onOpenNowPlaying}
-              onPointerEnter={() => preloadLargeArt(now?.artworkTemplate)}
+              onPointerEnter={() => {
+                preloadLargeArt(now?.artworkTemplate)
+                prefetchArtistImage(app.library, now)
+              }}
             >
               {nowPlayingOpen ? (
                 <span className="player__art player__art--away" />
@@ -364,7 +363,6 @@ export function PlayerDock({
               label={i18n.t('player.lyrics')}
               on={rightPanel === 'lyrics'}
               onClick={togglePanel('lyrics')}
-              onPointerEnter={prefetchLyrics}
             >
               <MessageSquareQuote size={18} strokeWidth={1.8} aria-hidden="true" />
             </IconButton>
@@ -387,23 +385,7 @@ export function PlayerDock({
             >
               <VolumeIcon size={18} strokeWidth={1.8} aria-hidden="true" />
             </IconButton>
-            <input
-              className="slider slider--volume"
-              type="range"
-              min={0}
-              max={1}
-              step={0.01}
-              value={volume}
-              style={fill(volume)}
-              aria-label={i18n.t('player.volume')}
-              disabled={!player}
-              onChange={(e) => player?.setVolume(Number(e.target.value))}
-              onWheel={(e) => {
-                // İnce ayar: tekerlekle ses (yukarı = aç), adım Ctrl+↑/↓ ile aynı.
-                if (!player || !settings?.tweaks.wheelVolume || e.deltaY === 0) return
-                player.setVolume(stepVolume(volume, settings.tweaks.volumeStep, e.deltaY < 0))
-              }}
-            />
+            <VolumeSlider player={player} volume={volume} />
           </div>
         </div>
       </motion.div>
@@ -417,6 +399,40 @@ export function PlayerDock({
   )
 }
 
+/**
+ * Ses kaydırıcısı (alt oynatıcı ve büyük oynatıcı). İnce ayar: tekerlekle ses (yukarı = aç), adım
+ * Ctrl+↑/↓ ile aynı.
+ */
+export function VolumeSlider({
+  player,
+  volume,
+  className = ''
+}: {
+  player: Player | null
+  volume: number
+  className?: string
+}) {
+  const settings = useSettings()
+  return (
+    <input
+      className={`slider slider--volume ${className}`.trim()}
+      type="range"
+      min={0}
+      max={1}
+      step={0.01}
+      value={volume}
+      style={fill(volume)}
+      aria-label={i18n.t('player.volume')}
+      disabled={!player}
+      onChange={(e) => player?.setVolume(Number(e.target.value))}
+      onWheel={(e) => {
+        if (!player || !settings?.tweaks.wheelVolume || e.deltaY === 0) return
+        player.setVolume(stepVolume(volume, settings.tweaks.volumeStep, e.deltaY < 0))
+      }}
+    />
+  )
+}
+
 /** B12b: MiniPlayer açılır, ana pencere gizlenir (main). Üstte kalma ayardan. */
 function openMiniPlayer(alwaysOnTop: boolean): void {
   window.api
@@ -426,8 +442,10 @@ function openMiniPlayer(alwaysOnTop: boolean): void {
 
 /**
  * Zaman satırı (geliştirici: "takılarak gitmesin kayarak devam etsin"): konum kare kare tahmin
- * edilir (`useSmoothTime`); her karede yalnızca bu bileşen yeniden çizilir. Sürüklerken tahmin
- * durur, bırakınca sarılır. Kaydırıcı ondalıklı (`step="any"`) olduğu için ←/→ elle 5 sn sarar.
+ * edilir (`useSmoothTime`); her karede yalnızca bu bileşen yeniden çizilir. Dolu kısım kaydırıcının
+ * degradesi değil ayrı bir katmanın `scaleX`'i (2026-10-18): degrade kenarı tam piksele oturduğu için
+ * yavaş şarkıda çizgi saniyede birkaç kez "adım" atıyordu; dönüşüm alt piksel kayar. Sürüklerken
+ * tahmin durur, bırakınca sarılır. Kaydırıcı ondalıklı (`step="any"`) olduğu için ←/→ elle sarar.
  */
 export function SeekBar({
   player,
@@ -443,16 +461,17 @@ export function SeekBar({
   const smooth = useSmoothTime(currentTime, duration, playing)
   // Klavye ←/→ sarma adımı (sn): İnce ayar.
   const seekStep = useSettings()?.tweaks.seekStep ?? 5
-  const [dragTime, setDragTime] = useState<number | null>(null)
-  const time = dragTime ?? smooth
-  const progress = duration > 0 ? Math.min(1, time / duration) : 0
+  const disabled = !player || duration <= 0
+  const pending = usePendingSeek(smooth)
   const seek = (to: number): void => {
-    void player?.seek(Math.max(0, Math.min(duration, to))).catch(() => {})
+    const target = Math.max(0, Math.min(duration, to))
+    pending.set(target)
+    void player?.seek(target).catch(() => pending.set(null))
   }
-  const commit = (): void => {
-    if (dragTime !== null) seek(dragTime)
-    setDragTime(null)
-  }
+  // Fare kapsayıcıda (pointerRange.ts): kaydırıcının `change` olayı eski konumu taşıyordu.
+  const pointer = usePointerRange(disabled ? 0 : duration, seek)
+  const time = pointer.drag ?? pending.value ?? smooth
+  const progress = duration > 0 ? Math.min(1, time / duration) : 0
   const onKeyDown = (e: KeyboardEvent<HTMLInputElement>): void => {
     if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
     e.preventDefault()
@@ -461,22 +480,25 @@ export function SeekBar({
   return (
     <div className="player__time">
       <span>{formatTime(time)}</span>
-      <input
-        className="slider slider--seek"
-        type="range"
-        min={0}
-        max={Math.max(1, duration)}
-        step="any"
-        value={time}
-        style={fill(progress)}
-        aria-label={i18n.t('player.seek')}
-        aria-valuetext={formatTime(time)}
-        disabled={!player || duration <= 0}
-        onChange={(e) => setDragTime(Number(e.target.value))}
-        onPointerUp={commit}
-        onKeyDown={onKeyDown}
-        onKeyUp={commit}
-      />
+      <div className={`seek${disabled ? ' seek--disabled' : ''}`} {...pointer.handlers}>
+        <span className="seek__track" aria-hidden="true">
+          <span className="seek__fill" style={{ transform: `scaleX(${progress})` }} />
+        </span>
+        <input
+          className="slider slider--seek"
+          type="range"
+          min={0}
+          max={Math.max(1, duration)}
+          step="any"
+          value={time}
+          aria-label={i18n.t('player.seek')}
+          aria-valuetext={formatTime(time)}
+          disabled={disabled}
+          // Yalnızca klavye (Home/End vb.): fare kapsayıcıda.
+          onChange={(e) => seek(Number(e.target.value))}
+          onKeyDown={onKeyDown}
+        />
+      </div>
       <span>-{formatTime(Math.max(0, duration - time))}</span>
     </div>
   )

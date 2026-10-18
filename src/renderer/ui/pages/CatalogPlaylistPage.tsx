@@ -6,13 +6,16 @@ import { useApp } from '../context'
 import { usePlayer } from '../hooks/usePlayer'
 import { useRemote } from '../hooks/useRemote'
 import { Artwork } from '../components/Artwork'
+import { PageTint } from '../components/PageTint'
 import { ExpandableNote, LoadFailed, RowsSkeleton, Sections } from '../components/Sections'
 import { TrackTable } from '../components/TrackTable'
 import { playlistStart } from '../components/playlistWindow'
 import { totalMinutes } from '../format'
-import { trackIds, useCardMenu, useTrackMenu } from '../overlays/itemMenus'
+import { trackIds, trackTargets, useCardMenu, useTrackMenu } from '../overlays/itemMenus'
 import { MoreButton } from '../overlays/MoreButton'
 import { PlaylistSortButton } from './library/PlaylistSortButton'
+import { PlaylistSearch, useDebounced } from '../components/PlaylistSearch'
+import { filterTracks } from '@shared/trackQuery'
 import type { PlaylistSort } from '@shared/ipc-contract'
 import {
   isDefaultSort,
@@ -52,9 +55,13 @@ export function CatalogPlaylistPage({
     setSortState(next)
     savePlaylistSort(id, next, window.localStorage)
   }
-  const sorted = !isDefaultSort(sort)
+  const [search, setSearch] = useState('')
+  const query = useDebounced(search.trim())
+  // Sıralı ya da süzülmüş görünüm Apple'ın liste sırası değil: çalma görünen sırayla.
+  const sorted = !isDefaultSort(sort) || query !== ''
   const all = detail?.tracks
-  const tracks = useMemo(() => sortTracks(all ?? [], sort), [all, sort])
+  const ordered = useMemo(() => sortTracks(all ?? [], sort), [all, sort])
+  const tracks = useMemo(() => filterTracks(ordered, query), [ordered, query])
   const [added, setAdded] = useState(false)
 
   const loadPage = useCallback(
@@ -66,7 +73,8 @@ export function CatalogPlaylistPage({
       if (!player) return
       const plan = playlistStart(index, tracks.length, sorted)
       if (plan.kind === 'playlist') {
-        void player.playPlaylist(id, index).catch(() => {})
+        const track = tracks[index]
+        void player.playPlaylist(id, index, track ? trackTargets(track) : undefined).catch(() => {})
         return
       }
       // MusicKit liste kuyruğu ilk 100 şarkıyla sınırlı: basılan şarkının çevresindeki dilim.
@@ -87,6 +95,7 @@ export function CatalogPlaylistPage({
 
   return (
     <>
+      <PageTint artwork={detail?.playlist.artworkUrl ?? artworkUrl} />
       <div className="collection-header">
         <Artwork
           url={detail?.playlist.artworkUrl ?? artworkUrl}
@@ -108,7 +117,10 @@ export function CatalogPlaylistPage({
           {detail?.playlist.description && <ExpandableNote text={detail.playlist.description} />}
           {detail && (
             <p className="collection-header__meta">
-              {i18n.t('album.summary', { count: tracks.length, minutes: totalMinutes(tracks) })}
+              {i18n.t('album.summary', {
+                count: ordered.length,
+                minutes: totalMinutes(ordered)
+              })}
             </p>
           )}
           <div className="collection-header__actions">
@@ -157,6 +169,9 @@ export function CatalogPlaylistPage({
                 })
               }
             />
+            <span className="collection-header__search">
+              <PlaylistSearch value={search} onChange={setSearch} />
+            </span>
           </div>
         </motion.div>
       </div>
@@ -166,9 +181,12 @@ export function CatalogPlaylistPage({
       )}
       {detail && (
         <>
+          {query !== '' && tracks.length === 0 && (
+            <p className="playlist-search__empty">{i18n.t('playlist.noMatches')}</p>
+          )}
           <TrackTable
             total={tracks.length}
-            resetKey={`${id}:${tracks.length}:${sort.by}:${sort.dir}`}
+            resetKey={`${id}:${tracks.length}:${sort.by}:${sort.dir}:${query}`}
             loadPage={loadPage}
             onPlay={(_t, i) => playFrom(i)}
             menu={(t) => trackMenu(t)}

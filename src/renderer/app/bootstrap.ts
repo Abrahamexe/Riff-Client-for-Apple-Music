@@ -24,6 +24,7 @@ import { bindMediaSession } from '@core/musickit/mediaSession'
 import { Player } from '@core/musickit/player'
 import { connectPlayerToHub } from '@core/player/hubPublisher'
 import { BackgroundClient, connectBackgroundPrefetch } from '@core/background/background'
+import { connectLyricsPrefetch, lyricsClient } from '@core/background/lyrics'
 import { TypedEmitter } from '@core/emitter'
 import { CoreError, toCoreError } from '@core/errors'
 import { i18n } from '@core/i18n'
@@ -273,11 +274,12 @@ export class App extends TypedEmitter<AppEvents> {
     )
     // 1.8a: durum main'deki player-hub üzerinden tüm pencerelere yayınlanır, komutlar oradan gelir.
     connectPlayerToHub(p, ipcHubPort)
-    // 3.A7: kuyruktaki sıradaki şarkının arka planı düşük öncelikle ön yüklenir.
+    // 3.A7: çalan ve sıradaki şarkının arka planı ve sözleri düşük öncelikle ön yüklenir.
     connectBackgroundPrefetch(p, this.background, {
       lang: () => i18n.locale,
       onError: (err) => this.emit('info', `Arka plan ön yüklemesi: ${err.code}`)
     })
+    connectLyricsPrefetch(p, lyricsClient())
     this.emit('playerReady', p)
   }
 

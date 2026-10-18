@@ -84,7 +84,41 @@ export interface PlayerOptions {
    * Reject ederse çalma başlamaz; hata `error` event'i olarak da yayınlanır.
    */
   beforePlayback?: () => Promise<void>
+  /** MusicKit'in `<audio>` öğeleri (kesirli konum için, `preciseTime`). Varsayılan: belgedekiler. */
+  mediaElements?: () => Iterable<MediaClock>
 }
+
+/** `<audio>` öğesinin konum için gereken kısmı. */
+export interface MediaClock {
+  readonly currentTime: number
+  readonly paused: boolean
+}
+
+/** "Önceki"ye bu kadar saniyeden sonra basılırsa şarkı başa sarılır, önceki şarkıya geçilmez. */
+export const PREVIOUS_RESTART_S = 2
+
+/** Bildirilen konum ile `<audio>` konumu arasında kabul edilen en büyük fark (sn). */
+const PRECISE_TOLERANCE_S = 1
+
+/**
+ * MusicKit `currentPlaybackTime`'ı tam saniyeye YUVARLAR (2026-10-18 ölçümü: ses 1,851 sn'deyken 2
+ * bildirildi): ilerleme çubuğu ve sözler ~0,5 sn önde gidiyordu. Çalan `<audio>` öğesinin konumu
+ * kesirlidir: bildirilene yakınsa o kullanılır (önce çalan öğe; önden yüklenmiş duraklatılmış öğe
+ * ancak çalan yoksa). Uyan öğe yoksa bildirilen döner.
+ */
+export function preciseTime(reported: number, media: Iterable<MediaClock>): number {
+  let paused: number | null = null
+  for (const m of media) {
+    const t = m.currentTime
+    if (!Number.isFinite(t) || Math.abs(t - reported) > PRECISE_TOLERANCE_S) continue
+    if (!m.paused) return t
+    paused ??= t
+  }
+  return paused ?? reported
+}
+
+const documentAudio = (): Iterable<MediaClock> =>
+  typeof document === 'undefined' ? [] : document.querySelectorAll('audio')
 
 export const resolveArtwork = (template: string | null, size = 512): string | null =>
   template ? template.replace('{w}', String(size)).replace('{h}', String(size)) : null
@@ -138,6 +172,7 @@ export class Player extends TypedEmitter<PlayerEvents> {
   private readonly handlers = new Map<HandledEvent, (event: unknown) => void>()
 
   private readonly beforePlayback: () => Promise<void>
+  private readonly mediaElements: () => Iterable<MediaClock>
 
   constructor(
     private readonly music: MusicKitInstance = getMusicKit(),
@@ -145,6 +180,7 @@ export class Player extends TypedEmitter<PlayerEvents> {
   ) {
     super()
     this.beforePlayback = options.beforePlayback ?? (async () => {})
+    this.mediaElements = options.mediaElements ?? documentAudio
     this.previousState = this.stateName()
     for (const name of EVENTS) {
       const handler = (event: unknown): void => this.onMusicKitEvent(name, event)
@@ -168,8 +204,7 @@ export class Player extends TypedEmitter<PlayerEvents> {
       nowPlaying: toNowPlaying(m.nowPlayingItem),
       // V9 bulgusu: geri yüklenen konum ilk çalışa kadar bekler; o sırada MusicKit 0 der. Bekleyen
       // konum bildirilir — aksi halde kayıt (ve kapanıştaki flush) konumu 0'a çeker, arayüz 0 gösterir.
-      currentTime:
-        m.currentPlaybackTime > 0 ? m.currentPlaybackTime : (this.resumeAt?.seconds ?? 0),
+      currentTime: m.currentPlaybackTime > 0 ? this.currentTime() : (this.resumeAt?.seconds ?? 0),
       duration: m.currentPlaybackDuration || 0,
       volume: m.volume,
       shuffle: m.shuffleMode === ShuffleMode.songs,
@@ -185,7 +220,7 @@ export class Player extends TypedEmitter<PlayerEvents> {
   // önceliklidir: henüz başlamamış bir geri yükleme, arkasından yeni istek geldiyse atlanır.
   private queueChain: Promise<void> = Promise.resolve()
   private queueGeneration = 0
-  /** Karıştırmalı geri yüklemede ilk çalışın başlayacağı sıra (`shuffledStartIndex`). */
+  /** Karıştırmalı geri yüklemede ilk çalışın başlayacağı sıra (`startIndexFor`). */
   private pendingStart: number | null = null
   /** Geri yüklenen kuyrukta ilk çalışta atlanacak konum (sn); kullanıcı başka yere giderse silinir. */
   private resumeAt: { index: number; seconds: number } | null = null
@@ -216,20 +251,29 @@ export class Player extends TypedEmitter<PlayerEvents> {
     return this.startQueue({ song: this.requireId(songId, 'Şarkı id') })
   }
 
-  /** Playlist'i kuyruğa alıp çalar; `startIndex` verilirse o şarkıdan başlar. */
-  playPlaylist(playlistId: string, startIndex?: number): Promise<void> {
-    return this.startQueue({
-      playlist: this.requireId(playlistId, 'Playlist id'),
-      ...(startIndex !== undefined ? { startWith: this.requireIndex(startIndex) } : {})
-    })
+  /**
+   * Playlist'i kuyruğa alıp çalar; `startIndex` verilirse o şarkıdan başlar. `target`: o şarkının
+   * bilinen kimlikleri (kütüphane / katalog); karıştırma açıkken doğru şarkıyı bulmak için.
+   */
+  playPlaylist(playlistId: string, startIndex?: number, target?: readonly string[]): Promise<void> {
+    return this.startQueue(
+      {
+        playlist: this.requireId(playlistId, 'Playlist id'),
+        ...(startIndex !== undefined ? { startWith: this.requireIndex(startIndex) } : {})
+      },
+      target
+    )
   }
 
-  /** Albümü kuyruğa alıp çalar; `startIndex` verilirse o şarkıdan başlar. */
-  playAlbum(albumId: string, startIndex?: number): Promise<void> {
-    return this.startQueue({
-      album: this.requireId(albumId, 'Albüm id'),
-      ...(startIndex !== undefined ? { startWith: this.requireIndex(startIndex) } : {})
-    })
+  /** Albümü kuyruğa alıp çalar; `startIndex` ve `target` playPlaylist'teki gibi. */
+  playAlbum(albumId: string, startIndex?: number, target?: readonly string[]): Promise<void> {
+    return this.startQueue(
+      {
+        album: this.requireId(albumId, 'Albüm id'),
+        ...(startIndex !== undefined ? { startWith: this.requireIndex(startIndex) } : {})
+      },
+      target
+    )
   }
 
   /** Şarkı listesini kuyruğa alıp çalar (sanatçı sayfası "Popüler Parçalar"); `startIndex`'ten. */
@@ -237,7 +281,7 @@ export class Player extends TypedEmitter<PlayerEvents> {
     const songs = songIds.map((id) => this.requireId(id, 'Şarkı id'))
     if (songs.length === 0) throw new CoreError('INVALID_ARGUMENT', 'Şarkı listesi boş.')
     const start = Math.min(this.requireIndex(startIndex), songs.length - 1)
-    return this.startQueue({ songs, startWith: start }, songs[start])
+    return this.startQueue({ songs, startWith: start }, [songs[start]!])
   }
 
   /**
@@ -282,7 +326,7 @@ export class Player extends TypedEmitter<PlayerEvents> {
             'Kuyruk geri yüklenemedi.'
           )
           // Karıştırma açıksa kayıtlı şarkı başka sıraya düşer: ilk çalış oradan başlar.
-          const fixed = this.shuffledStartIndex(startWith, songs[startWith])
+          const fixed = this.startIndexFor(startWith, [songs[startWith]!])
           if (fixed !== null) {
             this.pendingStart = fixed
             if (this.resumeAt) this.resumeAt = { ...this.resumeAt, index: fixed }
@@ -397,12 +441,19 @@ export class Player extends TypedEmitter<PlayerEvents> {
     )
   }
 
+  /**
+   * "Önceki" (geliştirici 2026-10-18): şarkı `PREVIOUS_RESTART_S`'den fazla ilerlediyse başa sarar;
+   * yalnızca ilk saniyelerde basılırsa önceki şarkıya geçer (Apple Music / iPod davranışı). Tüm
+   * yollar buradan geçer: alt / büyük oynatıcı, MiniPlayer (hub), medya tuşları.
+   */
   previous(): Promise<void> {
     this.resumeAt = null
     this.pendingStart = null
+    const restart = this.music.nowPlayingItem && this.currentTime() > PREVIOUS_RESTART_S
     return this.run(
       'Önceki şarkıya geçilemedi.',
-      async () => void (await this.music.skipToPreviousItem())
+      async () =>
+        void (await (restart ? this.music.seekToTime(0) : this.music.skipToPreviousItem()))
     )
   }
 
@@ -445,7 +496,7 @@ export class Player extends TypedEmitter<PlayerEvents> {
   /** `targetId`: `startWith`'teki öğenin id'si (biliniyorsa; karıştırma düzeltmesi için). */
   private startQueue(
     options: Parameters<MusicKitInstance['setQueue']>[0],
-    targetId?: string
+    target?: readonly string[]
   ): Promise<void> {
     this.resumeAt = null
     this.pendingStart = null
@@ -453,7 +504,7 @@ export class Player extends TypedEmitter<PlayerEvents> {
       this.run('Kuyruk oluşturulamadı veya çalma başlatılamadı.', async () => {
         // setQueue ağ isteği yapar (401/429/ağ yönetimi için guarded); play() ayrıca çalma hatalarını fırlatır.
         await guarded(() => this.music.setQueue(options), 'Kuyruk oluşturulamadı.')
-        const fixed = this.shuffledStartIndex(options.startWith, targetId)
+        const fixed = this.startIndexFor(options.startWith, target)
         await this.beforePlayback()
         await (fixed === null ? this.music.play() : this.music.changeToMediaAtIndex(fixed))
       })
@@ -461,24 +512,37 @@ export class Player extends TypedEmitter<PlayerEvents> {
   }
 
   /**
-   * MusicKit hatası (2026-10-15, gerçek hesapla ölçüldü; geliştirici: "sanatçı sayfasında bastığımı
-   * değil rastgele bir şarkı çalıyor"): karıştırma açıkken `setQueue({ startWith: k })` seçilen öğeyi
-   * kuyruğun BAŞINA koyuyor ama çalma konumunu k'da bırakıyor → `play()` k. sıradaki rastgele öğeyi
-   * çalar. Seçilen öğenin gerçek sırasını döner; düzeltme gerekmiyorsa `null`. id bilinmiyorsa
-   * (albüm / playlist) MusicKit'in koyduğu yer: 0.
+   * `setQueue({ startWith: k })` sonrası seçilen şarkının kuyruktaki GERÇEK sırası; düzeltme
+   * gerekmiyorsa `null`. İki MusicKit davranışı (gerçek hesapla ölçüldü):
+   *  - Karıştırma açıkken seçilen öğe kuyruğun BAŞINA gelir ama konum k'da kalır (2026-10-15;
+   *    "sanatçı sayfasında bastığımı değil rastgele bir şarkı çalıyor").
+   *  - Karıştırma KAPALIYKEN de: albümün çalınamayan şarkıları (ör. henüz çıkmamış parçalar) kuyruğa
+   *    alınmaz, k kayar (2026-10-18; GTA VI albümü sayfada 34, kuyrukta 9 şarkı; 6. satır "Flower In A
+   *    Hurricane" yerine kuyruğun 6.'sı "Suzuki" çaldı).
+   * `target` öğenin bilinen kimlikleri (kütüphane `i.…`, katalog): verilmişse karıştırmadan bağımsız
+   * kuyrukta aranır. Verilmemişse ya da bulunamazsa yalnızca karıştırmada MusicKit'in koyduğu yer: 0.
    */
-  private shuffledStartIndex(startWith: number | undefined, targetId?: string): number | null {
-    if (!startWith || this.music.shuffleMode === ShuffleMode.off) return null
+  private startIndexFor(startWith: number | undefined, target?: readonly string[]): number | null {
+    if (!startWith) return null
     const items = this.music.queue.items
     const at = this.music.nowPlayingItemIndex
-    const isTarget = (item: MediaItem | undefined): boolean =>
-      item !== undefined &&
-      targetId !== undefined &&
-      [item.id, item.playParams?.id, item.attributes?.playParams?.id].includes(targetId)
-    if (targetId !== undefined && isTarget(items[at])) return null
-    const found = targetId === undefined ? -1 : items.findIndex(isTarget)
-    const index = found >= 0 ? found : 0
-    return index === at ? null : index
+    const wanted = new Set(target ?? [])
+    if (wanted.size > 0) {
+      const isTarget = (item: MediaItem | undefined): boolean =>
+        item !== undefined &&
+        [
+          item.id,
+          item.playParams?.id,
+          item.playParams?.catalogId,
+          item.attributes?.playParams?.id,
+          item.attributes?.playParams?.catalogId
+        ].some((id) => id !== undefined && wanted.has(id))
+      if (isTarget(items[at])) return null
+      const found = items.findIndex(isTarget)
+      if (found >= 0) return found
+    }
+    if (this.music.shuffleMode === ShuffleMode.off) return null
+    return at === 0 ? null : 0
   }
 
   private async run(message: string, fn: () => Promise<void>): Promise<void> {
@@ -503,6 +567,11 @@ export class Player extends TypedEmitter<PlayerEvents> {
       throw new CoreError('INVALID_ARGUMENT', 'Geçersiz sıra numarası.')
     }
     return index
+  }
+
+  private currentTime(): number {
+    const reported = this.music.currentPlaybackTime || 0
+    return reported > 0 ? preciseTime(reported, this.mediaElements()) : reported
   }
 
   private stateName(): PlaybackStateName {
@@ -537,7 +606,7 @@ export class Player extends TypedEmitter<PlayerEvents> {
         break
       case 'playbackTimeDidChange':
         this.emit('playbackTimeDidChange', {
-          currentTime: this.music.currentPlaybackTime || 0,
+          currentTime: this.currentTime(),
           duration: this.music.currentPlaybackDuration || 0
         })
         break

@@ -97,15 +97,7 @@ export function LyricsPanel({
     }
   }, [ref, key, attempt])
 
-  // Sözler gelince sıradaki şarkınınki önden yüklenir (geçişte beklemesin).
-  const queue = snapshot?.queue
-  const nextRef = toTrackRef(queue ? queue.items[Math.max(0, queue.position) + 1] : null)
-  const nextKey = lyricsKey(nextRef)
-  const ready = state.status === 'ready'
-  useEffect(() => {
-    if (ready && nextRef) void client().prefetch(nextRef)
-    // Bağımlılık anahtarı: yalnızca sıradaki şarkı veya sözlerin hazır olması değişince.
-  }, [ready, nextKey])
+  // Çalan ve sıradaki şarkının sözleri uygulama genelinde önden yüklenir (connectLyricsPrefetch).
 
   const current = state.status !== 'idle' && state.key === key ? state : null
   const kind: LyricsKindState =

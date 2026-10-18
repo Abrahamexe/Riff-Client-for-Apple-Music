@@ -217,6 +217,20 @@ describe('CSP (Güvenlik kuralı 8)', () => {
     expect(d['object-src']).toEqual(["'none'"])
     expect(d['script-src']).toEqual(["'self'", 'https://js-cdn.music.apple.com'])
     expect(d['style-src']).toEqual(["'self'"])
+    // Worker yalnızca kendi kaynağı ve MusicKit'in blob'u (canlı radyo); uzak worker yok.
+    expect(d['worker-src']).toEqual(["'self'", 'blob:'])
+  })
+
+  it('canlı radyo: akış, CDN ve anahtar sunucuları connect-src’de (2026-10-18 gözlemi)', () => {
+    const connect = directives(buildCsp(false))['connect-src']
+    expect(connect).toEqual(
+      expect.arrayContaining([
+        'https://itsliveradio.apple.com',
+        'https://liveradio.music.apple.com',
+        'https://liveradiobackup.music.apple.com',
+        'https://linear.tv.apple.com'
+      ])
+    )
   })
 
   it('dev server: yalnızca connect-src’ye HMR websocket’i eklenir', () => {

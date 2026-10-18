@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { MAX_LEAD_S, SmoothClock } from './smoothTime'
+import { CATCH_UP_S, MAX_LEAD_S, SmoothClock } from './smoothTime'
 
 describe('akıcı çalma konumu', () => {
   it('çalarken bildirimler arasında süre kadar ilerler', () => {
@@ -9,13 +9,30 @@ describe('akıcı çalma konumu', () => {
     expect(c.at(900, 200)).toBeCloseTo(10.9)
   })
 
-  it('yuvarlanmış (biraz geride) bildirim çizgiyi geri götürmez', () => {
+  it('küçük fark zıplamadan, CATCH_UP_S içinde kapatılır', () => {
     const c = new SmoothClock()
     c.report(10, true, 0)
-    c.report(10, true, 600) // hâlâ "10" (tam saniye) → tahmin 10,6'da kalır
-    expect(c.at(600, 200)).toBeCloseTo(10.6)
-    c.report(11, true, 1000)
-    expect(c.at(1100, 200)).toBeCloseTo(11.1)
+    c.report(10.6, true, 400) // tahmin 10,4; bildirim 0,2 sn önde
+    expect(c.at(400, 200)).toBeCloseTo(10.4) // bildirim anında sıçrama yok
+    // 0,75 sn sonra farkın yarısı kapanmış: 10,4 + 0,75 + 0,1.
+    expect(c.at(400 + (CATCH_UP_S / 2) * 1000, 200)).toBeCloseTo(11.25)
+    c.report(11.5, true, 1300) // tahmin 10,4 + 0,9 + 0,12 = 11,42: kalan fark yenisiyle değişir
+    expect(c.at(1300, 200)).toBeCloseTo(11.42)
+  })
+
+  it('geride kalan bildirim çizgiyi geri götürmez', () => {
+    const c = new SmoothClock()
+    c.report(10, true, 0)
+    c.report(10, true, 600) // hâlâ 10 → tahmin 10,6'dan devam eder, yavaşlayarak hizalanır
+    let prev = c.at(600, 200)
+    expect(prev).toBeCloseTo(10.6)
+    for (let now = 616; now <= 1200; now += 16) {
+      const t = c.at(now, 200)
+      expect(t).toBeGreaterThanOrEqual(prev)
+      prev = t
+    }
+    // 10,6 + 0,6 − 0,6 × 0,6 / CATCH_UP_S
+    expect(c.at(1200, 200)).toBeCloseTo(10.96)
   })
 
   it('ileri / geri sarma ve şarkı değişiminde yeniden hizalanır', () => {

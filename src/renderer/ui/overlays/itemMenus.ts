@@ -48,6 +48,13 @@ export function trackIds(t: Track): {
   return { play: t.playParams?.catalogId ?? t.playParams?.id ?? t.id, catalog, library }
 }
 
+/** Şarkının kuyrukta tanınabileceği tüm kimlikler (karıştırmada başlangıç şarkısı, `Player`). */
+export function trackTargets(t: Track): string[] {
+  return [t.id, t.playParams?.id, t.playParams?.catalogId].filter(
+    (id): id is string => typeof id === 'string' && id !== ''
+  )
+}
+
 /** Şarkı kartı (listeler, arama) → menü için şarkı. */
 export function cardTrack(c: Card): Track {
   return {

@@ -11,6 +11,7 @@ import {
   TrackRefSchema
 } from './background'
 import { LyricsSchema } from './lyrics'
+import { TRACK_QUERY_MAX } from './trackQuery'
 
 // IPC sözleşmesi (PLAN 1.3a) — TEK KAYNAK. Her kanal adı ve yükünün zod şeması burada tanımlıdır:
 //  - main her çağrının argümanlarını bu şemalarla doğrular, geçersizse reddeder ve loglar;
@@ -613,7 +614,9 @@ export const workerContract = {
       playlistId: ResourceIdSchema,
       offset: z.optional(intRange(0, 1_000_000)),
       limit: z.optional(intRange(1, 500)),
-      sort: z.optional(PlaylistSortSchema)
+      sort: z.optional(PlaylistSortSchema),
+      /** Liste içinde arama (ad/sanatçı/albüm, `shared/trackQuery`); verilirse `total` eşleşen sayısı. */
+      query: z.optional(z.string().check(z.maxLength(TRACK_QUERY_MAX)))
     }),
     result: z.object({
       items: z.array(TrackSchema),

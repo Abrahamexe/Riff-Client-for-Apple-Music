@@ -8,10 +8,11 @@ import { displayedTrack, formatTime, usePlayer } from '../hooks/usePlayer'
 import { useRemote } from '../hooks/useRemote'
 import { useGo } from '../shell/scroll'
 import { Artwork } from '../components/Artwork'
+import { PageTint } from '../components/PageTint'
 import { ExpandableNote, LoadFailed, RowsSkeleton, Sections } from '../components/Sections'
 import { isCurrent } from '../components/TrackTable'
 import { audioBadges, discGroups, formatReleaseDate, releaseYear, totalMinutes } from '../format'
-import { useCardMenu, useMenuTrigger, useTrackMenu } from '../overlays/itemMenus'
+import { trackTargets, useCardMenu, useMenuTrigger, useTrackMenu } from '../overlays/itemMenus'
 import { MoreButton } from '../overlays/MoreButton'
 
 // Albüm sayfası (B5; geliştirici: "Apple Music gibi"): büyük kapak (karttan büyüyerek gelir), ad,
@@ -43,8 +44,8 @@ export function AlbumPage({
   const [added, setAdded] = useState(false)
 
   const playFrom = useCallback(
-    (index: number) => {
-      void player?.playAlbum(id, index).catch(() => {})
+    (index: number, track?: Track) => {
+      void player?.playAlbum(id, index, track ? trackTargets(track) : undefined).catch(() => {})
     },
     [player, id]
   )
@@ -67,6 +68,7 @@ export function AlbumPage({
 
   return (
     <>
+      <PageTint artwork={album?.artworkUrl ?? artworkUrl} />
       <div className="collection-header">
         <Artwork
           url={album?.artworkUrl ?? artworkUrl}
@@ -189,7 +191,7 @@ export function AlbumPage({
                     albumArtist={albumArtist}
                     active={isCurrent(track, current)}
                     playing={playing}
-                    onPlay={() => playFrom(index)}
+                    onPlay={() => playFrom(index, track)}
                   />
                 ))}
               </div>

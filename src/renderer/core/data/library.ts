@@ -64,7 +64,7 @@ export class LibraryClient {
   /** Aralıklı okuma: binlerce şarkılık playlist'ler parça parça (varsayılan 100) okunur. */
   getPlaylistTracks(
     playlistId: string,
-    range: { offset?: number; limit?: number; sort?: PlaylistSort } = {}
+    range: { offset?: number; limit?: number; sort?: PlaylistSort; query?: string } = {}
   ): Promise<TracksPage> {
     return this.call(this.api.getPlaylistTracks({ playlistId, ...range }))
   }
