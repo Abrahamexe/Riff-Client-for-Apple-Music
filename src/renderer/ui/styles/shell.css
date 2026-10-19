@@ -476,7 +476,9 @@
      değişip içeriği kabın dışına itiyordu (2026-10-19). Aşağıdaki değer yedek. */
   width: max(720px, calc(100vw - 160px));
   box-sizing: border-box;
-  padding: 10px 18px 12px;
+  /* Dikey bütçe (çubuk 92 px): 8 + ilerleme 22 + 2 + satır 55 = 87. İlerleme çubuğuna 4 px pay eklenince
+     (18.10) satır 8 px aşağı kaymış, şarkı kutusu çubuktan taşıyordu (2026-10-19). */
+  padding: 8px 18px 8px;
 }
 
 .player__time {
@@ -508,7 +510,7 @@
   grid-template-columns: 1fr minmax(260px, 400px) 1fr;
   align-items: center;
   gap: 16px;
-  margin-top: 8px;
+  margin-top: 2px;
 }
 
 .player__controls {
@@ -523,6 +525,18 @@
   gap: 10px;
   padding: 6px;
   min-width: 0;
+}
+
+/* İç içe cam (kapsül `backdrop-filter`'ı oynatıcının camı içinde) arkadaki satırları görmüyor, kutu
+   köşeleriyle belli oluyordu (2026-10-19): kapsülün kendi camı yok, oynatıcının camı yeter. */
+.player__now.glass {
+  background: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+.player__now.glass::after {
+  display: none;
 }
 
 .player__now img,
