@@ -154,6 +154,12 @@ export const en: Dictionary = {
   'about.openSource': 'Open Source',
   'about.openSourceText':
     'Licenses of the open-source components are in THIRD_PARTY_NOTICES.txt in the app folder.',
+  'settings.general.language': 'Language',
+  'settings.general.languageHint':
+    'Interface language. Album and artist text is requested in this language too; open pages update when reopened.',
+  'settings.general.languageSystem': 'System language',
+  'settings.general.languageTr': 'Türkçe',
+  'settings.general.languageEn': 'English',
   'settings.general.listeningHistory': 'Use Listening History',
   'shortcuts.title': 'Keyboard Shortcuts',
   'shortcuts.playPause': 'Play / Pause',

@@ -13,6 +13,10 @@ const RIGHT_WIDTH = 340
 const PLAYER_HEIGHT = 92
 /** Açık oynatıcı çubuğunun sağ ve sol boşluğu (geliştirici kararı: "sağdan soldan biraz boşluk"). */
 export const PLAYER_SIDE_INSET = 80
+/** İçerik bu genişliğin altındaysa (pencere < 1200 px) tuşlar küçülür (`.player--narrow`). */
+export const PLAYER_NARROW_BELOW = 1200 - 2 * PLAYER_SIDE_INSET
+/** `.player__content`'in en dar genişliği (CSS'teki eski `max(720px, …)` ile aynı). */
+const PLAYER_MIN_CONTENT = 720
 const BUBBLE_SIZE = 60
 export const DROPLET_SIZE = 44
 /** Üst şerit: arama çubuğu ve pencere düğmeleri. */
@@ -46,6 +50,11 @@ export interface ShellLayout {
   /** Sol menünün çıkabileceği en büyük yükseklik (açık / kapalı durumdan bağımsız). */
   sidebarMaxHeight: number
   player: Rect
+  /**
+   * Oynatıcı içeriğinin sabit genişliği (açık çubuğun genişliği; en az 720). Baloncuğa küçülünce de
+   * değişmez: içerik yeniden dizilmeden kırpılır. CSS `vw` yerine buradan: kapla aynı işlemde güncellenir.
+   */
+  playerContentWidth: number
   /** Sağ panel (sözler / Sıradaki) kapalıysa `null`. */
   right: Rect | null
   /** Ana ekranın yatay sınırları (kaydırma alanı tüm yüksekliği kullanır). */
@@ -98,6 +107,7 @@ export function computeLayout(
     sidebar,
     sidebarMaxHeight: panelBottom - GUTTER,
     player,
+    playerContentWidth: Math.max(PLAYER_MIN_CONTENT, width - 2 * PLAYER_SIDE_INSET),
     right,
     main: { left: 0, right: rightEdge },
     mainPadding: {

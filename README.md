@@ -15,12 +15,12 @@
 </p>
 
 <p align="center">
-  <img src=".github/assets/now-playing.png" width="860" alt="Full-screen player with album colours and synced lyrics" />
+  <img src=".github/assets/now-playing.png" width="860" alt="Full-screen player with album-colour backdrop" />
 </p>
 
 <table>
   <tr>
-    <td><img src=".github/assets/album.png" alt="Album page" /></td>
+    <td><img src=".github/assets/album.png" alt="Playlist page with a cover-tinted background" /></td>
     <td><img src=".github/assets/artist.png" alt="Artist page" /></td>
   </tr>
   <tr>
@@ -46,15 +46,19 @@ subscription.
   Play Later.
 - **Full-length playback** with Widevine DRM (castlabs ECS), 256 kbps AAC, editable Up Next with
   autoplay, shuffle and repeat, Windows media keys and media overlay.
+- **Cover-tinted pages** — album, playlist and artist pages take their colour from the artwork (or the
+  artist photo) and fade into the app background; spacious, rounded song rows.
 - **Full-screen player** — album-colour backdrop that pulses with the music, time-synced lyrics,
-  artist-photo mode, quality badge.
+  artist-photo mode, quality badge. Clicking the progress bar seeks almost instantly.
 - **MiniPlayer** — a square, optionally always-on-top artwork window.
 - **Song info** — credits (writers, producers, performers, engineers) and samples from MusicBrainz,
   artist summaries from Wikipedia.
 - **10-band equalizer** with presets and per-song presets.
 - **Tweaks** for enthusiasts — motion, glass blur, lyric timing and size, volume/seek steps, Fast
   DNS, library refresh interval, FPS meter.
-- **Light / dark / system theme**, adjustable transparency, Turkish and English interface.
+- **Light / dark / system theme**, adjustable transparency, and a **language setting**
+  (Settings → General: System, Türkçe or English) that also switches the language of Apple Music's
+  album and artist texts.
 
 ### Fast by design
 
@@ -165,15 +169,18 @@ odağıyla getirir. Kendi Apple ID'nle giriş yaparsın; her şey kendi aboneli�
   Sonra Çal.
 - **Tam şarkı çalma** — Widevine DRM (castlabs ECS), 256 kbps AAC, düzenlenebilir Sıradaki + otomatik
   çalma, karıştırma ve tekrar, Windows medya tuşları ve medya paneli.
+- **Kapak tonlu sayfalar** — albüm, çalma listesi ve sanatçı sayfaları rengini kapaktan (sanatçıda
+  fotoğraftan) alır ve uygulama arka planına erir; ferah, yuvarlak şarkı satırları.
 - **Büyük oynatıcı** — kapak renklerinden, müzikle nabız atan arka plan; zamanlı sözler; sanatçı
-  fotoğrafı modu; kalite rozeti.
+  fotoğrafı modu; kalite rozeti. İlerleme çubuğuna basınca neredeyse anında sarar.
 - **MiniPlayer** — kare, istenirse hep üstte kalan kapak penceresi.
 - **Şarkı bilgisi** — MusicBrainz'den krediler (söz/beste, yapım, icracılar, teknik) ve sample'lar,
   Wikipedia'dan sanatçı özeti.
 - **10 bantlı ekolayzır** — hazır ayarlar ve şarkıya özel ayar.
 - **İnce Ayar** — animasyon, cam bulanıklığı, söz zamanlaması ve boyutu, ses/sarma adımı, Hızlı DNS,
   arşiv yenileme aralığı, FPS göstergesi.
-- **Açık / koyu / sistem teması**, saydamlık ayarı, Türkçe ve İngilizce arayüz.
+- **Açık / koyu / sistem teması**, saydamlık ayarı ve **dil ayarı** (Ayarlar → Genel: Sistem, Türkçe
+  veya English); Apple Music'in albüm ve sanatçı metinlerinin dilini de değiştirir.
 
 ### Hız
 

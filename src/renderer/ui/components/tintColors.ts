@@ -3,7 +3,7 @@ import type { Rgb } from '../nowplaying/palette'
 // Sayfa tonunun renkleri (PageTint.tsx). Saf mantık: test edilebilir.
 
 /** Ana renk bu parlaklığın üstündeyse koyulaştırılır: beyaz metin ve açık kapaklarda okunurluk. */
-const MAX_LUMA = 150
+const MAX_LUMA = 125
 
 const luma = ([r, g, b]: Rgb): number => 0.299 * r + 0.587 * g + 0.114 * b
 

@@ -480,6 +480,27 @@ describe('kontroller', () => {
     await expect(p.seek(Infinity)).rejects.toMatchObject({ code: 'INVALID_ARGUMENT' })
   })
 
+  it('seek: çalma öğesi hazırsa konumu doğrudan değiştirir, değilse seekToTime', async () => {
+    const { music, raw } = fakeMusic()
+    const p = new Player(music, { mediaElements: () => [] })
+    raw.nowPlayingItem = item()
+    const el = { currentTime: 3, readyState: 4 }
+    vi.stubGlobal('document', {
+      getElementById: (id: string) => (id === 'apple-music-player' ? el : null)
+    })
+    try {
+      await p.seek(80)
+      expect(el.currentTime).toBe(80)
+      expect(raw.seekToTime).not.toHaveBeenCalled()
+      el.readyState = 0 // henüz yüklenmedi
+      await p.seek(90)
+      expect(el.currentTime).toBe(80)
+      expect(raw.seekToTime).toHaveBeenCalledWith(90)
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
   it('shuffle ve repeat modlarını çevirir; snapshot yansıtır', () => {
     const { music, raw } = fakeMusic()
     const p = new Player(music)

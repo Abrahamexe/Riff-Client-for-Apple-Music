@@ -120,6 +120,21 @@ export function preciseTime(reported: number, media: Iterable<MediaClock>): numb
 const documentAudio = (): Iterable<MediaClock> =>
   typeof document === 'undefined' ? [] : document.querySelectorAll('audio')
 
+/** MusicKit'in çalma öğesi (`<audio>`); ölçüm: sayfada tek öğe (2026-10-19). */
+const AUDIO_ELEMENT_ID = 'apple-music-player'
+
+/** Konumu doğrudan öğede değiştirir; öğe yok / henüz yüklenmedi ise `false` (çağıran `seekToTime`'a döner). */
+function seekElement(target: number): boolean {
+  if (typeof document === 'undefined') return false
+  const el = document.getElementById(AUDIO_ELEMENT_ID) as Pick<
+    HTMLMediaElement,
+    'currentTime' | 'readyState'
+  > | null
+  if (!el || el.readyState < 1) return false
+  el.currentTime = target
+  return true
+}
+
 export const resolveArtwork = (template: string | null, size = 512): string | null =>
   template ? template.replace('{w}', String(size)).replace('{h}', String(size)) : null
 
@@ -463,6 +478,11 @@ export class Player extends TypedEmitter<PlayerEvents> {
     }
     const target = Math.max(0, seconds)
     this.resumeAt = null
+    // Hızlı yol (2026-10-19, geliştirici: "çubuğa basınca zamana geçiş yavaş"): `seekToTime` aynı
+    // `<audio>` konumunu, kendi iç sıralaması ve yeniden arabelleğiyle değiştiriyor (ölçüm: tıklamadan
+    // sese 275–1732 ms; doğrudan `currentTime` ile 26 ms, arabellekte olmayan konumda ~700 ms).
+    // MusicKit `seeking` olayını kendisi dinleyip parçaları ister; konum bildirimleri yine gelir.
+    if (this.music.nowPlayingItem && seekElement(target)) return Promise.resolve()
     return this.run(
       'Konum değiştirilemedi.',
       async () => void (await this.music.seekToTime(target))

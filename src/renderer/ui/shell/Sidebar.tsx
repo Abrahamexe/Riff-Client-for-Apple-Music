@@ -29,13 +29,14 @@ import {
 } from 'lucide-react'
 import type { MessageKey } from '@shared/i18n'
 import { i18n } from '@core/i18n'
+import { Artwork } from '../components/Artwork'
 import { useApp } from '../context'
 import { usePlaylists } from '../hooks/usePlaylists'
 import { useOverlays } from '../overlays/Overlays'
 import { playlistCard, useCardMenu } from '../overlays/itemMenus'
 import { AccountRow } from './AccountRow'
 import type { Rect } from './layout'
-import { contentIn, dropletTransition, SPRING_SOFT } from './motion'
+import { contentIn, menuContentIn, menuTransition, SPRING_SOFT } from './motion'
 import { sameRoute, useRouter, type Route } from './router'
 import { useGo } from './scroll'
 import {
@@ -96,11 +97,14 @@ function NavItem({
   route,
   label,
   Icon,
+  art,
   onContextMenu
 }: {
   route: Route
   label: string
   Icon: LucideIcon
+  /** Verilirse simgenin yerine küçük kapak (çalma listeleri; `null` = kapaksız liste, yer tutucu). */
+  art?: { url: string | null }
   onContextMenu?: (e: MouseEvent) => void
 }) {
   const { route: current } = useRouter()
@@ -114,12 +118,16 @@ function NavItem({
   return (
     <button
       type="button"
-      className={`nav-item${active ? ' nav-item--active' : ''}`}
+      className={`nav-item${active ? ' nav-item--active' : ''}${art ? ' nav-item--art' : ''}`}
       aria-current={active ? 'page' : undefined}
       onClick={() => go(route)}
       onContextMenu={onContextMenu}
     >
-      <Icon className="nav-item__icon" size={18} strokeWidth={1.75} aria-hidden="true" />
+      {art ? (
+        <Artwork url={art.url} size={96} kind="playlist" className="nav-item__art" />
+      ) : (
+        <Icon className="nav-item__icon" size={18} strokeWidth={1.75} aria-hidden="true" />
+      )}
       <span className="nav-item__label">{label}</span>
     </button>
   )
@@ -219,7 +227,7 @@ export function Sidebar({
         height: open ? 'auto' : rect.height
       }}
       style={{ maxHeight }}
-      transition={dropletTransition(open)}
+      transition={menuTransition(open)}
     >
       <button
         type="button"
@@ -254,7 +262,7 @@ export function Sidebar({
       <AnimatePresence>
         {open && (
           <NavigatedContext.Provider value={navigated} key="content">
-            <motion.div className="sidebar__content" {...contentIn}>
+            <motion.div className="sidebar__content" {...menuContentIn}>
               <div className="sidebar__scroll">
                 {TOP.map((i) => (
                   <NavItem key={i.key} route={i.route} label={i18n.format(i.key)} Icon={i.icon} />
@@ -308,6 +316,7 @@ export function Sidebar({
                       }}
                       label={p.name}
                       Icon={ListMusic}
+                      art={{ url: p.artworkUrl }}
                       onContextMenu={(e) => {
                         e.preventDefault()
                         openMenu(cardMenu(playlistCard(p)), { x: e.clientX, y: e.clientY })

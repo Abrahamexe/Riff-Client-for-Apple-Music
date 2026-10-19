@@ -8,6 +8,7 @@ import {
   EQ_MAX_DB,
   TWEAK_LIMITS,
   defaultSettings,
+  type LanguagePreference,
   type Settings,
   type SettingsPatch,
   type ThemeMode
@@ -97,6 +98,18 @@ function TabContent({ tab, settings }: { tab: Tab; settings: Settings }) {
       return (
         <>
           <Card>
+            <Row label="settings.general.language" hint="settings.general.languageHint">
+              <Segmented<LanguagePreference>
+                label="settings.general.language"
+                value={settings.general.language}
+                options={[
+                  ['system', 'settings.general.languageSystem'],
+                  ['tr', 'settings.general.languageTr'],
+                  ['en', 'settings.general.languageEn']
+                ]}
+                onChange={(v) => update({ general: { language: v } })}
+              />
+            </Row>
             <Row
               label="settings.general.listeningHistory"
               hint="settings.general.listeningHistoryHint"

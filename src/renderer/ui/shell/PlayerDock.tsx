@@ -1,5 +1,12 @@
-import { useState, type CSSProperties, type KeyboardEvent, type ReactNode } from 'react'
-import { motion } from 'motion/react'
+import {
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type KeyboardEvent,
+  type ReactNode
+} from 'react'
+import { animate, motion, useMotionValue, type MotionValue } from 'motion/react'
 import {
   Check,
   ChevronsLeft,
@@ -33,7 +40,7 @@ import { useTrackActions } from '../hooks/useTrackActions'
 import { useApp, useSettings } from '../context'
 import { stepVolume } from '../theme/tweaks'
 import { Glass } from '../glass/Glass'
-import type { Rect } from './layout'
+import { PLAYER_NARROW_BELOW, type Rect } from './layout'
 import { dropletTransition, shownWhen } from './motion'
 import { NP_ART_LAYOUT_ID } from '../nowplaying/ids'
 import { prefetchArtistImage } from '../nowplaying/artistImage'
@@ -137,6 +144,7 @@ function preloadLargeArt(template: string | null | undefined): void {
 
 export function PlayerDock({
   rect,
+  contentWidth,
   expanded,
   rightPanel,
   onExpandedChange,
@@ -145,6 +153,8 @@ export function PlayerDock({
   onOpenNowPlaying
 }: {
   rect: Rect
+  /** İçeriğin sabit genişliği (layout.ts `playerContentWidth`). */
+  contentWidth: number
   expanded: boolean
   rightPanel: RightPanel
   onExpandedChange: (expanded: boolean) => void
@@ -185,22 +195,58 @@ export function PlayerDock({
   const togglePanel = (panel: Exclude<RightPanel, 'none'>) => (): void =>
     onRightPanel(rightPanel === panel ? 'none' : panel)
 
+  // Pencere boyutu değişince (2026-10-19, geliştirici: "büyütüp küçültünce tuşlar kayıyor, ses çubuğu
+  // çubuktan çıkıyor"): içerik genişliği anında değişiyor, kap ise yayla / sonraki karede geriden
+  // geliyordu; içerik kırpılıp kayıyordu. Yay yalnızca açılıp kapanma ve sağ panel değişiminde; yalnızca
+  // boyut değişirse kap, içerikle aynı işlemde `jump` ile (düzen efektinde, boyamadan önce) hizalanır.
+  const stateKey = `${expanded}|${rightPanel}`
+  const lastKey = useRef(stateKey)
+  const left = useMotionValue(rect.x)
+  const top = useMotionValue(rect.y)
+  const width = useMotionValue(rect.width)
+  const height = useMotionValue(rect.height)
+  const radius = useMotionValue(expanded ? 22 : rect.height / 2)
+  useLayoutEffect(() => {
+    const springing = lastKey.current !== stateKey
+    lastKey.current = stateKey
+    const targets: [MotionValue<number>, number][] = [
+      [left, rect.x],
+      [top, rect.y],
+      [width, rect.width],
+      [height, rect.height],
+      [radius, expanded ? 22 : rect.height / 2]
+    ]
+    if (!springing) {
+      for (const [value, target] of targets) value.jump(target)
+      return
+    }
+    const runs = targets.map(([value, target]) =>
+      animate(value, target, dropletTransition(expanded))
+    )
+    return () => runs.forEach((run) => run.stop())
+  }, [
+    rect.x,
+    rect.y,
+    rect.width,
+    rect.height,
+    expanded,
+    stateKey,
+    left,
+    top,
+    width,
+    height,
+    radius
+  ])
+
   return (
     <motion.div
-      className={`glass player${expanded ? '' : ' player--bubble'}`}
-      initial={false}
-      animate={{
-        left: rect.x,
-        top: rect.y,
-        width: rect.width,
-        height: rect.height,
-        borderRadius: expanded ? 22 : rect.height / 2
-      }}
-      transition={dropletTransition(expanded)}
+      className={`glass player${expanded ? '' : ' player--bubble'}${contentWidth < PLAYER_NARROW_BELOW ? ' player--narrow' : ''}`}
+      style={{ left, top, width, height, borderRadius: radius }}
     >
       {/* Çubuk ve baloncuk hep takılı (B5 akıcılık): geçişte yalnızca görünürlük değişir. */}
       <motion.div
         className="player__content"
+        style={{ width: contentWidth }}
         inert={!expanded}
         initial={false}
         animate={shownWhen(expanded)}

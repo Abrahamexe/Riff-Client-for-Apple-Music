@@ -10,8 +10,9 @@ import { useOverlays, type MenuEntry } from '../overlays/Overlays'
 
 // Şarkı tablosu (B4): Apple Music gibi Başlık · Sanatçı · Albüm · Süre. Sanal satırlar (binlerce şarkı);
 // satıra basınca çalar, çalan satır vurgulanır, üzerine gelince sıra numarası yerine ▶ görünür.
+// 2026-10-19: boşluklu pill satırlar; sanatçı adın altında (ayrı sütun yok): Başlık · Albüm · Süre.
 
-const TRACK_ROW_HEIGHT = 52
+const TRACK_ROW_HEIGHT = 64
 
 export function isCurrent(t: Track, current: { id: string; catalogId?: string } | null): boolean {
   if (!current) return false
@@ -81,14 +82,18 @@ export function TrackTable({
               {showArtwork && (
                 <Artwork url={t.artworkUrl} size={80} kind="song" className="track-row__art" />
               )}
-              <span className="track-row__name">{t.name}</span>
-              {t.explicit && (
-                <span className="explicit" title={i18n.t('track.explicit')}>
-                  E
+              <span className="track-row__main">
+                <span className="track-row__line">
+                  <span className="track-row__name">{t.name}</span>
+                  {t.explicit && (
+                    <span className="explicit" title={i18n.t('track.explicit')}>
+                      E
+                    </span>
+                  )}
                 </span>
-              )}
+                <span className="track-row__artist">{t.artistName}</span>
+              </span>
             </span>
-            <span className="track-row__cell">{t.artistName}</span>
             <span className="track-row__cell">{t.albumName}</span>
             <span className="track-row__time">
               {t.durationMs === null ? '' : formatTime(t.durationMs / 1000)}
@@ -106,7 +111,6 @@ export function TrackTable({
       <div className="track-table__head" role="row">
         <span />
         <span>{i18n.t('track.title')}</span>
-        <span>{i18n.t('track.artist')}</span>
         <span>{i18n.t('track.album')}</span>
         <span className="track-row__time">{i18n.t('track.time')}</span>
       </div>

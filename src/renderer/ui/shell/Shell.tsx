@@ -1,4 +1,6 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
+import { useLocale } from '../hooks/useLocale'
+import { MainScrollbar } from './MainScrollbar'
 import { AnimatePresence, motion } from 'motion/react'
 import { createWarmup } from '@core/musickit/warmup'
 import {
@@ -429,11 +431,15 @@ function ShellBody() {
         initial={false}
         animate={{ left: layout.main.left, right: layout.main.right }}
         transition={SPRING_SOFT}
-        style={{
-          paddingLeft: layout.mainPadding.left,
-          paddingTop: layout.mainPadding.top,
-          paddingBottom: layout.mainPadding.bottom
-        }}
+        style={
+          {
+            paddingLeft: layout.mainPadding.left,
+            paddingTop: layout.mainPadding.top,
+            paddingBottom: layout.mainPadding.bottom,
+            // Sayfa tonu (PageTint) alt boşluğa (oynatıcının altı) kadar uzansın.
+            '--main-pad-bottom': `${layout.mainPadding.bottom}px`
+          } as CSSProperties
+        }
       >
         {/* Kapaktan büyüme: sayfanın kendisi karttan büyür (useZoomPages); kapak ayrıca uçmaz. */}
         {/* Sayfalar aynı ızgara hücresinde üst üste: çıkan sayfa yeni sayfayı aşağı itmez (B4). */}
@@ -453,6 +459,11 @@ function ShellBody() {
           </AnimatePresence>
         </div>
       </motion.main>
+      <MainScrollbar
+        element={mainEl}
+        paddingTop={layout.mainPadding.top}
+        paddingBottom={layout.mainPadding.bottom}
+      />
       {zoom.custom.flight ? (
         <ZoomFlight key={zoom.custom.flight.id} spec={zoom.custom.flight} mainEl={mainEl} />
       ) : null}
@@ -474,6 +485,7 @@ function ShellBody() {
       </AnimatePresence>
       <PlayerDock
         rect={layout.player}
+        contentWidth={layout.playerContentWidth}
         expanded={effective.playerExpanded}
         rightPanel={shownPanel}
         onExpandedChange={setPlayerExpanded}
@@ -489,11 +501,13 @@ function ShellBody() {
 }
 
 export function Shell() {
+  // Dil değişince arayüz metinleri yeniden kurulur; sayfa (router) ve oynatma korunur.
+  const locale = useLocale()
   return (
     <RouterProvider>
       <OverlayProvider>
         <MenuProvider>
-          <ShellBody />
+          <ShellBody key={locale} />
         </MenuProvider>
       </OverlayProvider>
     </RouterProvider>

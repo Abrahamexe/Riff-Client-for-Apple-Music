@@ -1,12 +1,14 @@
 import '@fontsource-variable/inter'
 import './styles/ui.css'
 import './styles/shell.css'
-import { StrictMode, useEffect, useState } from 'react'
+import { StrictMode, useEffect, useLayoutEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { MotionConfig } from 'motion/react'
 import { defaultSettings } from '@shared/settings'
+import { i18n } from '@core/i18n'
 import type { App } from '../app/bootstrap'
 import { AppProvider, useSettings } from './context'
+import { useLocale } from './hooks/useLocale'
 import { Shell } from './shell/Shell'
 import { applyAppearance } from './theme/theme'
 import { applyTweaks, motionConfigMode, NO_BLUR_MIN_ALPHA } from './theme/tweaks'
@@ -37,8 +39,21 @@ function useAppearance(): void {
   }, [tweaks])
 }
 
+/** Dil ayarını i18n'e uygular (boyamadan önce) ve `<html lang>`'ı etkin dile eşitler. */
+function useLanguage(): void {
+  const preference = useSettings()?.general.language
+  useLayoutEffect(() => {
+    if (preference) i18n.setPreference(preference)
+  }, [preference])
+  const locale = useLocale()
+  useEffect(() => {
+    document.documentElement.lang = locale
+  }, [locale])
+}
+
 function Root() {
   useAppearance()
+  useLanguage()
   const motion = useSettings()?.tweaks.motion ?? 'system'
   return (
     <MotionConfig reducedMotion={motionConfigMode(motion)}>

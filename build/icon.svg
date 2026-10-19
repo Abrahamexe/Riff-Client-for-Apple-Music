@@ -1,23 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-  <!-- Riff Client uygulama ikonu (geliştirici seçimi 2026-10-15, "Pena r"): koyu karo, kırmızı gitar
-       penası; penanın içindeki "r" negatif alandır. Kaynak bu dosya; icon.ico ve appIcon.ts
-       `npm run icons` ile buradan üretilir. -->
+  <!-- Riff Client uygulama ikonu (geliştirici seçimi 2026-10-19, "M2"): renkli bulanık cam zemin üzerinde,
+       ses çubuklarından oluşan gitar penası (riff = pena + ses). Eski "Pena r" ikonunun yerine geçti.
+       Kaynak bu dosya; icon.ico ve appIcon.ts `npm run icons` ile buradan üretilir. -->
   <defs>
-    <linearGradient id="char" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#2a2a2f"/>
-      <stop offset="1" stop-color="#121214"/>
-    </linearGradient>
-    <linearGradient id="hot" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#ff7a5c"/>
-      <stop offset="1" stop-color="#fa2d48"/>
-    </linearGradient>
-    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#fff" stop-opacity=".28"/>
-      <stop offset=".45" stop-color="#fff" stop-opacity="0"/>
-    </linearGradient>
+    <clipPath id="tile"><rect x="16" y="16" width="224" height="224" rx="58"/></clipPath>
+    <filter id="blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="30"/></filter>
+    <filter id="soft" filterUnits="userSpaceOnUse" x="0" y="0" width="256" height="256"><feGaussianBlur stdDeviation="8"/></filter>
+    <linearGradient id="w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity=".45"/></linearGradient>
   </defs>
-  <rect x="16" y="16" width="224" height="224" rx="58" fill="url(#char)"/>
-  <path d="M128 216c-24 0-76-66-76-114 0-34 34-56 76-56s76 22 76 56c0 48-52 114-76 114z" fill="url(#hot)"/>
-  <path d="M112 168v-48c0-18 12-28 32-28h10" fill="none" stroke="#17171a" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>
-  <rect x="16" y="16" width="224" height="224" rx="58" fill="url(#sheen)"/>
+  <g clip-path="url(#tile)">
+    <rect x="16" y="16" width="224" height="224" fill="#0d0d11"/>
+    <circle cx="86" cy="76" r="78" fill="#fa2d48" filter="url(#blur)"/>
+    <circle cx="190" cy="196" r="74" fill="#7b2cff" filter="url(#blur)" opacity=".85"/>
+    <circle cx="200" cy="70" r="46" fill="#ff8a3d" filter="url(#blur)" opacity=".7"/>
+  </g>
+  <g filter="url(#soft)" opacity=".55" transform="translate(0 8)"><rect x="55.0" y="89.9" width="11" height="17.3" rx="5.5" fill="url(#w)"/><rect x="68.5" y="79.1" width="11" height="54.5" rx="5.5" fill="url(#w)"/><rect x="82.0" y="70.8" width="11" height="87.8" rx="5.5" fill="url(#w)"/><rect x="95.5" y="64.8" width="11" height="116.6" rx="5.5" fill="url(#w)"/><rect x="109.0" y="61.2" width="11" height="140.2" rx="5.5" fill="url(#w)"/><rect x="122.5" y="60.0" width="11" height="156.0" rx="5.5" fill="url(#w)"/><rect x="136.0" y="61.2" width="11" height="140.2" rx="5.5" fill="url(#w)"/><rect x="149.5" y="64.8" width="11" height="116.6" rx="5.5" fill="url(#w)"/><rect x="163.0" y="70.8" width="11" height="87.8" rx="5.5" fill="url(#w)"/><rect x="176.5" y="79.1" width="11" height="54.5" rx="5.5" fill="url(#w)"/><rect x="190.0" y="89.9" width="11" height="17.3" rx="5.5" fill="url(#w)"/></g>
+  <rect x="55.0" y="89.9" width="11" height="17.3" rx="5.5" fill="url(#w)"/><rect x="68.5" y="79.1" width="11" height="54.5" rx="5.5" fill="url(#w)"/><rect x="82.0" y="70.8" width="11" height="87.8" rx="5.5" fill="url(#w)"/><rect x="95.5" y="64.8" width="11" height="116.6" rx="5.5" fill="url(#w)"/><rect x="109.0" y="61.2" width="11" height="140.2" rx="5.5" fill="url(#w)"/><rect x="122.5" y="60.0" width="11" height="156.0" rx="5.5" fill="url(#w)"/><rect x="136.0" y="61.2" width="11" height="140.2" rx="5.5" fill="url(#w)"/><rect x="149.5" y="64.8" width="11" height="116.6" rx="5.5" fill="url(#w)"/><rect x="163.0" y="70.8" width="11" height="87.8" rx="5.5" fill="url(#w)"/><rect x="176.5" y="79.1" width="11" height="54.5" rx="5.5" fill="url(#w)"/><rect x="190.0" y="89.9" width="11" height="17.3" rx="5.5" fill="url(#w)"/>
 </svg>

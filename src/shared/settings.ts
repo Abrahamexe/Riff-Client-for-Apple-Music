@@ -27,9 +27,13 @@ export const EqPresetSchema = z.strictObject({
   bands
 })
 
+/** Arayüz dili tercihi (2026-10-19): `system` = sistem dili Türkçeyse `tr`, değilse `en` (i18n `resolveLocale`). */
+export const LANGUAGE_PREFERENCES = ['system', 'tr', 'en'] as const
 const GeneralSchema = z.strictObject({
   /** Apple: "Dinleme geçmişini kullan" → `music.privateEnabled = !değer`. */
-  useListeningHistory: z.boolean()
+  useListeningHistory: z.boolean(),
+  /** Arayüz dili; Apple Music içeriği (albüm / sanatçı metinleri) de bu dilde istenir. */
+  language: z.enum(LANGUAGE_PREFERENCES)
 })
 const PlaybackSchema = z.strictObject({
   /** Apple: Akış kalitesi. MusicKit: `bitrate` HIGH (256) / STANDARD (64). Kayıpsız yok. */
@@ -149,6 +153,7 @@ export type EqPreset = z.infer<typeof EqPresetSchema>
 export type EqualizerSettings = Settings['equalizer']
 export type AppearanceSettings = Settings['appearance']
 export type ThemeMode = (typeof THEME_MODES)[number]
+export type LanguagePreference = (typeof LANGUAGE_PREFERENCES)[number]
 export type RightPanel = (typeof RIGHT_PANELS)[number]
 export type TweaksSettings = Settings['tweaks']
 export type MotionMode = (typeof MOTION_MODES)[number]
@@ -160,7 +165,7 @@ const flatBands = (): number[] => EQ_BANDS_HZ.map(() => 0)
 export function defaultSettings(): Settings {
   return {
     version: SETTINGS_VERSION,
-    general: { useListeningHistory: true },
+    general: { useListeningHistory: true, language: 'system' },
     playback: { streamingQuality: 'high', autoplay: true },
     restrictions: { allowExplicit: true },
     advanced: {

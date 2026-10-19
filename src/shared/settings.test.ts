@@ -56,6 +56,26 @@ describe('yerleşik EQ hazır ayarları (PLAN_v5 P1)', () => {
   })
 })
 
+describe('dil tercihi (2026-10-19)', () => {
+  it('eski kayıtta dil yok: `system` eklenir, dinleme geçmişi ayarı korunur', () => {
+    const { settings } = migrateSettings({
+      ...defaultSettings(),
+      general: { useListeningHistory: false }
+    })
+    expect(settings.general).toEqual({ useListeningHistory: false, language: 'system' })
+  })
+
+  it('geçersiz dil varsayılana döner; yama yalnızca system / tr / en kabul eder', () => {
+    const { settings } = migrateSettings({
+      ...defaultSettings(),
+      general: { useListeningHistory: true, language: 'de' }
+    })
+    expect(settings.general.language).toBe('system')
+    expect(SettingsPatchSchema.safeParse({ general: { language: 'en' } }).success).toBe(true)
+    expect(SettingsPatchSchema.safeParse({ general: { language: 'de' } }).success).toBe(false)
+  })
+})
+
 describe('ince ayar bölümü (2026-10-14)', () => {
   it('eski kayıtta bölüm yok: varsayılanlar eklenir, diğer ayarlar korunur', () => {
     const old = { ...defaultSettings(), general: { useListeningHistory: false } } as Record<

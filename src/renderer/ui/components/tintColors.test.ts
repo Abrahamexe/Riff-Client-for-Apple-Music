@@ -17,7 +17,7 @@ describe('sayfa tonu renkleri', () => {
 
   it('çok açık renk koyulaştırılır (beyaz metin okunur), ton korunur', () => {
     const { main } = tintColors([[250, 240, 200]])!
-    expect(0.299 * main[0] + 0.587 * main[1] + 0.114 * main[2]).toBeLessThanOrEqual(150.5)
+    expect(0.299 * main[0] + 0.587 * main[1] + 0.114 * main[2]).toBeLessThanOrEqual(125.5)
     expect(main[0]).toBeGreaterThan(main[2])
   })
 

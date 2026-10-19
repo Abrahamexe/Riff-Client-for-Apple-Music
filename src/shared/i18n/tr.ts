@@ -152,6 +152,12 @@ export const tr = {
   'about.openSource': 'Açık Kaynak',
   'about.openSourceText':
     'Kullanılan açık kaynak bileşenlerin lisansları uygulama klasöründeki THIRD_PARTY_NOTICES.txt dosyasındadır.',
+  'settings.general.language': 'Dil',
+  'settings.general.languageHint':
+    'Arayüz dili. Albüm ve sanatçı metinleri de bu dilde istenir; açık sayfalar yeniden açılınca güncellenir.',
+  'settings.general.languageSystem': 'Sistem dili',
+  'settings.general.languageTr': 'Türkçe',
+  'settings.general.languageEn': 'English',
   'settings.general.listeningHistory': 'Dinleme geçmişini kullan',
   'shortcuts.title': 'Klavye Kısayolları',
   'shortcuts.playPause': 'Çal / Duraklat',

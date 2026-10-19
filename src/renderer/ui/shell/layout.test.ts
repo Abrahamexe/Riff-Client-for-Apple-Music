@@ -106,4 +106,23 @@ describe('kabuk yerleşimi (B2)', () => {
     expect(l.player.x).toBe(80)
     expect(l.player.x + l.player.width).toBe(1440 - 80)
   })
+
+  it('oynatıcı içeriği açık çubuk genişliğinde sabit (en az 720); baloncukta da değişmez', () => {
+    const open = computeLayout(
+      { width: 1440, height: 900 },
+      { sidebarOpen: false, rightOpen: false, playerExpanded: true }
+    )
+    const bubble = computeLayout(
+      { width: 1440, height: 900 },
+      { sidebarOpen: false, rightOpen: false, playerExpanded: false }
+    )
+    expect(open.playerContentWidth).toBe(1440 - 160)
+    expect(bubble.playerContentWidth).toBe(open.playerContentWidth)
+    expect(
+      computeLayout(
+        { width: 800, height: 600 },
+        { sidebarOpen: false, rightOpen: false, playerExpanded: true }
+      ).playerContentWidth
+    ).toBe(720)
+  })
 })

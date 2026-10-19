@@ -78,7 +78,7 @@ describe('applyPlaybackSettings (3.B3)', () => {
     expect(music).toMatchObject({ bitrate: 256, autoplayEnabled: true, privateEnabled: false })
     applyPlaybackSettings(music as unknown as MusicKitInstance, {
       ...s,
-      general: { useListeningHistory: false },
+      general: { useListeningHistory: false, language: 'system' },
       playback: { streamingQuality: 'standard', autoplay: false },
       restrictions: { allowExplicit: false }
     })
