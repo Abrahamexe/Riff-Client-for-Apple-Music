@@ -1,4 +1,5 @@
-import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { TintProvider } from '../components/PageTint'
 import { useLocale } from '../hooks/useLocale'
 import { MainScrollbar } from './MainScrollbar'
 import { AnimatePresence, motion } from 'motion/react'
@@ -155,6 +156,8 @@ interface ZoomFlightSpec {
   to: Box
 }
 
+/** `.main` CSS `padding-right` ile aynı (shell.css); sayfa genişliği hesabı için. */
+const MAIN_PADDING_RIGHT = 24
 const ZOOM_RADIUS = 40
 /**
  * Geliştirici geri bildirimi (2026-10-14): "birden fırlıyor". Ölçüm: sert yayla genişlik 90 ms'de
@@ -423,6 +426,15 @@ function ShellBody() {
     if (mainEl) mainEl.scrollTop = restoreScroll
   }, [key, mainEl, restoreScroll])
 
+  const pageWidth = Math.max(
+    320,
+    viewport.width -
+      layout.main.left -
+      layout.main.right -
+      layout.mainPadding.left -
+      MAIN_PADDING_RIGHT
+  )
+
   return (
     <MainScrollProvider element={mainEl}>
       <motion.main
@@ -431,19 +443,17 @@ function ShellBody() {
         initial={false}
         animate={{ left: layout.main.left, right: layout.main.right }}
         transition={SPRING_SOFT}
-        style={
-          {
-            paddingLeft: layout.mainPadding.left,
-            paddingTop: layout.mainPadding.top,
-            paddingBottom: layout.mainPadding.bottom,
-            // Sayfa tonu (PageTint) alt boşluğa (oynatıcının altı) kadar uzansın.
-            '--main-pad-bottom': `${layout.mainPadding.bottom}px`
-          } as CSSProperties
-        }
+        style={{
+          paddingLeft: layout.mainPadding.left,
+          paddingTop: layout.mainPadding.top,
+          paddingBottom: layout.mainPadding.bottom
+        }}
       >
         {/* Kapaktan büyüme: sayfanın kendisi karttan büyür (useZoomPages); kapak ayrıca uçmaz. */}
         {/* Sayfalar aynı ızgara hücresinde üst üste: çıkan sayfa yeni sayfayı aşağı itmez (B4). */}
-        <div className="page-stack">
+        {/* Sağ panel açılırken ana ekranın kenarı yayla daralır; sayfa hedef genişlikte sabit durur (her
+            karede yeniden dizilmez, kenar yalnızca kırpar). */}
+        <div className="page-stack" style={{ width: pageWidth }}>
           <AnimatePresence initial={false} custom={zoom.custom}>
             <motion.div
               key={key}
@@ -507,7 +517,9 @@ export function Shell() {
     <RouterProvider>
       <OverlayProvider>
         <MenuProvider>
-          <ShellBody key={locale} />
+          <TintProvider>
+            <ShellBody key={locale} />
+          </TintProvider>
         </MenuProvider>
       </OverlayProvider>
     </RouterProvider>

@@ -1437,18 +1437,22 @@
 
 /* Sayfa tonu (2026-10-18, iOS Apple Music gibi): kapağın / sanatçı fotoğrafının rengi üstten başlar,
    aşağı doğru arka plana erir. Ana pencerenin kenarlarına kadar taşar (main yatayda kırpar). */
+/* Sayfa tonu (PageTint.tsx `TintProvider`): tüm pencereyi kaplayan tek katman, ana ekranın ve panellerin
+   arkasında. Sayfa içinde olsaydı ana ekran kenarında kırpılır (sağ panelin arkası koyu kalırdı) ve sayfa
+   boyunca uzardı (1204 şarkılık listede 77.000 px). Sabit: aşağı inince renk değişmez. */
+.page-tint-root {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
 .page-tint {
   --tint-top: 0.8;
   --tint-mid: 0.5;
   --tint-low: 0.3;
   position: absolute;
-  z-index: -1;
-  top: -180px;
-  left: -100vw;
-  right: -60px;
-  /* Sayfanın tamamı (2026-10-19: "sayfa komple o tonda"): üstte güçlü, aşağıda sabit hafif ton.
-     Duraklar piksel: uzun listede de aynı hızla erir, sonra sayfa sonuna kadar `--tint-low` kalır. */
-  bottom: calc(-1 * var(--main-pad-bottom, 0px));
+  inset: 0;
   pointer-events: none;
   background:
     radial-gradient(640px 420px at 78% 140px, rgb(var(--tint-b) / 0.5), transparent 72%),
@@ -1469,6 +1473,17 @@
   --tint-low: 0.18;
 }
 
+/* Sayfa değişince eski ton söner (yenisi `page-tint-in` ile belirir). */
+.page-tint--leaving {
+  animation: page-tint-out 0.55s ease both;
+}
+
+@keyframes page-tint-out {
+  to {
+    opacity: 0;
+  }
+}
+
 @keyframes page-tint-in {
   from {
     opacity: 0;
@@ -1478,6 +1493,10 @@
 @media (prefers-reduced-motion: reduce) {
   .page-tint {
     animation: none;
+  }
+
+  .page-tint--leaving {
+    display: none;
   }
 }
 

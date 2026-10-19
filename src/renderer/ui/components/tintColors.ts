@@ -14,8 +14,13 @@ function darken(c: Rgb): Rgb {
   return [Math.round(c[0] * k), Math.round(c[1] * k), Math.round(c[2] * k)]
 }
 
+export interface TintColors {
+  main: Rgb
+  accent: Rgb
+}
+
 /** Paletten ana renk (baskın) ve vurgu (ikinci renk; yoksa ana). Palet yoksa `null`. */
-export function tintColors(palette: readonly Rgb[] | null): { main: Rgb; accent: Rgb } | null {
+export function tintColors(palette: readonly Rgb[] | null): TintColors | null {
   const first = palette?.[0]
   if (!first) return null
   return { main: darken(first), accent: darken(palette[1] ?? first) }
