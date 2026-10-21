@@ -1,12 +1,21 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode
+} from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { i18n } from '@core/i18n'
-import { shelfEdges, shelfTarget } from './shelfScroll'
+import { CARD_GAP, fitCardWidth, shelfEdges, shelfTarget } from './shelfScroll'
 
 // Yatay raf (B4 ek; Apple Music Ana Sayfa rafları): başlık + yana kayan kart sırası. Fareyle üzerine
 // gelince iki yanda cam ok damlaları belirir (yalnızca o yönde içerik varsa); tekerlek / dokunmatik
-// yüzeyle de kayar. Kart genişliği CSS'te sabit (`--shelf-card`), ok bir "sayfa" kaydırır.
+// yüzeyle de kayar. Kart genişliği CSS'te sabit (`--shelf-card`); kare kartlı raflarda (`FIT_SIZES`) sığan tam kart sayısına göre
+// ölçülür (yarım kart görünmez). Ok bir "sayfa" kaydırır.
 
 /** `wide`: 16:9 büyük kartlar (B6 canlı radyo); `chart`: dört satırlı numaralı şarkı sütunları (B6). */
 export type ShelfSize = 'regular' | 'large' | 'songs' | 'chart' | 'wide'
@@ -19,6 +28,10 @@ const CARD_STEP: Record<ShelfSize, number> = {
   chart: 320 + 20,
   wide: 420 + 20
 }
+
+/** Kare kartlı raflar: sığacak tam kart sayısı hesaplanır, kartlar genişliği doldurur (yarım kart yok). */
+const FIT_SIZES: readonly ShelfSize[] = ['regular', 'large']
+const ROW_PADDING = 20
 
 export function Shelf({
   title,
@@ -33,7 +46,24 @@ export function Shelf({
   const rowRef = useRef<HTMLDivElement>(null)
   const [edges, setEdges] = useState({ canPrevious: false, canNext: false })
   const [hover, setHover] = useState(false)
+  const [fit, setFit] = useState<number | null>(null)
   const reduced = useReducedMotion()
+
+  useLayoutEffect(() => {
+    const row = rowRef.current
+    if (!row || !FIT_SIZES.includes(size)) return
+    const base = CARD_STEP[size] - CARD_GAP
+    const update = (): void => {
+      const width = row.clientWidth - ROW_PADDING * 2
+      if (width <= 0) return
+      const next = fitCardWidth(width, base)
+      setFit((f) => (f === next ? f : next))
+    }
+    update()
+    const observer = new ResizeObserver(update)
+    observer.observe(row)
+    return () => observer.disconnect()
+  }, [size])
 
   useEffect(() => {
     const row = rowRef.current
@@ -78,8 +108,15 @@ export function Shelf({
       onPointerLeave={() => setHover(false)}
     >
       {title && <h2 className="shelf__title">{title}</h2>}
-      <div className="shelf-v2__viewport">
-        <div className={`shelf-row shelf-row--${size}`} ref={rowRef}>
+      <div
+        className="shelf-v2__viewport"
+        style={fit ? ({ '--shelf-card-fit': `${fit}px` } as CSSProperties) : undefined}
+      >
+        <div
+          className={`shelf-row shelf-row--${size}`}
+          ref={rowRef}
+          style={fit ? ({ '--shelf-card': `${fit}px` } as CSSProperties) : undefined}
+        >
           {children}
         </div>
         <AnimatePresence>

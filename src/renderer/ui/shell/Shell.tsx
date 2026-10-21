@@ -252,7 +252,10 @@ const ZOOM_VARIANTS = {
           ...c.enterFrom,
           opacity: 0,
           transformOrigin: '0 0',
-          backgroundColor: c.bg,
+          // Opak arka plan YOK: animasyon yarıda kesilirse (`transitionEnd` çalışmaz) sayfa siyah kalıp
+          // sayfa tonunu örtüyordu (geliştirici 2026-10-21, "şarkıların arkası siyah"). Sayfa zaten
+          // 0,2 sn'de opaklaşır; çıkış (`leave`) küçülürken opak kalmaya devam eder.
+          backgroundColor: CLEAR,
           borderRadius: ZOOM_RADIUS
         }
       : { ...pageTransition.initial, x: 0, scale: 1 },
@@ -264,7 +267,7 @@ const ZOOM_VARIANTS = {
           scale: 1,
           opacity: 1,
           borderRadius: 0,
-          transitionEnd: { backgroundColor: CLEAR },
+          backgroundColor: CLEAR,
           transition: { ...ZOOM_OPEN, opacity: { duration: 0.2, ease: 'linear' } }
         }
       : { ...pageTransition.animate, x: 0, scale: 1 },

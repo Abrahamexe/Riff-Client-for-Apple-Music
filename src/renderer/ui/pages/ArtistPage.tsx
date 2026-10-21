@@ -42,7 +42,7 @@ export function ArtistPage({ id, title }: { id: string; title: string }) {
 
   return (
     <>
-      <PageTint artwork={detail?.artist.artworkUrl} />
+      <PageTint artwork={detail?.artist.artworkUrl} size={HERO_SIZE} />
       <ArtistHero
         name={detail?.artist.name ?? title}
         artworkUrl={detail?.artist.artworkUrl ?? null}

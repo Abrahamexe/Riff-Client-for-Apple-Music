@@ -11,6 +11,7 @@ import {
 } from 'react'
 import type { Rgb } from '../nowplaying/palette'
 import { useArtworkPalette } from '../hooks/useArtworkPalette'
+import { AmbientOrbs } from './AmbientOrbs'
 import { tintColors, type TintColors } from './tintColors'
 
 // Sayfa arka plan tonu (geliştirici isteği 2026-10-18: "playlist, albüm ya da sanatçı sayfasına girince
@@ -30,8 +31,15 @@ interface TintApi {
 const TintContext = createContext<TintApi | null>(null)
 
 /** Sayfanın rengini pencere katmanına bildirir; görsel yoksa / palet hazır değilse bir şey yapmaz. */
-export function PageTint({ artwork }: { artwork: string | null | undefined }) {
-  const colors = tintColors(useArtworkPalette(artwork))
+export function PageTint({
+  artwork,
+  size = 480
+}: {
+  artwork: string | null | undefined
+  /** Sayfadaki kapağın istenen boyutu: aynı adres, tek istek (ayrı küçük kopya beklenmez). */
+  size?: number
+}) {
+  const colors = tintColors(useArtworkPalette(artwork, size))
   const api = useContext(TintContext)
   const id = useId()
   const signature = colors ? `${colors.main.join(',')}|${colors.accent.join(',')}` : ''
@@ -95,6 +103,7 @@ export function TintProvider({ children }: { children: ReactNode }) {
   )
   return (
     <TintContext.Provider value={api}>
+      <AmbientOrbs dimmed={current !== null} />
       <TintHost colors={current?.colors ?? null} />
       {children}
     </TintContext.Provider>

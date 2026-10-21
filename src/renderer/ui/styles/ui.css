@@ -23,6 +23,11 @@
   --bg: #0b0b0e;
   --bg-ambient-1: rgb(250 45 72 / 0.11);
   --bg-ambient-2: rgb(120 80 255 / 0.06);
+  /* Yaşayan küreler (AmbientOrbs): kırmızı, mor, lacivert. */
+  --orb-a: 250 45 72;
+  --orb-b: 124 82 255;
+  --orb-c: 40 120 255;
+  --orb-alpha: 0.34;
   --text: rgb(255 255 255 / 0.94);
   --text-secondary: rgb(255 255 255 / 0.58);
   --glass-tint: 28 28 32;
@@ -39,6 +44,10 @@
   --bg: #f3f3f6;
   --bg-ambient-1: rgb(250 45 72 / 0.07);
   --bg-ambient-2: rgb(90 140 255 / 0.06);
+  --orb-a: 250 45 72;
+  --orb-b: 124 82 255;
+  --orb-c: 40 120 255;
+  --orb-alpha: 0.2;
   --text: rgb(0 0 0 / 0.88);
   --text-secondary: rgb(0 0 0 / 0.52);
   --glass-tint: 252 252 254;

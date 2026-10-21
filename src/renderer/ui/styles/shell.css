@@ -1435,6 +1435,78 @@
   isolation: isolate;
 }
 
+/* Yaşayan küreler (AmbientOrbs.tsx): tüm pencerede sabit, tonun ve içeriğin arkasında. Yalnızca transform
+   animasyonu (kompozitörde); gradyanın kendisi bulanık, `filter` yok. */
+.ambient-orbs {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: 1;
+  transition: opacity 0.7s ease;
+}
+
+.ambient-orbs--dimmed {
+  opacity: 0;
+}
+
+.ambient-orb {
+  position: absolute;
+  width: 62vmax;
+  height: 62vmax;
+  border-radius: 50%;
+  will-change: transform;
+}
+
+.ambient-orb--a {
+  top: -26vmax;
+  left: -14vmax;
+  background: radial-gradient(circle, rgb(var(--orb-a) / var(--orb-alpha)), transparent 66%);
+  animation: orb-drift-a 22s ease-in-out infinite alternate;
+}
+
+.ambient-orb--b {
+  right: -22vmax;
+  top: 6vh;
+  background: radial-gradient(circle, rgb(var(--orb-b) / var(--orb-alpha)), transparent 66%);
+  animation: orb-drift-b 27s ease-in-out infinite alternate;
+}
+
+.ambient-orb--c {
+  bottom: -30vmax;
+  left: 18vw;
+  background: radial-gradient(
+    circle,
+    rgb(var(--orb-c) / calc(var(--orb-alpha) * 0.8)),
+    transparent 66%
+  );
+  animation: orb-drift-c 24s ease-in-out infinite alternate;
+}
+
+@keyframes orb-drift-a {
+  to {
+    transform: translate3d(14vmax, 10vmax, 0) scale(1.15);
+  }
+}
+
+@keyframes orb-drift-b {
+  to {
+    transform: translate3d(-16vmax, 12vmax, 0) scale(0.9);
+  }
+}
+
+@keyframes orb-drift-c {
+  to {
+    transform: translate3d(12vmax, -12vmax, 0) scale(1.12);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient-orb {
+    animation: none;
+  }
+}
+
 /* Sayfa tonu (2026-10-18, iOS Apple Music gibi): kapağın / sanatçı fotoğrafının rengi üstten başlar,
    aşağı doğru arka plana erir. Ana pencerenin kenarlarına kadar taşar (main yatayda kırpar). */
 /* Sayfa tonu (PageTint.tsx `TintProvider`): tüm pencereyi kaplayan tek katman, ana ekranın ve panellerin
@@ -1999,7 +2071,7 @@
   position: absolute;
   z-index: 2;
   /* Kapak hizasında, ortada (kart genişliği = kapak yüksekliği). */
-  top: calc(8px + var(--arrow-art, 176px) / 2 - 20px);
+  top: calc(8px + var(--shelf-card-fit, var(--arrow-art, 176px)) / 2 - 20px);
   width: 40px;
   height: 40px;
   border: 0;

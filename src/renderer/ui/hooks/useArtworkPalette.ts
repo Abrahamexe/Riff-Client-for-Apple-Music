@@ -3,15 +3,15 @@ import { cachedArtworkUrl } from '@core/data/artwork'
 import { extractPalette, type Rgb } from '../nowplaying/palette'
 
 // Kapağın / fotoğrafın baskın renkleri (büyük oynatıcı arka planı; 2026-10-18'den albüm, playlist ve
-// sanatçı sayfalarının arka plan tonu). Küçük (48 px) önbellekli kopyadan 32×32 örneklenir. Aynı görsel
+// sanatçı sayfalarının arka plan tonu). Önbellekli kopyadan 32×32 örneklenir (varsayılan 48 px; sayfa tonu sayfada zaten inen boyutu ister: ayrı küçük kopya yavaş CDN'de kapaktan sonra gelip sayfayı siyah bırakıyordu). Aynı görsel
 // tekrar açılınca renk anında gelsin diye sonuçlar saklanır.
 
 const CACHE_MAX = 300
 const cache = new Map<string, Rgb[]>()
 
 /** Görselin paleti; görsel yoksa ya da okunamazsa `null`. */
-export function useArtworkPalette(template: string | null | undefined): Rgb[] | null {
-  const src = cachedArtworkUrl(template, 48)
+export function useArtworkPalette(template: string | null | undefined, size = 48): Rgb[] | null {
+  const src = cachedArtworkUrl(template, size)
   const [palette, setPalette] = useState<Rgb[] | null>(() =>
     src ? (cache.get(src) ?? null) : null
   )
