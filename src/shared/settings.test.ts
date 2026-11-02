@@ -101,3 +101,31 @@ describe('ince ayar bölümü (2026-10-14)', () => {
     expect(SettingsPatchSchema.safeParse({ tweaks: { lyricsOffsetMs: -250 } }).success).toBe(true)
   })
 })
+
+describe('Ses Laboratuvarı bölümü (2026-10-30)', () => {
+  it('varsayılan kapalı; eski kayıtta bölüm yok: varsayılanlar eklenir, EQ korunur', () => {
+    expect(defaultSettings().audioLab.enabled).toBe(false)
+    const old = {
+      ...defaultSettings(),
+      equalizer: { ...defaultSettings().equalizer, enabled: true }
+    } as Record<string, unknown>
+    delete old.audioLab
+    const { settings } = migrateSettings(old)
+    expect(settings.audioLab).toEqual(defaultSettings().audioLab)
+    expect(settings.equalizer.enabled).toBe(true)
+  })
+
+  it('yüzdeler 0–100 tamsayı; sınır dışı alan tek başına varsayılana döner', () => {
+    const raw = {
+      ...defaultSettings(),
+      audioLab: { enabled: true, clarity: 150, air: 40, limiter: false }
+    }
+    const { settings } = migrateSettings(raw)
+    expect(settings.audioLab).toEqual({ enabled: true, clarity: 35, air: 40, limiter: false })
+    expect(SettingsPatchSchema.safeParse({ audioLab: { air: 101 } }).success).toBe(false)
+    expect(SettingsPatchSchema.safeParse({ audioLab: { air: 12.5 } }).success).toBe(false)
+    expect(SettingsPatchSchema.safeParse({ audioLab: { enabled: true, air: 0 } }).success).toBe(
+      true
+    )
+  })
+})

@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { memo, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { TintProvider } from '../components/PageTint'
 import { useLocale } from '../hooks/useLocale'
 import { MainScrollbar } from './MainScrollbar'
@@ -45,6 +45,7 @@ import { NowPlaying } from '../nowplaying/NowPlaying'
 import { focusInfo, isPlaybackActive, shortcutAction } from './shortcuts'
 import { stepVolume } from '../theme/tweaks'
 import { FpsMeter } from './FpsMeter'
+import { CoverAccent } from '../components/CoverAccent'
 import { Sidebar } from './Sidebar'
 
 // Uygulama kabuğu (PLAN_v5 B2): yüzen cam sütunlar. Açılışta sol menü ve oynatıcı açık gelir;
@@ -60,7 +61,9 @@ function useViewport(): { width: number; height: number } {
   return size
 }
 
-function Page({ route }: { route: Route }) {
+// `memo`: kabuk yeniden çizildiğinde (menü, sağ panel, oynatıcı aç/kapa) açık sayfa baştan çizilmez
+// (1204 şarkılık listede tıklama karesini uzatıyordu). `route` nesnesi gezinmede değişir.
+const Page = memo(function Page({ route }: { route: Route }) {
   switch (route.name) {
     case 'home':
       return <HomePage />
@@ -111,7 +114,7 @@ function Page({ route }: { route: Route }) {
     case 'artist':
       return <ArtistPage id={route.id} title={route.title} />
   }
-}
+})
 
 /**
  * Çalma bağlantısını ısıtma (`core/musickit/warmup.ts`, `main/playbackWarmup.ts`): açılışta, pencere
@@ -429,13 +432,20 @@ function ShellBody() {
     if (mainEl) mainEl.scrollTop = restoreScroll
   }, [key, mainEl, restoreScroll])
 
+  // 2026-11-02 (geliştirici: "sağ panel açılınca ana ekranda kasma"): ana ekranın sağ kenarı panel
+  // canlanırken DEĞİŞMEZ. Ölçüm: kenar yayla daralırken kaydırma çubuğunun ölçümü her karede tüm sayfayı
+  // yeniden dizdiriyordu (`getBoundingClientRect` ~100 ms, 42–63 ms'lik kareler). Yeni genişlik panel
+  // açılınca yerine oturduktan sonra, kapanınca tamamen kaybolduktan sonra tek seferde uygulanır.
+  const [panelSettled, setPanelSettled] = useState(false)
+  const [mainRight, setMainRight] = useState(layout.main.right)
+  const targetRight = layout.main.right
+  useEffect(() => {
+    if (layout.right && panelSettled) setMainRight(targetRight)
+  }, [layout.right, panelSettled, targetRight])
+
   const pageWidth = Math.max(
     320,
-    viewport.width -
-      layout.main.left -
-      layout.main.right -
-      layout.mainPadding.left -
-      MAIN_PADDING_RIGHT
+    viewport.width - layout.main.left - mainRight - layout.mainPadding.left - MAIN_PADDING_RIGHT
   )
 
   return (
@@ -444,9 +454,10 @@ function ShellBody() {
         ref={setMainEl}
         className="main"
         initial={false}
-        animate={{ left: layout.main.left, right: layout.main.right }}
+        animate={{ left: layout.main.left }}
         transition={SPRING_SOFT}
         style={{
+          right: mainRight,
           paddingLeft: layout.mainPadding.left,
           paddingTop: layout.mainPadding.top,
           paddingBottom: layout.mainPadding.bottom
@@ -454,8 +465,7 @@ function ShellBody() {
       >
         {/* Kapaktan büyüme: sayfanın kendisi karttan büyür (useZoomPages); kapak ayrıca uçmaz. */}
         {/* Sayfalar aynı ızgara hücresinde üst üste: çıkan sayfa yeni sayfayı aşağı itmez (B4). */}
-        {/* Sağ panel açılırken ana ekranın kenarı yayla daralır; sayfa hedef genişlikte sabit durur (her
-            karede yeniden dizilmez, kenar yalnızca kırpar). */}
+        {/* Sağ panelin animasyonu sürerken genişlik sabit (yukarıdaki `mainRight`). */}
         <div className="page-stack" style={{ width: pageWidth }}>
           <AnimatePresence initial={false} custom={zoom.custom}>
             <motion.div
@@ -481,6 +491,7 @@ function ShellBody() {
         <ZoomFlight key={zoom.custom.flight.id} spec={zoom.custom.flight} mainEl={mainEl} />
       ) : null}
       <TitleBar />
+      <CoverAccent />
       <NavControls sidebar={layout.sidebar} sidebarOpen={effective.sidebarOpen} />
       <SearchBar centerX={searchLeft} />
       {settings?.tweaks.fpsMeter ? <FpsMeter /> : null}
@@ -491,9 +502,19 @@ function ShellBody() {
         open={effective.sidebarOpen}
         onToggle={() => setSidebarOpen(!effective.sidebarOpen)}
       />
-      <AnimatePresence>
+      <AnimatePresence
+        onExitComplete={() => {
+          setPanelSettled(false)
+          setMainRight(layout.main.right)
+        }}
+      >
         {layout.right && shownPanel !== 'none' && (
-          <RightPanel key="right" rect={layout.right} mode={shownPanel} />
+          <RightPanel
+            key="right"
+            rect={layout.right}
+            mode={shownPanel}
+            onSettled={() => setPanelSettled(true)}
+          />
         )}
       </AnimatePresence>
       <PlayerDock

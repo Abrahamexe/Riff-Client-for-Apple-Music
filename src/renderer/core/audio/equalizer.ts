@@ -2,7 +2,8 @@ import { EQ_BANDS_HZ, findPreset, type EqualizerSettings } from '@shared/setting
 import type { Player } from '../musickit/player'
 
 // Ekolayzır (PLAN 3.B3). MusicKit'in <audio> öğesi Web Audio'ya bağlanır:
-//   kaynak → preamp (Gain) → 10 × peaking Biquad (32 Hz … 16 kHz) → çıkış
+//   kaynak → preamp (Gain) → 10 × peaking Biquad (32 Hz … 16 kHz) → [Ses Laboratuvarı] → son kat → çıkış
+// Ses Laboratuvarı (2026-10-30, core/audio/lab) yalnızca ilk açıldığında araya eklenir (`useProcessor`).
 // Fizibilite (MANUAL_TESTS 3.B3): Widevine korumalı ses grafiğe sessizleşmeden geliyor; filtreler ve
 // preamp etkili; `music.volume` grafikten önce uygulanır (ses kontrolü EQ'dan bağımsız).
 // Kurallar:
@@ -19,6 +20,11 @@ export interface ParamLike {
 }
 export interface AudioNodeLike {
   connect(destination: AudioNodeLike): unknown
+  disconnect?(destination?: AudioNodeLike): void
+}
+/** AudioWorkletNode'un kullandığımız yüzeyi (Ses Laboratuvarı). */
+export interface ProcessorNodeLike extends AudioNodeLike {
+  parameters: { get(name: string): ParamLike | undefined }
 }
 export interface GainNodeLike extends AudioNodeLike {
   gain: ParamLike
@@ -51,6 +57,9 @@ export class Equalizer {
   private ctx: AudioContextLike | null = null
   private preamp: GainNodeLike | null = null
   private bands: BiquadNodeLike[] = []
+  /** Grafiğin son katı (çıkış + ölçüm dalı buradan); işlemci bantlarla bunun arasına girer. */
+  private post: GainNodeLike | null = null
+  private processor: Promise<ProcessorNodeLike> | null = null
   private analyser: AnalyserLike | null = null
   private samples: Uint8Array | null = null
   private readonly attached = new WeakSet<HTMLMediaElement>()
@@ -98,6 +107,32 @@ export class Equalizer {
     return Math.min(1, Math.sqrt(sum / this.samples.length) * 2.5)
   }
 
+  /**
+   * Ses Laboratuvarı işlemcisini EQ ile son kat arasına bir kez ekler (sonraki çağrılar aynı düğümü
+   * döndürür). Grafik yoksa `null`: önce `attach` gerekir.
+   */
+  useProcessor(
+    create: (ctx: AudioContextLike) => Promise<ProcessorNodeLike>
+  ): Promise<ProcessorNodeLike> | null {
+    const ctx = this.ctx
+    const last = this.bands.at(-1)
+    const post = this.post
+    if (!ctx || !last || !post) return null
+    this.processor ??= create(ctx).then(
+      (node) => {
+        last.disconnect?.(post)
+        last.connect(node)
+        node.connect(post)
+        return node
+      },
+      (err: unknown) => {
+        this.processor = null
+        throw err
+      }
+    )
+    return this.processor
+  }
+
   /** Tarayıcı AudioContext'i kullanıcı etkileşimi/çalma öncesi askıda başlatabilir. */
   async resume(): Promise<void> {
     if (this.ctx && this.ctx.state !== 'running') await this.ctx.resume()
@@ -118,16 +153,19 @@ export class Equalizer {
       node = band
       return band
     })
-    node.connect(ctx.destination)
+    const post = ctx.createGain()
+    node.connect(post)
+    post.connect(ctx.destination)
     // Yalnızca dinleyen dal: çıkışa bağlanmaz, sesi değiştirmez.
     if (ctx.createAnalyser) {
       const analyser = ctx.createAnalyser()
       analyser.fftSize = 512
-      node.connect(analyser)
+      post.connect(analyser)
       this.analyser = analyser
     }
     this.ctx = ctx
     this.preamp = preamp
+    this.post = post
     return ctx
   }
 }

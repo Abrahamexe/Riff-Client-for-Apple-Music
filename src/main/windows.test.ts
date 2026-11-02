@@ -98,6 +98,17 @@ describe('PlayerHub', () => {
     return { reg, main, aux, hub: new PlayerHub(reg) }
   }
 
+  it('main içi dinleyiciler her durumda ve sıfırlamada (null) çağrılır; abonelik kaldırılabilir', () => {
+    const { hub } = setup()
+    const seen: (PlayerHubState | null)[] = []
+    const off = hub.onState((s) => seen.push(s))
+    hub.publishState(STATE)
+    hub.reset()
+    off()
+    hub.publishState(STATE)
+    expect(seen).toEqual([STATE, null])
+  })
+
   it('durum tüm pencerelere, konum yalnızca görünürlere gider; snapshot son durumu verir', () => {
     const { hub, main, aux } = setup()
     aux.state.visible = false

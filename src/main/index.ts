@@ -52,6 +52,7 @@ import { WorkerHost } from './worker-host'
 import {
   applyAppIdentity,
   createAppTray,
+  setupThumbar,
   platformDescription,
   watchSystemResume,
   enableMediaKeyIntegration,
@@ -151,6 +152,8 @@ const supervisor = new Supervisor({
 })
 // Tray referansı tutulmazsa çöp toplayıcı ikonu kaldırabilir.
 let disposeTray: (() => void) | null = null
+/** Başlangıçta kurulur; ana pencere (görev çubuğu düğmeleri) metinleri buradan alır. */
+let appI18n: I18n | null = null
 
 // Gerçek çıkış: tray "Çıkış", uygulama menüsü veya sistem kapanışı (PLAN 1.8a). Çıkıştan önce son
 // player durumu main'deki hub'dan worker'a kaydedilir (renderer donmuş/kapanmış olsa bile).
@@ -191,6 +194,16 @@ function createMainWindow(): void {
   watchWindowState(win, (state) => windows.send(win, 'onWindowState', state))
 
   win.once('ready-to-show', () => win.show())
+  // Görev çubuğu önizlemesinde önceki / çal-duraklat / sonraki (2026-11-02; yalnızca Windows).
+  const disposeThumbar = appI18n
+    ? setupThumbar(win, appI18n, hub, (command) => {
+        try {
+          hub.command(command)
+        } catch (err) {
+          logError('thumbar', err)
+        }
+      })
+    : () => {}
   // Kapat (X): varsayılan çıkış (önce player durumu kaydedilir); "gizle" tercihinde tray'e gizler.
   win.on('close', (event) => lifecycle.onMainWindowClose(event, () => win.hide()))
   onSystemSessionEnd(win, () => lifecycle.onSessionEnd())
@@ -200,6 +213,7 @@ function createMainWindow(): void {
     if (details.isMainFrame && !details.isSameDocument) hub.reset()
   })
   win.on('closed', () => {
+    disposeThumbar()
     hub.reset()
     // Ana pencere giderse (çıkış) MiniPlayer da kapanır; aksi halde uygulama açık kalırdı.
     if (miniWindow && !miniWindow.isDestroyed()) miniWindow.destroy()
@@ -376,6 +390,7 @@ async function startPrimaryInstance(): Promise<void> {
   })
   registerAppProtocolHandler(appSession, paths.rendererRoot, artwork)
   const i18n = new I18n(app.getPreferredSystemLanguages())
+  appI18n = i18n
   const tokenProvider = await createTokenProvider()
   const userTokenStore = new SecureStore(paths.authFile, safeStorage)
   const workerHost = startWorker(tokenProvider)

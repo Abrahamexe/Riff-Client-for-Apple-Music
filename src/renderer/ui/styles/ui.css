@@ -7,8 +7,12 @@
 
 :root {
   --font-ui: 'Inter Variable', 'Segoe UI Variable', 'Segoe UI', system-ui, sans-serif;
-  --accent: #fa2d48;
-  --accent-ambient: rgb(250 45 72 / 0.1);
+  /* Tuş rengi kapaktan (2026-10-30, CoverAccent.tsx): kapak yoksa / renksizse nötr. Uyarı (sil, hata,
+     CANLI) ayrı ve hep kırmızı: --danger. */
+  --accent: rgb(242 242 247);
+  --on-accent: rgb(17 17 20);
+  --accent-ambient: rgb(255 255 255 / 0.1);
+  --danger: #ff453a;
   --radius-panel: 22px;
   --radius-capsule: 14px;
   --glass-blur: 28px;
@@ -20,13 +24,14 @@
 }
 
 :root[data-theme='dark'] {
+  --accent: var(--cover-accent-dark, rgb(242 242 247));
+  --on-accent: var(--cover-on-accent-dark, rgb(17 17 20));
+  --accent-ambient: var(--cover-ambient-dark, rgb(255 255 255 / 0.1));
+  --danger: #ff453a;
   --bg: #0b0b0e;
   --bg-ambient-1: rgb(250 45 72 / 0.11);
   --bg-ambient-2: rgb(120 80 255 / 0.06);
-  /* Yaşayan küreler (AmbientOrbs): kırmızı, mor, lacivert. */
-  --orb-a: 250 45 72;
-  --orb-b: 124 82 255;
-  --orb-c: 40 120 255;
+  /* Yaşayan küreler (AmbientOrbs): renkler her açılışta paletten (orbPalette.ts); burada yalnızca güç. */
   --orb-alpha: 0.34;
   --text: rgb(255 255 255 / 0.94);
   --text-secondary: rgb(255 255 255 / 0.58);
@@ -41,12 +46,13 @@
 }
 
 :root[data-theme='light'] {
+  --accent: var(--cover-accent-light, rgb(29 29 31));
+  --on-accent: var(--cover-on-accent-light, rgb(255 255 255));
+  --accent-ambient: var(--cover-ambient-light, rgb(0 0 0 / 0.07));
+  --danger: #d70015;
   --bg: #f3f3f6;
   --bg-ambient-1: rgb(250 45 72 / 0.07);
   --bg-ambient-2: rgb(90 140 255 / 0.06);
-  --orb-a: 250 45 72;
-  --orb-b: 124 82 255;
-  --orb-c: 40 120 255;
   --orb-alpha: 0.2;
   --text: rgb(0 0 0 / 0.88);
   --text-secondary: rgb(0 0 0 / 0.52);

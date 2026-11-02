@@ -4,7 +4,7 @@ import type { Transition } from 'motion/react'
 // yan tarafları yetişemiyor" → yükseklik ve genişlik AYNI yayla, aynı anda; damla sol üst köşeden
 // yumuşakça büyür (sekme yok denecek kadar az). Kapanış biraz daha hızlı.
 
-export const SPRING_OPEN: Transition = { type: 'spring', stiffness: 260, damping: 30, mass: 0.9 }
+const SPRING_OPEN: Transition = { type: 'spring', stiffness: 260, damping: 30, mass: 0.9 }
 export const SPRING_SOFT: Transition = { type: 'spring', stiffness: 220, damping: 28 }
 const SPRING_CLOSE: Transition = { type: 'spring', stiffness: 320, damping: 34 }
 
@@ -13,17 +13,90 @@ export function dropletTransition(opening: boolean): Transition {
   return opening ? SPRING_OPEN : SPRING_CLOSE
 }
 
-// Sol menü (2026-10-19, iOS 26/27 "…" menüsü gibi; geliştirici: "açılış kapanış animasyonu iOS'a
-// benzemiyor"): düğmenin içinden büyür, hafif yay payıyla (~%3) oturur; içerik köşeden ölçeklenerek
-// belirir. Kapanış sıçramasız ve hızlı, içerik önce söner. `filter: blur()` denendi: açılışta en uzun
-// kare 28 → 83 ms (cam bulanıklığıyla birlikte yeniden rasterleştirme), bu yüzden yok.
-const MENU_OPEN: Transition = { type: 'spring', stiffness: 420, damping: 27, mass: 0.85 }
-// Kapanış yayla değil eğriyle: yay durgunluktan başlar (ilk kareler "gecikmeli" hissettirir); iOS
-// kapanışı hızlı başlar, düğmenin içine yumuşakça oturur.
-const MENU_CLOSE: Transition = { type: 'tween', duration: 0.32, ease: [0.32, 0.72, 0, 1] }
+/**
+ * Sol menü paneli (2026-11-02, geliştiricinin iOS bağlam menüsü videosu → Gemini'nin yazdığı tarif):
+ * panel hep son boyutunda; düğmenin olduğu sol üst köşeye çivili (`transform-origin: top left`) ölçek +
+ * opaklık + köşeye doğru küçük kayma. Tarif sağ üst köşe içindi; menü düğmesi solda olduğu için x
+ * yönü aynalandı (geliştirici seçimi). Açılış iOS yayı (hafif sekme), kapanış 160 ms hızlanan eğri.
+ * Yalnızca transform + opaklık: her karede liste yeniden dizilmez.
+ */
+export const sidebarPanelMotion = {
+  initial: { opacity: 0, scale: 0.82, x: -10, y: -10 },
+  animate: {
+    opacity: 1,
+    scale: 1,
+    x: 0,
+    y: 0,
+    transition: { type: 'spring', stiffness: 450, damping: 30, mass: 0.7 }
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.85,
+    x: -6,
+    y: -6,
+    transition: { duration: 0.16, ease: [0.32, 0, 0.67, 0] }
+  }
+} as const
 
-export function menuTransition(opening: boolean): Transition {
-  return opening ? MENU_OPEN : MENU_CLOSE
+/** Menü ikonunun üç çizgisi (Lucide `Menu` ile aynı: 24'lük kutuda y = 5, 12, 19; x 4 → 20). */
+export const MENU_ICON_LINES_Y = [5, 12, 19] as const
+
+/**
+ * 2026-11-02 (geliştirici: "açılınca geri ok kötü, daha premium"; seçim: "çizgiler X'e dönsün"):
+ * üst ve alt çizgi ortaya kayıp ±45° döner, ortadaki daralarak söner; kapanınca tersi. Panelle aynı yay.
+ */
+export function menuIconLine(
+  index: 0 | 1 | 2,
+  open: boolean
+): { y: number; rotate: number; opacity: number; scaleX: number } {
+  if (!open || index === 1)
+    return { y: 0, rotate: 0, opacity: open ? 0 : 1, scaleX: open ? 0.2 : 1 }
+  const y = 12 - MENU_ICON_LINES_Y[index]
+  return { y, rotate: index === 0 ? 45 : -45, opacity: 1, scaleX: 1 }
+}
+
+export const MENU_ICON_SPRING: Transition = sidebarPanelMotion.animate.transition
+
+/**
+ * Eş merkezli yuva (2026-11-02, geliştirici: "X köşeye emanet duruyor"): açık panelin köşe yarıçapı
+ * `SIDEBAR_PANEL_RADIUS`; aç/kapa düğmesi (36 px) köşeden `SIDEBAR_SLOT_INSET` içeride, böylece
+ * düğme dairesi köşeyle aynı merkezli (iç yarıçap = dış yarıçap − boşluk) ve merkezi listedeki ikon
+ * sütunuyla aynı hizada. Kapalıyken düğme damla olarak köşede; açılınca panelle aynı yayla yuvaya kayar.
+ */
+export const SIDEBAR_PANEL_RADIUS = 28
+export const SIDEBAR_SLOT_INSET = 10
+
+export function dropletSlot(open: boolean): { x: number; y: number } {
+  const d = open ? SIDEBAR_SLOT_INSET : 0
+  return { x: d, y: d }
+}
+
+export function dropletSlotTransition(open: boolean): Transition {
+  return open ? sidebarPanelMotion.animate.transition : sidebarPanelMotion.exit.transition
+}
+
+/**
+ * Sağ panel (sözler / Sıradaki / Bilgi): sol menüyle aynı tarif, köşe aynalı — panel sağ alttaki oynatıcı
+ * düğmelerinden büyür (`transform-origin: bottom right`, CSS), kapanırken oraya küçülür.
+ */
+export const rightPanelMotion = {
+  initial: { ...sidebarPanelMotion.initial, x: 10, y: 10 },
+  animate: sidebarPanelMotion.animate,
+  exit: { ...sidebarPanelMotion.exit, x: 6, y: 6 }
+} as const
+
+/** Motion'ın `onAnimationComplete` tanımı kapanış hedefi mi (opaklık 0'a giden). */
+export function isExitDefinition(definition: unknown): boolean {
+  return (
+    typeof definition === 'object' &&
+    definition !== null &&
+    (definition as { opacity?: unknown }).opacity === rightPanelMotion.exit.opacity
+  )
+}
+
+/** Panel açılınca damlanın camı söner (düğme panelin camında kalır), kapanınca geri gelir. */
+export function dropletGlassTransition(open: boolean): Transition {
+  return open ? { duration: 0.12, ease: 'easeOut' } : { duration: 0.16, ease: [0.32, 0, 0.67, 0] }
 }
 
 /**
@@ -31,27 +104,6 @@ export function menuTransition(opening: boolean): Transition {
  * B5 akıcılık: geçişler doğrusal olmayan bu eğriyle.
  */
 export const EASE_OUT: [number, number, number, number] = [0.22, 1, 0.36, 1]
-
-export const menuContentIn = {
-  initial: { opacity: 0, scale: 0.9 },
-  animate: {
-    opacity: 1,
-    scale: 1,
-    transition: {
-      opacity: { delay: 0.04, duration: 0.2, ease: EASE_OUT },
-      scale: { type: 'spring', stiffness: 380, damping: 28, mass: 0.85 }
-    }
-  },
-  // Kapanışta içerik kapla birlikte köşeye küçülür (açılışın tersi), kap bitmeden söner.
-  exit: {
-    opacity: 0,
-    scale: 0.88,
-    transition: {
-      opacity: { duration: 0.16, ease: 'easeIn' },
-      scale: { duration: 0.3, ease: [0.32, 0.72, 0, 1] }
-    }
-  }
-} as const
 
 /**
  * İçerik, kap açıldıktan az sonra belirir; kapanırken hemen kaybolur. B5 akıcılık ölçümü: önceki

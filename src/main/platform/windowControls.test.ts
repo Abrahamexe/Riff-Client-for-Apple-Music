@@ -36,6 +36,7 @@ describe('kendi pencere çubuğu (B1)', () => {
       resizable: true,
       roundedCorners: true
     })
+    expect(framelessWindowOptions()).not.toHaveProperty('transparent')
   })
 
   it('eylemler: küçült, büyüt ↔ geri al, kapat', () => {

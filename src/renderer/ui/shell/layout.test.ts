@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  BUBBLE_SIZE,
   computeLayout,
   DROPLET_SIZE,
   GUTTER,
@@ -105,6 +106,15 @@ describe('kabuk yerleşimi (B2)', () => {
     expect(PLAYER_SIDE_INSET).toBe(80)
     expect(l.player.x).toBe(80)
     expect(l.player.x + l.player.width).toBe(1440 - 80)
+  })
+
+  it('kapalı oynatıcı sol altta 48 px baloncuk, kenarlardan GUTTER kadar içeride (2026-11-02)', () => {
+    const l = computeLayout(
+      { width: 1440, height: 900 },
+      { sidebarOpen: false, rightOpen: false, playerExpanded: false }
+    )
+    expect(BUBBLE_SIZE).toBe(48)
+    expect(l.player).toEqual({ x: GUTTER, y: 900 - GUTTER - 48, width: 48, height: 48 })
   })
 
   it('oynatıcı içeriği açık çubuk genişliğinde sabit (en az 720); baloncukta da değişmez', () => {

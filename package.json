@@ -28,6 +28,7 @@
     "check": "npm run typecheck && npm run lint && npm run format:check && npm run depcruise && npm test && npm run scan:secrets",
     "scan:secrets": "node scripts/scan-secrets.mjs",
     "icons": "electron scripts/make-icons.cjs",
+    "icons:thumbar": "electron scripts/make-thumbar-icons.cjs",
     "build:dev": "npm run typecheck && electron-vite build --mode devbuild && npm run notices",
     "preview:dev": "electron-vite preview --mode devbuild",
     "pack:dev": "npm run build:dev && electron-builder --dir",

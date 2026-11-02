@@ -8,7 +8,7 @@
 // Ölçüler geliştiricinin onayına sunulan başlangıç değerleridir.
 
 export const GUTTER = 12
-const SIDEBAR_WIDTH = 248
+export const SIDEBAR_WIDTH = 248
 const RIGHT_WIDTH = 340
 const PLAYER_HEIGHT = 92
 /** Açık oynatıcı çubuğunun sağ ve sol boşluğu (geliştirici kararı: "sağdan soldan biraz boşluk"). */
@@ -17,8 +17,10 @@ export const PLAYER_SIDE_INSET = 80
 export const PLAYER_NARROW_BELOW = 1200 - 2 * PLAYER_SIDE_INSET
 /** `.player__content`'in en dar genişliği (CSS'teki eski `max(720px, …)` ile aynı). */
 const PLAYER_MIN_CONTENT = 720
-const BUBBLE_SIZE = 60
-export const DROPLET_SIZE = 44
+/** 2026-10-30: köşedeki düğmeler eşit (36 px, kenarlardan 12 px = GUTTER). 2026-11-02 (geliştirici:
+ * "sol altta çok küçük kalıyor"): oynatıcı baloncuğu 48 px, kenar boşluğu yine 12 px. */
+export const BUBBLE_SIZE = 48
+export const DROPLET_SIZE = 36
 /** Üst şerit: arama çubuğu ve pencere düğmeleri. */
 const TOP_STRIP = 60
 /** Bu genişliğin altında sağ panel kendiliğinden kapanır. */

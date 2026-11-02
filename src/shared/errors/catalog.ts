@@ -149,6 +149,8 @@ export const ERROR_CATALOG = {
    * gibi göstermemeli.
    */
   PLAYBACK_STREAM_LIMIT: def('PLAY_004', 'playback', 'error.streamLimit', { logLevel: 'warn' }),
+  /** Ses Laboratuvarı işlemcisi (AudioWorklet) yüklenemedi; ses işlenmeden çalmaya devam eder. */
+  AUDIO_LAB_FAILED: def('PLAY_005', 'playback', 'error.audioLabFailed', { logLevel: 'warn' }),
   /** Widevine CDM hâlâ hazırlanıyor (bekleme süresi doldu). */
   DRM_NOT_READY: def('DRM_001', 'drm', 'error.drmNotReady', { logLevel: 'warn' }),
   /** Widevine CDM kurulamadı. */

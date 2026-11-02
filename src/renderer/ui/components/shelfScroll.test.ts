@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { fitCardWidth, shelfEdges, shelfTarget } from './shelfScroll'
+import { CARD_GAP, fitCardWidth, MAX_CARD_GROWTH, shelfEdges, shelfTarget } from './shelfScroll'
 
 describe('raf kaydırma (B4 ek)', () => {
   it('başta yalnızca ileri, ortada ikisi, sonda yalnızca geri; sığan rafta hiçbiri', () => {
@@ -45,6 +45,29 @@ describe('fitCardWidth', () => {
       expect(card).toBeGreaterThanOrEqual(176)
       expect(count * card + (count - 1) * 20).toBeLessThanOrEqual(w)
       expect(w - (count * card + (count - 1) * 20)).toBeLessThan(1)
+    }
+  })
+})
+
+describe('fitCardWidth — az öğeli raf satırı doldurur (2026-11-02)', () => {
+  const span = (card: number, n: number): number => n * card + (n - 1) * CARD_GAP
+
+  it('5 öğe, 9 kart sığan satır: 5 kart satırı tam doldurur', () => {
+    const card = fitCardWidth(1832, 266, 5)
+    expect(span(card, 5)).toBeGreaterThan(1831)
+    expect(span(card, 5)).toBeLessThanOrEqual(1832)
+  })
+
+  it('öğe sayısı sığandan fazlaysa davranış aynı (raf kayar)', () => {
+    expect(fitCardWidth(1000, 176, 40)).toBe(fitCardWidth(1000, 176))
+    expect(fitCardWidth(1000, 176, 5)).toBe(fitCardWidth(1000, 176))
+  })
+
+  it('1–2 öğede kart en fazla MAX_CARD_GROWTH × base olur', () => {
+    for (const items of [1, 2, 3]) {
+      const card = fitCardWidth(1832, 176, items)
+      expect(card).toBeLessThanOrEqual(176 * MAX_CARD_GROWTH)
+      expect(card).toBeGreaterThanOrEqual(176)
     }
   })
 })

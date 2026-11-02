@@ -4,6 +4,7 @@ import { Trash2 } from 'lucide-react'
 import type { MessageKey } from '@shared/i18n'
 import {
   BUILTIN_EQ_PRESETS,
+  AUDIO_LAB_LIMITS,
   EQ_BANDS_HZ,
   EQ_MAX_DB,
   TWEAK_LIMITS,
@@ -37,6 +38,7 @@ const TABS = [
   'playback',
   'restrictions',
   'equalizer',
+  'audioLab',
   'appearance',
   'advanced',
   'tweaks',
@@ -161,6 +163,8 @@ function TabContent({ tab, settings }: { tab: Tab; settings: Settings }) {
       )
     case 'equalizer':
       return <EqualizerTab settings={settings} />
+    case 'audioLab':
+      return <AudioLabTab settings={settings} />
     case 'appearance':
       return (
         <Card>
@@ -448,6 +452,67 @@ function ActionButton({ run, disabled }: { run: () => Promise<unknown>; disabled
     >
       {i18n.t(label)}
     </button>
+  )
+}
+
+/**
+ * Ses Laboratuvarı (2026-10-30, core/audio/lab): ana anahtar + kaliteye yönelik üç işlem. Kapalıyken
+ * işlemci yüklenmez; açıkken değerler anında uygulanır.
+ */
+function AudioLabTab({ settings }: { settings: Settings }) {
+  const update = useUpdate()
+  const lab = settings.audioLab
+  const set = (patch: Partial<Settings['audioLab']>): void => update({ audioLab: patch })
+  const slider = (key: 'clarity' | 'air', label: MessageKey) => (
+    <div className="tweak-slider">
+      <ThrottledSlider
+        className="settings-slider"
+        label={i18n.format(label)}
+        min={AUDIO_LAB_LIMITS[key][0]}
+        max={AUDIO_LAB_LIMITS[key][1]}
+        step={5}
+        value={lab[key]}
+        onCommit={(v) => set({ [key]: Math.round(v) })}
+      />
+      <span className="tweak-slider__value">
+        {i18n.t('tweaks.unit.percent', { value: lab[key] })}
+      </span>
+    </div>
+  )
+  return (
+    <>
+      <p className="settings-row__hint tweaks__intro">{i18n.t('audioLab.intro')}</p>
+      <Card>
+        <Row label="audioLab.enabled" hint="audioLab.enabledHint">
+          <Switch on={lab.enabled} label="audioLab.enabled" onChange={(v) => set({ enabled: v })} />
+        </Row>
+      </Card>
+      <Card className={lab.enabled ? '' : 'settings-card--muted'}>
+        <h3 className="settings-card__title">{i18n.t('audioLab.section.quality')}</h3>
+        <Row label="audioLab.clarity" hint="audioLab.clarityHint">
+          {slider('clarity', 'audioLab.clarity')}
+        </Row>
+        <Row label="audioLab.air" hint="audioLab.airHint">
+          {slider('air', 'audioLab.air')}
+        </Row>
+        <Row label="audioLab.limiter" hint="audioLab.limiterHint">
+          <Switch on={lab.limiter} label="audioLab.limiter" onChange={(v) => set({ limiter: v })} />
+        </Row>
+      </Card>
+      <div className="tweaks__reset">
+        <button
+          type="button"
+          className="pill-button"
+          onClick={() => {
+            // Ana anahtara dokunmadan yalnızca değerler.
+            const { clarity, air, limiter } = defaultSettings().audioLab
+            update({ audioLab: { clarity, air, limiter } })
+          }}
+        >
+          {i18n.t('audioLab.reset')}
+        </button>
+      </div>
+    </>
   )
 }
 

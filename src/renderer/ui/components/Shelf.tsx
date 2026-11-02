@@ -1,4 +1,5 @@
 import {
+  Children,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -14,8 +15,8 @@ import { CARD_GAP, fitCardWidth, shelfEdges, shelfTarget } from './shelfScroll'
 
 // Yatay raf (B4 ek; Apple Music Ana Sayfa rafları): başlık + yana kayan kart sırası. Fareyle üzerine
 // gelince iki yanda cam ok damlaları belirir (yalnızca o yönde içerik varsa); tekerlek / dokunmatik
-// yüzeyle de kayar. Kart genişliği CSS'te sabit (`--shelf-card`); kare kartlı raflarda (`FIT_SIZES`) sığan tam kart sayısına göre
-// ölçülür (yarım kart görünmez). Ok bir "sayfa" kaydırır.
+// yüzeyle de kayar. Kart genişliği CSS'te taban değer (`--shelf-card`); ölçülünce sığan tam sütun sayısına
+// göre büyür (yarım kart görünmez), öğe azsa satırı doldurur. Ok bir "sayfa" kaydırır.
 
 /** `wide`: 16:9 büyük kartlar (B6 canlı radyo); `chart`: dört satırlı numaralı şarkı sütunları (B6). */
 export type ShelfSize = 'regular' | 'large' | 'songs' | 'chart' | 'wide'
@@ -29,9 +30,18 @@ const CARD_STEP: Record<ShelfSize, number> = {
   wide: 420 + 20
 }
 
-/** Kare kartlı raflar: sığacak tam kart sayısı hesaplanır, kartlar genişliği doldurur (yarım kart yok). */
-const FIT_SIZES: readonly ShelfSize[] = ['regular', 'large']
+/** Kare kartlı raflar: ok düğmesi kapak hizasında (kart genişliği = kapak yüksekliği). */
+const SQUARE_SIZES: readonly ShelfSize[] = ['regular', 'large']
+/** Bir sütundaki satır sayısı (shell.css `grid-template-rows`); öğe sayısı → sütun sayısı. */
+const ROWS: Record<ShelfSize, number> = { regular: 1, large: 1, songs: 3, chart: 4, wide: 1 }
 const ROW_PADDING = 20
+
+/** Ok düğmesinin dikey hizası: kare kartta kapak = kart genişliği, geniş kartta 16:9. */
+function arrowStyle(size: ShelfSize, fit: number): CSSProperties | undefined {
+  if (SQUARE_SIZES.includes(size)) return { '--shelf-card-fit': `${fit}px` } as CSSProperties
+  if (size === 'wide') return { '--arrow-art': `${(fit * 9) / 16}px` } as CSSProperties
+  return undefined
+}
 
 export function Shelf({
   title,
@@ -48,22 +58,25 @@ export function Shelf({
   const [hover, setHover] = useState(false)
   const [fit, setFit] = useState<number | null>(null)
   const reduced = useReducedMotion()
+  // 2026-11-02: tüm raflar sığan tam sütun sayısına göre ölçülür (yarım kart yok) ve öğe azsa sütunlar
+  // büyüyüp satırı doldurur (geliştirici: "tam ekranda sağda boşluk kalmasın").
+  const columns = Math.ceil(Children.toArray(children).length / ROWS[size])
 
   useLayoutEffect(() => {
     const row = rowRef.current
-    if (!row || !FIT_SIZES.includes(size)) return
+    if (!row) return
     const base = CARD_STEP[size] - CARD_GAP
     const update = (): void => {
       const width = row.clientWidth - ROW_PADDING * 2
       if (width <= 0) return
-      const next = fitCardWidth(width, base)
+      const next = fitCardWidth(width, base, columns)
       setFit((f) => (f === next ? f : next))
     }
     update()
     const observer = new ResizeObserver(update)
     observer.observe(row)
     return () => observer.disconnect()
-  }, [size])
+  }, [size, columns])
 
   useEffect(() => {
     const row = rowRef.current
@@ -108,10 +121,7 @@ export function Shelf({
       onPointerLeave={() => setHover(false)}
     >
       {title && <h2 className="shelf__title">{title}</h2>}
-      <div
-        className="shelf-v2__viewport"
-        style={fit ? ({ '--shelf-card-fit': `${fit}px` } as CSSProperties) : undefined}
-      >
+      <div className="shelf-v2__viewport" style={fit ? arrowStyle(size, fit) : undefined}>
         <div
           className={`shelf-row shelf-row--${size}`}
           ref={rowRef}

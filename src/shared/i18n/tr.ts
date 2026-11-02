@@ -27,6 +27,7 @@ export const tr = {
   'error.requestCancelled': 'İstek, daha yenisi geldiği için iptal edildi.',
   'error.musicKitUnavailable': 'Apple Music bileşeni yüklenemedi. Bağlantınızı kontrol edin.',
   'error.playbackFailed': 'Şarkı çalınamadı.',
+  'error.audioLabFailed': 'Ses Laboratuvarı başlatılamadı; ses işlenmeden çalıyor.',
   'error.playerUnavailable': 'Oynatıcı penceresi açık değil.',
   'error.playerNotReady':
     'Oynatıcı hazırlanıyor (Apple Music veya çalma bileşeni yükleniyor). Biraz sonra tekrar deneyin.',
@@ -88,6 +89,22 @@ export const tr = {
   'settings.tab.playback': 'Çalma',
   'settings.tab.restrictions': 'Kısıtlamalar',
   'settings.tab.equalizer': 'Ekolayzır',
+  'settings.tab.audioLab': 'Ses Laboratuvarı',
+  'audioLab.intro':
+    'Apple Music bu uygulamaya en fazla 256 kbps AAC verir; atılan ayrıntı geri gelmez. Ses Laboratuvarı sesi bilgisayarında işleyerek algıyı iyileştirir: daha net orta-tiz, daha havadar üst bölge ve cızırtısız tepe noktaları. Ses yalnızca çalma yolunda işlenir, hiçbir yere kaydedilmez.',
+  'audioLab.enabled': 'Ses Laboratuvarı',
+  'audioLab.enabledHint': 'Kapalıyken ses hiç işlenmez.',
+  'audioLab.section.quality': 'Ses kalitesi',
+  'audioLab.clarity': 'Netlik',
+  'audioLab.clarityHint':
+    'Orta ve tiz seslere hafif harmonik ekler; vokal ve enstrümanlar daha belirgin olur.',
+  'audioLab.air': 'Hava',
+  'audioLab.airHint':
+    'Sıkıştırmanın zayıflattığı en üst frekanslara ayrıntı ekler; ses daha açık ve ferah olur.',
+  'audioLab.limiter': 'Kırpılma koruması',
+  'audioLab.limiterHint':
+    'Ekolayzır ya da işlem sesi yükseltince oluşan cızırtıyı önler (−1 dBTP tavan).',
+  'audioLab.reset': 'Varsayılan değerler',
   'settings.tab.appearance': 'Görünüm',
   'settings.tab.advanced': 'Gelişmiş',
   'settings.tab.about': 'Hakkında',
@@ -241,6 +258,7 @@ export const tr = {
   'search.kind.playlist': 'Çalma Listesi',
   'search.kind.station': 'İstasyon',
   'player.play': 'Çal',
+  'player.starting': 'Başlatılıyor…',
   'player.pause': 'Duraklat',
   'player.next': 'Sonraki',
   'player.previous': 'Önceki',

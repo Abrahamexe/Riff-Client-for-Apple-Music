@@ -12,7 +12,8 @@ import { useGo } from './scroll'
 // okunun ucu sola doğru küçük bir itme yapar.
 
 const GAP = 8
-const BUTTON_SIZE = 40
+/** Menü düğmesiyle aynı boy ve hiza (2026-10-30, köşedeki düğmeler eşit). */
+const BUTTON_SIZE = 36
 
 export function NavControls({ sidebar, sidebarOpen }: { sidebar: Rect; sidebarOpen: boolean }) {
   const { canGoBack, back, route } = useRouter()
@@ -26,7 +27,7 @@ export function NavControls({ sidebar, sidebarOpen }: { sidebar: Rect; sidebarOp
     <motion.div
       className="nav-controls"
       initial={false}
-      animate={{ left: sidebar.x + sidebar.width + GAP, top: sidebar.y + 2 }}
+      animate={{ left: sidebar.x + sidebar.width + GAP, top: sidebar.y }}
       transition={dropletTransition(sidebarOpen)}
     >
       <motion.button

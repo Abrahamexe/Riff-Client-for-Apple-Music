@@ -9,17 +9,19 @@
   align-items: flex-start;
 }
 
-/* B3: bize özel pencere düğmeleri — üç küçük cam damla (geliştiricinin onayına sunulur). */
+/* B3: bize özel pencere düğmeleri — üç küçük cam damla (geliştiricinin onayına sunulur).
+   2026-10-30 (geliştirici seçimi "eşit boşluk"): köşedeki tüm düğmeler 36 px ve kenarlardan 12 px;
+   üst sıradakilerin merkezi aynı hizada (30 px): menü damlası, geri/ev, arama, pencere düğmeleri. */
 .titlebar__controls {
   display: flex;
   gap: 8px;
-  margin: 14px 16px 0 0;
+  margin: 12px 12px 0 0;
 }
 
 .window-drop {
   -webkit-app-region: no-drag;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   display: grid;
   place-items: center;
   padding: 0;
@@ -187,18 +189,55 @@
   /* Açıkken yükseklik içeriğe göre (`height: auto`, en fazla `max-height`): bölüm kapanınca küçülür. */
   display: flex;
   flex-direction: column;
+  /* Panel damlanın köşesinden ölçeklenir (`sidebarPanelMotion`). */
+  transform-origin: top left;
+}
+
+/* Aç/kapa düğmesi: panelden ayrı, hep yerinde; camı yalnızca panel kapalıyken görünür. */
+.sidebar-droplet {
+  position: absolute;
+  z-index: 41;
+  width: 36px;
+  height: 36px;
+  -webkit-app-region: no-drag;
+}
+
+.sidebar-droplet > .glass {
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  pointer-events: none;
+}
+
+/* Eş merkezli yuva (motion.ts SIDEBAR_SLOT_INSET): panel köşesi 28 px, yuva 10 px içeride, 36 px daire
+   (18 = 28 − 10). Merkezi listedeki ikon sütunuyla aynı (panel içinde 28 px). */
+.glass.sidebar {
+  border-radius: 28px;
+}
+
+.sidebar-droplet__slot {
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  background: var(--hover);
+  box-shadow: inset 0 0 0 1px var(--glass-edge);
+  pointer-events: none;
+}
+
+.sidebar-droplet:has(.sidebar__toggle[aria-expanded='true']:hover) .sidebar-droplet__slot {
+  background: var(--press);
 }
 
 .sidebar__toggle {
   position: absolute;
   top: 0;
   left: 0;
-  width: 44px;
-  height: 44px;
+  width: 36px;
+  height: 36px;
   display: grid;
   place-items: center;
   border: 0;
-  border-radius: 22px;
+  border-radius: 18px;
   background: transparent;
   color: var(--text);
   z-index: 2;
@@ -206,8 +245,9 @@
 
 .sidebar__pin {
   position: absolute;
-  top: 7px;
-  left: 46px;
+  /* Yuvayla aynı satırda (merkez 28 px). */
+  top: 13px;
+  left: 52px;
   width: 30px;
   height: 30px;
   display: grid;
@@ -233,7 +273,7 @@
 .sidebar__content {
   flex: 0 1 auto;
   min-height: 0;
-  padding-top: 52px;
+  padding-top: 54px;
   display: flex;
   flex-direction: column;
   min-width: 248px;
@@ -245,7 +285,8 @@
   flex: 0 1 auto;
   min-height: 0;
   overflow-y: auto;
-  padding: 0 10px 8px;
+  /* Sol 9 px: ikon merkezi 9 + 10 + 9 = 28 px, yuvanın merkeziyle aynı sütun. */
+  padding: 0 10px 8px 9px;
 }
 
 /* Bölüm gövdesi: yükseklik 0 ↔ içerik yayla (Sidebar.tsx); kapalıyken içerik görünmez. */
@@ -306,7 +347,7 @@
 
 .sidebar__footer {
   flex: none;
-  padding: 8px 10px 10px;
+  padding: 8px 10px 10px 9px;
   border-top: 1px solid var(--glass-edge);
 }
 
@@ -642,11 +683,12 @@
   position: absolute;
   top: 0;
   left: 0;
-  /* Baloncuk boyutunda sabit (layout.ts BUBBLE_SIZE): çubuk açılırken gerilmez. */
-  width: 60px;
-  height: 60px;
+  /* Baloncuk boyutunda sabit (layout.ts BUBBLE_SIZE): çubuk açılırken gerilmez. 2026-10-30: 60 → 36
+     (köşedeki düğmeler eşit: 36 px, kenarlardan 12 px); 2026-11-02: 36 → 48 (geliştirici: "çok küçük"). */
+  width: 48px;
+  height: 48px;
   border: 0;
-  padding: 6px;
+  padding: 3px;
   border-radius: 50%;
   background: transparent;
 }
@@ -690,6 +732,8 @@
   z-index: 40;
   overflow: hidden;
   -webkit-app-region: no-drag;
+  /* Oynatıcıdaki düğmelerin olduğu köşeden açılır (motion.ts `rightPanelMotion`). */
+  transform-origin: bottom right;
 }
 
 .right-panel__content {
@@ -888,6 +932,25 @@
 
 .slider:disabled {
   opacity: 0.5;
+}
+
+/* Sıradaki: panel yerine oturduktan sonra kurulan listeler (panelSettled.ts) yumuşakça belirir. */
+.queue__list,
+.queue__autoplay ~ .queue-item {
+  animation: queue-rows-in 180ms ease-out both;
+}
+
+@keyframes queue-rows-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .queue__list,
+  .queue__autoplay ~ .queue-item {
+    animation: none;
+  }
 }
 
 /* ---- Bilgi paneli (§3.5) ------------------------------------------------------------------------ */
@@ -1452,52 +1515,179 @@
 
 .ambient-orb {
   position: absolute;
-  width: 62vmax;
-  height: 62vmax;
+  width: 56vmax;
+  height: 56vmax;
   border-radius: 50%;
   will-change: transform;
+  /* Renk her açılışta paletten (AmbientOrbs.tsx `--orb-color`); güç küreye göre. */
+  background: radial-gradient(
+    circle,
+    rgb(var(--orb-color, 124 82 255) / calc(var(--orb-alpha) * var(--orb-strength, 1))),
+    transparent 66%
+  );
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
 }
 
+/* 2026-11-02: yedi küre; her biri birkaç ara noktadan geçen kapalı bir yolda 10–16 sn'de döner. Süreler
+   farklı: renkler hep yeni biçimde karışır. Başlangıç noktası ve yönü her açılışta rastgele (satır içi
+   negatif `animation-delay`, `animation-direction`). */
 .ambient-orb--a {
-  top: -26vmax;
-  left: -14vmax;
-  background: radial-gradient(circle, rgb(var(--orb-a) / var(--orb-alpha)), transparent 66%);
-  animation: orb-drift-a 22s ease-in-out infinite alternate;
+  top: -22vmax;
+  left: -12vmax;
+  animation-name: orb-drift-a;
+  animation-duration: 13s;
 }
 
 .ambient-orb--b {
-  right: -22vmax;
-  top: 6vh;
-  background: radial-gradient(circle, rgb(var(--orb-b) / var(--orb-alpha)), transparent 66%);
-  animation: orb-drift-b 27s ease-in-out infinite alternate;
+  right: -20vmax;
+  top: 4vh;
+  animation-name: orb-drift-b;
+  animation-duration: 16s;
 }
 
 .ambient-orb--c {
-  bottom: -30vmax;
-  left: 18vw;
-  background: radial-gradient(
-    circle,
-    rgb(var(--orb-c) / calc(var(--orb-alpha) * 0.8)),
-    transparent 66%
-  );
-  animation: orb-drift-c 24s ease-in-out infinite alternate;
+  bottom: -28vmax;
+  left: 16vw;
+  --orb-strength: 0.85;
+  animation-name: orb-drift-c;
+  animation-duration: 14s;
+}
+
+.ambient-orb--d {
+  top: 30vh;
+  left: 34vw;
+  width: 44vmax;
+  height: 44vmax;
+  --orb-strength: 0.75;
+  animation-name: orb-drift-d;
+  animation-duration: 11s;
+}
+
+.ambient-orb--e {
+  bottom: -18vmax;
+  right: -10vmax;
+  width: 48vmax;
+  height: 48vmax;
+  --orb-strength: 0.8;
+  animation-name: orb-drift-e;
+  animation-duration: 15s;
+}
+
+.ambient-orb--f {
+  top: -14vmax;
+  left: 40vw;
+  width: 40vmax;
+  height: 40vmax;
+  --orb-strength: 0.7;
+  animation-name: orb-drift-f;
+  animation-duration: 12s;
+}
+
+.ambient-orb--g {
+  top: 44vh;
+  left: -16vmax;
+  width: 42vmax;
+  height: 42vmax;
+  --orb-strength: 0.7;
+  animation-name: orb-drift-g;
+  animation-duration: 10s;
 }
 
 @keyframes orb-drift-a {
-  to {
-    transform: translate3d(14vmax, 10vmax, 0) scale(1.15);
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(22vmax, 12vmax, 0) scale(1.18);
+  }
+  66% {
+    transform: translate3d(8vmax, 26vmax, 0) scale(0.92);
   }
 }
 
 @keyframes orb-drift-b {
-  to {
-    transform: translate3d(-16vmax, 12vmax, 0) scale(0.9);
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  30% {
+    transform: translate3d(-24vmax, 16vmax, 0) scale(0.88);
+  }
+  65% {
+    transform: translate3d(-10vmax, -8vmax, 0) scale(1.15);
   }
 }
 
 @keyframes orb-drift-c {
-  to {
-    transform: translate3d(12vmax, -12vmax, 0) scale(1.12);
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  35% {
+    transform: translate3d(20vmax, -18vmax, 0) scale(1.14);
+  }
+  70% {
+    transform: translate3d(-14vmax, -10vmax, 0) scale(0.9);
+  }
+}
+
+@keyframes orb-drift-d {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  25% {
+    transform: translate3d(-26vmax, -12vmax, 0) scale(1.2);
+  }
+  50% {
+    transform: translate3d(-6vmax, 14vmax, 0) scale(0.85);
+  }
+  75% {
+    transform: translate3d(18vmax, -6vmax, 0) scale(1.1);
+  }
+}
+
+@keyframes orb-drift-e {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  40% {
+    transform: translate3d(-28vmax, -14vmax, 0) scale(1.16);
+  }
+  75% {
+    transform: translate3d(-8vmax, -26vmax, 0) scale(0.9);
+  }
+}
+
+@keyframes orb-drift-f {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  30% {
+    transform: translate3d(16vmax, 18vmax, 0) scale(1.12);
+  }
+  60% {
+    transform: translate3d(-20vmax, 10vmax, 0) scale(0.9);
+  }
+  85% {
+    transform: translate3d(-8vmax, -6vmax, 0) scale(1.05);
+  }
+}
+
+@keyframes orb-drift-g {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  35% {
+    transform: translate3d(24vmax, -16vmax, 0) scale(1.15);
+  }
+  70% {
+    transform: translate3d(30vmax, 8vmax, 0) scale(0.88);
   }
 }
 
@@ -2463,7 +2653,7 @@
   display: grid;
   place-items: center;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   cursor: pointer;
   box-shadow: 0 8px 22px rgb(0 0 0 / 0.3);
 }
@@ -2640,7 +2830,8 @@
   top: calc(var(--shelf-card) * 9 / 16 - 50px);
 }
 
-.shelf-v2--wide .shelf-arrow {
+/* Varsayılan bölümde: ölçülen kart boyu raf görünümüne satır içi yazılır ve onu ezer (Shelf.tsx). */
+.shelf-v2--wide {
   --arrow-art: calc(420px * 9 / 16);
 }
 
@@ -2651,7 +2842,7 @@
   left: 10px;
   padding: 3px 7px;
   border-radius: 6px;
-  background: var(--accent);
+  background: var(--danger);
   color: #fff;
   font-size: 10.5px;
   font-weight: 700;
@@ -2899,7 +3090,7 @@
 }
 
 .account-menu__item--danger {
-  color: var(--accent);
+  color: var(--danger);
 }
 
 .account-menu__separator {
@@ -2926,12 +3117,12 @@
 }
 
 .pill-button--danger {
-  background: var(--accent);
+  background: var(--danger);
   color: #fff;
 }
 
 .pill-button--danger:hover:not(:disabled) {
-  background: var(--accent);
+  background: var(--danger);
   filter: brightness(1.08);
 }
 
@@ -3301,7 +3492,7 @@
 }
 
 .context-menu__item--danger {
-  color: var(--accent);
+  color: var(--danger);
 }
 
 .context-menu__item--disabled {
@@ -3467,7 +3658,7 @@
 /* §3.4: hata bildirimi — sol kenarda vurgu rengi; düğmeli bildirim tıklanabilir. */
 .toast--error {
   box-shadow:
-    inset 3px 0 0 var(--accent),
+    inset 3px 0 0 var(--danger),
     inset 0 0 0 1px var(--glass-edge);
 }
 
@@ -3481,7 +3672,7 @@
   border: 0;
   border-radius: 999px;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
   font: inherit;
   font-size: 12.5px;
   font-weight: 650;
@@ -3555,7 +3746,7 @@
 }
 
 .dialog__error {
-  color: var(--accent);
+  color: var(--danger);
 }
 
 .dialog__actions {
@@ -4327,4 +4518,110 @@
   margin-top: 2px;
   font-size: 13px;
   font-variant-numeric: tabular-nums;
+}
+
+/* ---- Şarkı seçme: anında tepki (2026-10-30, pendingPlay.ts) ---------------------------------- */
+
+/* Basınca satır hafifçe çöker, bırakınca yaylanarak geri gelir. */
+.track-row,
+.album-row {
+  transition:
+    background 140ms ease,
+    transform 420ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.track-row:active,
+.album-row:active {
+  transform: scale(0.985);
+  transition:
+    background 140ms ease,
+    transform 90ms ease-out;
+}
+
+/* Ses gelene kadar sıra numarasının yerinde nabız atan çubuklar (yalnızca transform). */
+.pending-bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 14px;
+  color: var(--accent);
+}
+
+.pending-bars > span {
+  width: 3px;
+  height: 100%;
+  border-radius: 1.5px;
+  background: currentColor;
+  transform-origin: bottom;
+  animation: pending-bar 0.9s ease-in-out infinite;
+}
+
+.pending-bars > span:nth-child(2) {
+  animation-delay: -0.3s;
+}
+
+.pending-bars > span:nth-child(3) {
+  animation-delay: -0.6s;
+}
+
+@keyframes pending-bar {
+  0%,
+  100% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+/* İlerleme çubuğunda soldan sağa akan ışık (çubuk soluk değil; sarma kapalı). */
+.seek--loading {
+  opacity: 1;
+}
+
+.seek--loading .seek__fill {
+  opacity: 0;
+}
+
+.seek--loading .seek__track::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, var(--text) 60%, transparent),
+    transparent
+  );
+  animation: seek-shimmer 1.1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes seek-shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pending-bars > span,
+  .seek--loading .seek__track::after {
+    animation: none;
+  }
+
+  .pending-bars > span {
+    transform: scaleY(0.6);
+  }
+}
+
+.tw-reduced-motion .pending-bars > span,
+.tw-reduced-motion .seek--loading .seek__track::after {
+  animation: none;
+}
+
+.tw-reduced-motion .pending-bars > span {
+  transform: scaleY(0.6);
 }

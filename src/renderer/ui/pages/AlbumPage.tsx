@@ -4,11 +4,13 @@ import { AudioLines, Check, Play, Plus, Shuffle } from 'lucide-react'
 import type { AlbumDetail, Track } from '@shared/ipc-contract'
 import { i18n } from '@core/i18n'
 import { useApp } from '../context'
+import { pendingPlay, toPending, usePendingPlay } from '../hooks/pendingPlay'
 import { displayedTrack, formatTime, usePlayer } from '../hooks/usePlayer'
 import { useRemote } from '../hooks/useRemote'
 import { useGo } from '../shell/scroll'
 import { Artwork } from '../components/Artwork'
 import { PageTint } from '../components/PageTint'
+import { PendingBars } from '../components/PendingBars'
 import { ExpandableNote, LoadFailed, RowsSkeleton, Sections } from '../components/Sections'
 import { isCurrent } from '../components/TrackTable'
 import { audioBadges, discGroups, formatReleaseDate, releaseYear, totalMinutes } from '../format'
@@ -64,6 +66,7 @@ export function AlbumPage({
   const tracks = detail?.tracks ?? []
   const current = displayedTrack(snapshot)
   const playing = snapshot?.state === 'playing'
+  const pending = usePendingPlay()
   const albumArtist = album?.artistName ?? ''
 
   return (
@@ -189,9 +192,13 @@ export function AlbumPage({
                     key={track.id}
                     track={track}
                     albumArtist={albumArtist}
-                    active={isCurrent(track, current)}
+                    active={pending ? pending.id === track.id : isCurrent(track, current)}
+                    waiting={pending !== null && pending.id === track.id}
                     playing={playing}
-                    onPlay={() => playFrom(index, track)}
+                    onPlay={() => {
+                      pendingPlay.set(toPending(track, current, detail.album.artworkUrl))
+                      playFrom(index, track)
+                    }}
                   />
                 ))}
               </div>
@@ -209,12 +216,15 @@ function AlbumRow({
   track,
   albumArtist,
   active,
+  waiting,
   playing,
   onPlay
 }: {
   track: Track
   albumArtist: string
   active: boolean
+  /** Basıldı, ses henüz gelmedi (pendingPlay.ts). */
+  waiting: boolean
   playing: boolean
   onPlay: () => void
 }) {
@@ -224,11 +234,13 @@ function AlbumRow({
     <div className="album-row-wrap" onContextMenu={onContextMenu}>
       <button
         type="button"
-        className={`album-row${active ? ' album-row--active' : ''}`}
+        className={`album-row${active ? ' album-row--active' : ''}${waiting ? ' album-row--pending' : ''}`}
         onClick={onPlay}
       >
         <span className="album-row__index">
-          {active && playing ? (
+          {waiting ? (
+            <PendingBars label={i18n.t('player.starting')} />
+          ) : active && playing ? (
             <AudioLines size={15} strokeWidth={2} aria-hidden="true" />
           ) : (
             <>

@@ -1,4 +1,5 @@
 import {
+  useEffect,
   useLayoutEffect,
   useRef,
   useState,
@@ -32,6 +33,13 @@ import type { RightPanel } from '@shared/settings'
 import { cachedArtworkUrl } from '@core/data/artwork'
 import { i18n } from '@core/i18n'
 import type { Player } from '@core/musickit/player'
+import {
+  pendingAsNowPlaying,
+  pendingPlay,
+  SETTLE_MS,
+  settled,
+  usePendingPlay
+} from '../hooks/pendingPlay'
 import { displayedTrack, formatTime, usePlayer } from '../hooks/usePlayer'
 import { useSmoothTime } from '../hooks/smoothTime'
 import { usePendingSeek } from '../hooks/pendingSeek'
@@ -164,7 +172,32 @@ export function PlayerDock({
   onOpenNowPlaying: () => void
 }) {
   const { player, snapshot, currentTime, duration } = usePlayer()
-  const now = displayedTrack(snapshot)
+  // Bekleyen çalma (pendingPlay.ts): satıra basınca çubuk hemen yeni şarkıyı gösterir, ilerleme
+  // çubuğunda ışık akar; ses gelince (ya da hata / zaman aşımında) gerçek duruma döner.
+  const pending = usePendingPlay()
+  // Çalma SETTLE_MS boyunca sürerse bekleme biter; arada "waiting"e dönerse (anlık "playing") sayaç
+  // iptal olur. İlgisiz durum yenilemeleri (kuyruk ayrıntısı vb.) sayacı baştan başlatmaz.
+  const settleTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isSettled = pending !== null && settled(pending, snapshot)
+  useEffect(() => {
+    if (!isSettled) {
+      if (settleTimer.current) clearTimeout(settleTimer.current)
+      settleTimer.current = null
+      return
+    }
+    settleTimer.current ??= setTimeout(() => {
+      settleTimer.current = null
+      pendingPlay.clear()
+    }, SETTLE_MS)
+  }, [isSettled])
+  useEffect(
+    () => () => {
+      if (settleTimer.current) clearTimeout(settleTimer.current)
+    },
+    []
+  )
+  useEffect(() => player?.on('error', () => pendingPlay.clear()), [player])
+  const now = pending ? pendingAsNowPlaying(pending) : displayedTrack(snapshot)
   const actions = useTrackActions(now)
   const app = useApp()
   const settings = useSettings()
@@ -181,7 +214,7 @@ export function PlayerDock({
     })
   }
   const [lastVolume, setLastVolume] = useState(1)
-  const playing = snapshot?.state === 'playing'
+  const playing = snapshot?.state === 'playing' || pending !== null
   // Baloncuğun halkası: bildirilen konum yeter (küçük; saniyede bir güncellenir).
   const progress = duration > 0 ? Math.min(1, currentTime / duration) : 0
   const volume = snapshot?.volume ?? 1
@@ -251,7 +284,13 @@ export function PlayerDock({
         initial={false}
         animate={shownWhen(expanded)}
       >
-        <SeekBar player={player} currentTime={currentTime} duration={duration} playing={playing} />
+        <SeekBar
+          player={player}
+          currentTime={pending ? 0 : currentTime}
+          duration={pending ? pending.durationSec : duration}
+          playing={playing}
+          loading={pending !== null}
+        />
         <div className="player__row">
           <div className="player__controls">
             <IconButton label={i18n.t('player.collapse')} onClick={() => onExpandedChange(false)}>
@@ -497,17 +536,20 @@ export function SeekBar({
   player,
   currentTime,
   duration,
-  playing
+  playing,
+  loading = false
 }: {
   player: Player | null
   currentTime: number
   duration: number
   playing: boolean
+  /** Şarkı seçildi, ses henüz gelmedi: çubukta ışık akar, sarma kapalı. */
+  loading?: boolean
 }) {
   const smooth = useSmoothTime(currentTime, duration, playing)
   // Klavye ←/→ sarma adımı (sn): İnce ayar.
   const seekStep = useSettings()?.tweaks.seekStep ?? 5
-  const disabled = !player || duration <= 0
+  const disabled = !player || duration <= 0 || loading
   const pending = usePendingSeek(smooth)
   const seek = (to: number): void => {
     const target = Math.max(0, Math.min(duration, to))
@@ -526,7 +568,10 @@ export function SeekBar({
   return (
     <div className="player__time">
       <span>{formatTime(time)}</span>
-      <div className={`seek${disabled ? ' seek--disabled' : ''}`} {...pointer.handlers}>
+      <div
+        className={`seek${disabled ? ' seek--disabled' : ''}${loading ? ' seek--loading' : ''}`}
+        {...pointer.handlers}
+      >
         <span className="seek__track" aria-hidden="true">
           <span className="seek__fill" style={{ transform: `scaleX(${progress})` }} />
         </span>

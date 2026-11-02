@@ -46,6 +46,10 @@ vi.mock('@core/audio/equalizer', () => ({
   Equalizer: class {},
   bindEqualizer: vi.fn(() => ({ update: vi.fn(), dispose: vi.fn() }))
 }))
+vi.mock('@core/audio/lab/audioLab', () => ({
+  bindAudioLab: vi.fn(() => ({ update: vi.fn(), dispose: vi.fn() })),
+  workletProcessor: vi.fn()
+}))
 vi.mock('@core/musickit/mediaSession', () => ({ bindMediaSession: vi.fn() }))
 vi.mock('@core/musickit/player', () => ({
   Player: class {

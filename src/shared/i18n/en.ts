@@ -28,6 +28,7 @@ export const en: Dictionary = {
   'error.musicKitUnavailable':
     'The Apple Music component could not be loaded. Check your connection.',
   'error.playbackFailed': 'The song could not be played.',
+  'error.audioLabFailed': 'Audio Lab could not start; playing without processing.',
   'error.playerUnavailable': 'The player window is not open.',
   'error.playerNotReady':
     'The player is getting ready (Apple Music or the playback component is loading). Try again shortly.',
@@ -90,6 +91,22 @@ export const en: Dictionary = {
   'settings.tab.playback': 'Playback',
   'settings.tab.restrictions': 'Restrictions',
   'settings.tab.equalizer': 'Equalizer',
+  'settings.tab.audioLab': 'Audio Lab',
+  'audioLab.intro':
+    'Apple Music gives this app at most 256 kbps AAC; detail that was discarded cannot come back. Audio Lab processes the sound on your computer to improve how it is perceived: clearer mids and highs, more air on top and peaks without distortion. Audio is only processed on its way to your speakers and is never stored.',
+  'audioLab.enabled': 'Audio Lab',
+  'audioLab.enabledHint': 'When off, audio is not processed at all.',
+  'audioLab.section.quality': 'Sound quality',
+  'audioLab.clarity': 'Clarity',
+  'audioLab.clarityHint':
+    'Adds gentle harmonics to mids and highs so vocals and instruments stand out.',
+  'audioLab.air': 'Air',
+  'audioLab.airHint':
+    'Adds detail to the top frequencies that compression weakens, for a more open sound.',
+  'audioLab.limiter': 'Clipping protection',
+  'audioLab.limiterHint':
+    'Prevents the crackle that appears when the equalizer or processing pushes the level up (−1 dBTP ceiling).',
+  'audioLab.reset': 'Default values',
   'settings.tab.appearance': 'Appearance',
   'settings.tab.advanced': 'Advanced',
   'settings.tab.about': 'About',
@@ -244,6 +261,7 @@ export const en: Dictionary = {
   'search.kind.playlist': 'Playlist',
   'search.kind.station': 'Station',
   'player.play': 'Play',
+  'player.starting': 'Starting…',
   'player.pause': 'Pause',
   'player.next': 'Next',
   'player.previous': 'Previous',

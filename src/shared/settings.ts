@@ -106,6 +106,22 @@ const TweaksSchema = z.strictObject({
 })
 
 /**
+ * Ses Laboratuvarı (2026-10-30, CHECKPOINT §6.33; geliştirici: "ses kalitesini artırmaya yönelik, ayarlardan
+ * açılıp kapanabilsin"). Renderer'daki AudioWorklet işlemcisi (core/audio/lab). Varsayılan KAPALI: hiç
+ * açılmadıysa ses yolu MusicKit'inkiyle aynı kalır. Değerler yüzde (0 = o işlem kapalı).
+ */
+export const AUDIO_LAB_LIMITS = { clarity: [0, 100], air: [0, 100] } as const
+const AudioLabSchema = z.strictObject({
+  enabled: z.boolean(),
+  /** Netlik: orta-tizde harmonik zenginleştirme (%). */
+  clarity: intIn(...AUDIO_LAB_LIMITS.clarity),
+  /** Hava: 9 kHz üstünde harmonik (%). */
+  air: intIn(...AUDIO_LAB_LIMITS.air),
+  /** Kırpılma koruması: −1 dBTP öngörülü tepe sınırlayıcı. */
+  limiter: z.boolean()
+})
+
+/**
  * Profil (B3 geri bildirimi): Apple adı/fotoğrafı vermediği için kullanıcı adını bir kez yazar;
  * kenar çubuğunda baş harfleri görünür. Kişisel veridir: yalnızca bu bilgisayarda, çıkışta silinir.
  */
@@ -130,6 +146,7 @@ export const SettingsSchema = z.strictObject({
   restrictions: RestrictionsSchema,
   advanced: AdvancedSchema,
   equalizer: EqualizerSchema,
+  audioLab: AudioLabSchema,
   appearance: AppearanceSchema,
   profile: ProfileSchema,
   tweaks: TweaksSchema
@@ -142,6 +159,7 @@ export const SettingsPatchSchema = z.strictObject({
   restrictions: z.optional(z.partial(RestrictionsSchema)),
   advanced: z.optional(z.partial(AdvancedSchema)),
   equalizer: z.optional(z.partial(EqualizerSchema)),
+  audioLab: z.optional(z.partial(AudioLabSchema)),
   appearance: z.optional(z.partial(AppearanceSchema)),
   profile: z.optional(z.partial(ProfileSchema)),
   tweaks: z.optional(z.partial(TweaksSchema))
@@ -151,6 +169,7 @@ export type Settings = z.infer<typeof SettingsSchema>
 export type SettingsPatch = z.infer<typeof SettingsPatchSchema>
 export type EqPreset = z.infer<typeof EqPresetSchema>
 export type EqualizerSettings = Settings['equalizer']
+export type AudioLabSettings = Settings['audioLab']
 export type AppearanceSettings = Settings['appearance']
 export type ThemeMode = (typeof THEME_MODES)[number]
 export type LanguagePreference = (typeof LANGUAGE_PREFERENCES)[number]
@@ -182,6 +201,7 @@ export function defaultSettings(): Settings {
       customPresets: [],
       songPresets: {}
     },
+    audioLab: { enabled: false, clarity: 35, air: 25, limiter: true },
     // B1: varsayılanlar geliştiricinin onayına sunulur (referans: koyu, arkası hafif seçilen cam).
     appearance: { theme: 'system', transparency: 60, rightPanel: 'none' },
     profile: { displayName: '' },
@@ -298,6 +318,7 @@ const sections = [
   'restrictions',
   'advanced',
   'equalizer',
+  'audioLab',
   'appearance',
   'profile',
   'tweaks'
@@ -308,6 +329,7 @@ const sectionSchemas = {
   restrictions: RestrictionsSchema,
   advanced: AdvancedSchema,
   equalizer: EqualizerSchema,
+  audioLab: AudioLabSchema,
   appearance: AppearanceSchema,
   profile: ProfileSchema,
   tweaks: TweaksSchema

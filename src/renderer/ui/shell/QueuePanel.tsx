@@ -9,6 +9,7 @@ import { usePlayer } from '../hooks/usePlayer'
 import { MoreButton } from '../overlays/MoreButton'
 import { nowPlayingTrack, useMenuTrigger, useTrackMenu } from '../overlays/itemMenus'
 import { useOverlays, type MenuEntry } from '../overlays/Overlays'
+import { usePanelSettled } from './panelSettled'
 import { dropTarget, queueEntries, type QueueEntry } from './queueRows'
 
 // Sıradaki (B3): Apple Music gibi Geçmiş · Şu An Çalıyor · Sıradaki · Otomatik Çalma. Otomatik çalma
@@ -165,6 +166,8 @@ export function QueuePanel() {
   const trackMenu = useTrackMenu()
   const { toast } = useOverlays()
   const { player, snapshot } = usePlayer()
+  // Sürüklenebilir / animasyonlu satırlar panel yerine oturunca (bkz. panelSettled.ts).
+  const settled = usePanelSettled()
   const items = useMemo(() => snapshot?.queue.items ?? [], [snapshot])
   const position = snapshot?.queue.position ?? -1
   const autoplayIndex = snapshot?.queue.autoplayIndex ?? null
@@ -240,7 +243,7 @@ export function QueuePanel() {
       ) : (
         <p className="queue__empty">{i18n.t('player.nothingPlaying')}</p>
       )}
-      {upNext.length > 0 && (
+      {settled && upNext.length > 0 && (
         <>
           <div className="queue__heading-row">
             <h3 className="queue__heading">{i18n.t('queue.upNext')}</h3>
@@ -272,7 +275,7 @@ export function QueuePanel() {
           <InfinityIcon size={18} strokeWidth={2} aria-hidden="true" />
         </button>
       </div>
-      {autoplayOn && (
+      {settled && autoplayOn && (
         <AnimatePresence initial={false}>
           {autoplay.map((e) => (
             <motion.div key={e.key} className="queue-item" layout="position" exit={ROW_EXIT}>

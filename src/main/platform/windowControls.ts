@@ -9,6 +9,7 @@ export function framelessWindowOptions(): BrowserWindowConstructorOptions {
   return {
     frame: false,
     // Pencere kenarından yeniden boyutlandırma ve Windows 11 yuvarlak köşeleri korunur.
+    // (2026-10-30: saydam pencere + kendi köşemiz denendi, geliştirici geri istedi; CHECKPOINT §6.36.)
     resizable: true,
     roundedCorners: true,
     // Arayüzün en dar düzeni (sol menü + içerik + oynatıcı) için alt sınır; B2'de gözden geçirilir.

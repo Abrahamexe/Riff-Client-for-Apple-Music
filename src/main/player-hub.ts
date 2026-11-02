@@ -29,6 +29,7 @@ export class PlayerHub {
   private state: PlayerHubState | null = null
   private time: PlayerTime = ZERO_TIME
   private readonly isCdmReady: () => boolean
+  private readonly stateListeners = new Set<(state: PlayerHubState | null) => void>()
 
   constructor(
     private readonly windows: HubWindows,
@@ -47,6 +48,16 @@ export class PlayerHub {
   publishState(state: PlayerHubState): void {
     this.state = state
     this.windows.broadcast('onPlayerState', state)
+    this.notify()
+  }
+
+  /**
+   * Main içindeki dinleyiciler (görev çubuğu düğmeleri): her durum yayınında ve sıfırlamada (`null`)
+   * çağrılır. Döndürülen fonksiyon aboneliği kaldırır.
+   */
+  onState(listener: (state: PlayerHubState | null) => void): () => void {
+    this.stateListeners.add(listener)
+    return () => this.stateListeners.delete(listener)
   }
 
   /** Ana pencereden: konum (≤ 1/sn). Yalnızca görünür pencerelere gider (PLAN 1.8b). */
@@ -86,6 +97,7 @@ export class PlayerHub {
   reset(): void {
     this.state = null
     this.time = ZERO_TIME
+    this.notify()
   }
 
   /** Çıkışta kaydedilecek biçim (worker player_state); kayıtlı durum yoksa `null`. */
@@ -97,6 +109,10 @@ export class PlayerHub {
       position: Math.min(position, ids.length - 1),
       currentTime: this.time.currentTime
     }
+  }
+
+  private notify(): void {
+    for (const listener of this.stateListeners) listener(this.state)
   }
 
   private sendSnapshot(win: WindowLike): void {

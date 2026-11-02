@@ -3,6 +3,7 @@
 
 import { Menu } from 'electron'
 export { createAppTray, type TrayActions } from './tray'
+export { setupThumbar } from './thumbar'
 export { watchSystemResume, type PowerSource } from './power'
 export { resolveAppPaths, type AppPathSource, type AppPaths } from './paths'
 export { openInDefaultBrowser } from './shell'

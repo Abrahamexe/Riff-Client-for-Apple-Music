@@ -55,8 +55,28 @@ describe('Equalizer (3.B3)', () => {
     eq.attach(el)
     expect(fake.ctx.createMediaElementSource).toHaveBeenCalledTimes(1)
     expect(fake.edges[0]).toEqual(['gain0', 'bq1'])
-    expect(fake.edges.at(-2)).toEqual(['bq10', 'out'])
-    expect(fake.edges.at(-1)).toEqual(['src11', 'gain0'])
+    expect(fake.edges.at(-3)).toEqual(['bq10', 'gain11'])
+    expect(fake.edges.at(-2)).toEqual(['gain11', 'out'])
+    expect(fake.edges.at(-1)).toEqual(['src12', 'gain0'])
+  })
+
+  it('Ses Laboratuvarı: işlemci EQ ile son kat arasına bir kez girer; grafik yoksa eklenmez', async () => {
+    const fake = fakeContext()
+    const eq = new Equalizer(() => fake.ctx)
+    const make = vi.fn(async () => ({
+      name: 'lab',
+      parameters: { get: () => undefined },
+      connect: (to: AudioNodeLike & { name?: string }) =>
+        void fake.edges.push(['lab', to.name ?? '?'])
+    }))
+    expect(eq.useProcessor(make)).toBeNull()
+    eq.attach({} as HTMLMediaElement)
+    const node = await eq.useProcessor(make)
+    await eq.useProcessor(make)
+    expect(make).toHaveBeenCalledTimes(1)
+    expect(node).toBeDefined()
+    expect(fake.edges).toContainEqual(['bq10', 'lab'])
+    expect(fake.edges).toContainEqual(['lab', 'gain11'])
   })
 
   it('kazançlar: dB → doğrusal preamp, bantlar dB; null → nötr', () => {
@@ -151,7 +171,7 @@ describe('bindEqualizer (3.B3)', () => {
 })
 
 describe('ses düzeyi analizi (büyük oynatıcı, 2026-10-14)', () => {
-  it('analizci son banttan dinler, çıkışa bağlanmaz; düzey 0..1; grafik yoksa 0', () => {
+  it('analizci son kattan (işlemciden sonra) dinler, çıkışa bağlanmaz; düzey 0..1; grafik yoksa 0', () => {
     const fake = fakeContext()
     let wave = 128
     const analyser = {
@@ -164,7 +184,7 @@ describe('ses düzeyi analizi (büyük oynatıcı, 2026-10-14)', () => {
     const eq = new Equalizer(() => ctx)
     expect(eq.level()).toBe(0)
     eq.startAnalysis([{} as HTMLMediaElement])
-    expect(fake.edges).toContainEqual(['bq10', 'an'])
+    expect(fake.edges).toContainEqual(['gain11', 'an'])
     expect(analyser.connect).not.toHaveBeenCalled()
     expect(ctx.resume).toHaveBeenCalled()
     expect(eq.level()).toBe(0)

@@ -18,7 +18,6 @@ import {
   House,
   LayoutGrid,
   ListMusic,
-  Menu,
   MicVocal,
   Music,
   PenLine,
@@ -35,8 +34,15 @@ import { usePlaylists } from '../hooks/usePlaylists'
 import { useOverlays } from '../overlays/Overlays'
 import { playlistCard, useCardMenu } from '../overlays/itemMenus'
 import { AccountRow } from './AccountRow'
-import type { Rect } from './layout'
-import { contentIn, menuContentIn, menuTransition, SPRING_SOFT } from './motion'
+import { MenuIcon } from './MenuIcon'
+import { SIDEBAR_WIDTH, type Rect } from './layout'
+import {
+  dropletGlassTransition,
+  dropletSlot,
+  dropletSlotTransition,
+  sidebarPanelMotion,
+  SPRING_SOFT
+} from './motion'
 import { sameRoute, useRouter, type Route } from './router'
 import { useGo } from './scroll'
 import {
@@ -47,8 +53,8 @@ import {
   type SidebarSection
 } from './sidebarSections'
 
-// Sol menü (B2): kapalıyken sol üstte üç çizgili damla; açılınca yukarıdan aşağı uzayıp yuvarlak
-// köşeli cam panele dönüşür. İçerik Apple Music (Windows) kenar çubuğuyla aynı.
+// Sol menü (B2): kapalıyken sol üstte üç çizgili damla; açılınca cam panel damlanın köşesinden
+// ölçeklenerek belirir (2026-11-02, iOS bağlam menüsü gibi). İçerik Apple Music (Windows) kenar çubuğuyla aynı.
 // Bölümler (2026-10-14, geliştirici kararı): "Arşiv" ve "Çalma Listeleri" başlığının yanındaki oka
 // basınca bölüm açılır / kapanır; durum hatırlanır. Panelin yüksekliği içeriğe göre (`height: auto`,
 // en fazla ekran): bölüm kapanınca panel de aynı yayla, aynı karede küçülür (ölçüm / gecikme yok).
@@ -215,128 +221,150 @@ export function Sidebar({
   const hasCompilations = useHasCompilations()
   const { openMenu, newPlaylist } = useOverlays()
   const cardMenu = useCardMenu()
+  // 2026-11-02: damla (aç/kapa düğmesi) hep yerinde; panel ayrı katman, düğmenin köşesinden ölçeklenerek
+  // açılır ve oraya küçülerek kapanır (`sidebarPanelMotion`). Açıkken damlanın camı söner, düğme panelin
+  // camının üstünde kalır.
   return (
-    <motion.nav
-      className={`glass sidebar${open ? '' : ' sidebar--droplet'}`}
-      aria-label={i18n.t('nav.menu')}
-      initial={false}
-      animate={{
-        left: rect.x,
-        top: rect.y,
-        width: rect.width,
-        height: open ? 'auto' : rect.height
-      }}
-      style={{ maxHeight }}
-      transition={menuTransition(open)}
-    >
-      <button
-        type="button"
-        className="sidebar__toggle"
-        aria-label={i18n.t(open ? 'nav.closeMenu' : 'nav.openMenu')}
-        aria-expanded={open}
-        title={i18n.t(open ? 'nav.closeMenu' : 'nav.openMenu')}
-        onClick={onToggle}
-      >
-        <Menu size={20} strokeWidth={1.9} aria-hidden="true" />
-      </button>
+    <>
       <AnimatePresence>
         {open && (
-          <motion.button
-            key="pin"
-            type="button"
-            className={`sidebar__pin${pinned ? ' sidebar__pin--on' : ''}`}
-            aria-label={i18n.t(pinned ? 'nav.unpinMenu' : 'nav.pinMenu')}
-            aria-pressed={pinned}
-            title={i18n.t(pinned ? 'nav.unpinMenu' : 'nav.pinMenu')}
-            onClick={togglePinned}
-            {...contentIn}
+          <motion.nav
+            key="panel"
+            className="glass sidebar"
+            aria-label={i18n.t('nav.menu')}
+            style={{ left: rect.x, top: rect.y, width: SIDEBAR_WIDTH, maxHeight }}
+            {...sidebarPanelMotion}
           >
-            {pinned ? (
-              <Lock size={15} strokeWidth={2} aria-hidden="true" />
-            ) : (
-              <LockOpen size={15} strokeWidth={2} aria-hidden="true" />
-            )}
-          </motion.button>
-        )}
-      </AnimatePresence>
-      <AnimatePresence>
-        {open && (
-          <NavigatedContext.Provider value={navigated} key="content">
-            <motion.div className="sidebar__content" {...menuContentIn}>
-              <div className="sidebar__scroll">
-                {TOP.map((i) => (
-                  <NavItem key={i.key} route={i.route} label={i18n.format(i.key)} Icon={i.icon} />
-                ))}
-                <Section
-                  title={i18n.t('nav.library')}
-                  open={isOpen('library')}
-                  onToggle={toggle('library')}
-                >
-                  {LIBRARY.map((i) => (
+            <button
+              type="button"
+              className={`sidebar__pin${pinned ? ' sidebar__pin--on' : ''}`}
+              aria-label={i18n.t(pinned ? 'nav.unpinMenu' : 'nav.pinMenu')}
+              aria-pressed={pinned}
+              title={i18n.t(pinned ? 'nav.unpinMenu' : 'nav.pinMenu')}
+              onClick={togglePinned}
+            >
+              {pinned ? (
+                <Lock size={15} strokeWidth={2} aria-hidden="true" />
+              ) : (
+                <LockOpen size={15} strokeWidth={2} aria-hidden="true" />
+              )}
+            </button>
+            <NavigatedContext.Provider value={navigated}>
+              <div className="sidebar__content">
+                <div className="sidebar__scroll">
+                  {TOP.map((i) => (
                     <NavItem key={i.key} route={i.route} label={i18n.format(i.key)} Icon={i.icon} />
                   ))}
-                  {hasCompilations && (
+                  <Section
+                    title={i18n.t('nav.library')}
+                    open={isOpen('library')}
+                    onToggle={toggle('library')}
+                  >
+                    {LIBRARY.map((i) => (
+                      <NavItem
+                        key={i.key}
+                        route={i.route}
+                        label={i18n.format(i.key)}
+                        Icon={i.icon}
+                      />
+                    ))}
+                    {hasCompilations && (
+                      <NavItem
+                        route={{ name: 'compilations' }}
+                        label={i18n.t('nav.compilations')}
+                        Icon={Layers}
+                      />
+                    )}
+                  </Section>
+                  <Section
+                    title={i18n.t('nav.playlists')}
+                    open={isOpen('playlists')}
+                    onToggle={toggle('playlists')}
+                    action={
+                      <button
+                        type="button"
+                        className="sidebar__add"
+                        aria-label={i18n.t('menu.newPlaylistTitle')}
+                        title={i18n.t('menu.newPlaylistTitle')}
+                        onClick={() => newPlaylist()}
+                      >
+                        <Plus size={15} strokeWidth={2.2} aria-hidden="true" />
+                      </button>
+                    }
+                  >
                     <NavItem
-                      route={{ name: 'compilations' }}
-                      label={i18n.t('nav.compilations')}
-                      Icon={Layers}
-                    />
-                  )}
-                </Section>
-                <Section
-                  title={i18n.t('nav.playlists')}
-                  open={isOpen('playlists')}
-                  onToggle={toggle('playlists')}
-                  action={
-                    <button
-                      type="button"
-                      className="sidebar__add"
-                      aria-label={i18n.t('menu.newPlaylistTitle')}
-                      title={i18n.t('menu.newPlaylistTitle')}
-                      onClick={() => newPlaylist()}
-                    >
-                      <Plus size={15} strokeWidth={2.2} aria-hidden="true" />
-                    </button>
-                  }
-                >
-                  <NavItem
-                    route={{ name: 'playlists' }}
-                    label={i18n.t('nav.allPlaylists')}
-                    Icon={ListMusic}
-                  />
-                  {playlists.map((p) => (
-                    <NavItem
-                      key={p.id}
-                      route={{
-                        name: 'playlist',
-                        id: p.id,
-                        title: p.name,
-                        artworkUrl: p.artworkUrl,
-                        description: p.description
-                      }}
-                      label={p.name}
+                      route={{ name: 'playlists' }}
+                      label={i18n.t('nav.allPlaylists')}
                       Icon={ListMusic}
-                      art={{ url: p.artworkUrl }}
-                      onContextMenu={(e) => {
-                        e.preventDefault()
-                        openMenu(cardMenu(playlistCard(p)), { x: e.clientX, y: e.clientY })
-                      }}
                     />
-                  ))}
-                </Section>
+                    {playlists.map((p) => (
+                      <NavItem
+                        key={p.id}
+                        route={{
+                          name: 'playlist',
+                          id: p.id,
+                          title: p.name,
+                          artworkUrl: p.artworkUrl,
+                          description: p.description
+                        }}
+                        label={p.name}
+                        Icon={ListMusic}
+                        art={{ url: p.artworkUrl }}
+                        onContextMenu={(e) => {
+                          e.preventDefault()
+                          openMenu(cardMenu(playlistCard(p)), { x: e.clientX, y: e.clientY })
+                        }}
+                      />
+                    ))}
+                  </Section>
+                </div>
+                <div className="sidebar__footer">
+                  <NavItem
+                    route={{ name: 'settings' }}
+                    label={i18n.t('nav.settings')}
+                    Icon={Settings}
+                  />
+                  <AccountRow />
+                </div>
               </div>
-              <div className="sidebar__footer">
-                <NavItem
-                  route={{ name: 'settings' }}
-                  label={i18n.t('nav.settings')}
-                  Icon={Settings}
-                />
-                <AccountRow />
-              </div>
-            </motion.div>
-          </NavigatedContext.Provider>
+            </NavigatedContext.Provider>
+          </motion.nav>
         )}
       </AnimatePresence>
-    </motion.nav>
+      {/* 2026-11-02: açıkken düğme panelin köşesine eş merkezli yuvaya kayar (`dropletSlot`). */}
+      <motion.div
+        className="sidebar-droplet"
+        style={{ left: rect.x, top: rect.y }}
+        initial={false}
+        animate={dropletSlot(open)}
+        transition={dropletSlotTransition(open)}
+      >
+        <motion.span
+          className="glass"
+          aria-hidden="true"
+          initial={false}
+          animate={{ opacity: open ? 0 : 1 }}
+          transition={dropletGlassTransition(open)}
+        />
+        <motion.span
+          className="sidebar-droplet__slot"
+          aria-hidden="true"
+          initial={false}
+          animate={{ opacity: open ? 1 : 0 }}
+          transition={dropletGlassTransition(!open)}
+        />
+        <button
+          type="button"
+          className="sidebar__toggle"
+          aria-label={i18n.t(open ? 'nav.closeMenu' : 'nav.openMenu')}
+          aria-expanded={open}
+          title={i18n.t(open ? 'nav.closeMenu' : 'nav.openMenu')}
+          onClick={onToggle}
+        >
+          {/* 2026-11-02 (geliştirici): geri ok yerine çizgiler X'e akar. */}
+          <MenuIcon open={open} />
+        </button>
+      </motion.div>
+    </>
   )
 }

@@ -12,6 +12,9 @@ import { SearchController } from '@core/data/search'
 import { appleMusicLink, type LinkKind } from '@core/data/links'
 import { applyPlaybackSettings, SettingsClient } from '@core/settings/settings'
 import { bindEqualizer, Equalizer, type EqualizerBinding } from '@core/audio/equalizer'
+import { bindAudioLab, workletProcessor, type AudioLabBinding } from '@core/audio/lab/audioLab'
+// Ses Laboratuvarı işlemcisi ayrı paket olarak (`'self'` kaynağından; CSP değişmez).
+import audioLabWorkletUrl from '@core/audio/lab/worklet.ts?worker&url'
 import { defaultSettings } from '@shared/settings'
 import {
   configureMusicKit,
@@ -77,6 +80,7 @@ export class App extends TypedEmitter<AppEvents> {
   private searchInstance: SearchController | null = null
   private signedInState: boolean | null = null
   private eqBinding: EqualizerBinding | null = null
+  private labBinding: AudioLabBinding | null = null
   private disposers: (() => void)[] = []
 
   constructor(private readonly info: AppInfo) {
@@ -230,6 +234,7 @@ export class App extends TypedEmitter<AppEvents> {
       /* MusicKit henüz yapılandırılmadı: yapılandırılınca uygulanır */
     }
     this.eqBinding?.update(s.equalizer)
+    this.labBinding?.update(s.audioLab)
   }
 
   private async restore(): Promise<void> {
@@ -271,6 +276,19 @@ export class App extends TypedEmitter<AppEvents> {
       p,
       this.equalizer,
       (this.settings.current ?? defaultSettings()).equalizer
+    )
+    this.labBinding = bindAudioLab(
+      p,
+      this.equalizer,
+      (this.settings.current ?? defaultSettings()).audioLab,
+      workletProcessor(audioLabWorkletUrl),
+      {
+        onError: (err) =>
+          this.emit('error', {
+            error: toCoreError(err, 'AUDIO_LAB_FAILED', 'Ses Laboratuvarı yüklenemedi'),
+            context: 'Ses Laboratuvarı yüklenemedi'
+          })
+      }
     )
     // 1.8a: durum main'deki player-hub üzerinden tüm pencerelere yayınlanır, komutlar oradan gelir.
     connectPlayerToHub(p, ipcHubPort)
