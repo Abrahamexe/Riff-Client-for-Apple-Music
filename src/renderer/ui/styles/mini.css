@@ -1,0 +1,354 @@
+/*
+ * MiniPlayer (B12b): kapak tüm pencereyi kaplar; kontroller üzerine gelince alttan cam katman.
+ * Pencere hep koyu (kapak üstünde beyaz metin), uygulama temasından bağımsız.
+ */
+html.mini-root,
+html.mini-root body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #000;
+  color: #fff;
+  font-family: 'Inter Variable', system-ui, sans-serif;
+  user-select: none;
+}
+
+#mini-root {
+  height: 100%;
+}
+
+.mini {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  background: #111;
+}
+
+.mini__art,
+.mini__empty {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.mini__empty {
+  display: grid;
+  place-items: center;
+  color: rgb(255 255 255 / 0.35);
+  background: linear-gradient(160deg, #2a2a33, #111116);
+}
+
+/* Üst şerit: pencereyi sürükler (Windows'ta burada fare olayı yok → yalnızca şerit). */
+.mini__grip {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 36px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 0 6px;
+  -webkit-app-region: drag;
+  background: linear-gradient(to bottom, rgb(0 0 0 / 0.45), transparent);
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.mini__grip .mini__icon {
+  -webkit-app-region: no-drag;
+}
+
+.mini__controls {
+  position: absolute;
+  inset: auto 0 0 0;
+  padding: 12px 14px 12px;
+  display: grid;
+  /* Dar pencerede içerik sütunu genişleyip her şeyi sağa kaydırıyordu (2026-10-18). */
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  background: rgb(18 18 22 / 0.42);
+  backdrop-filter: blur(24px) saturate(160%);
+  border-top: 1px solid rgb(255 255 255 / 0.12);
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 0.25s ease,
+    transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  pointer-events: none;
+}
+
+.mini:hover .mini__grip,
+.mini:focus-within .mini__grip {
+  opacity: 1;
+}
+
+.mini:hover .mini__controls,
+.mini:focus-within .mini__controls {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+.mini__meta {
+  min-width: 0;
+  text-shadow: 0 1px 6px rgb(0 0 0 / 0.5);
+}
+
+.mini__title,
+.mini__artist {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.mini__title {
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.mini__artist {
+  font-size: 12.5px;
+  color: rgb(255 255 255 / 0.72);
+}
+
+/* Çal tuşları ortada; hoparlör sağ sütunda (ses çubuğu açılınca orta grup kaymaz). */
+.mini__buttons {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+}
+
+.mini__transport {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.mini__vol {
+  position: relative;
+  justify-self: end;
+  display: flex;
+  align-items: center;
+}
+
+/* Ses çubuğu: yalnızca imleç hoparlörün üzerindeyken (ya da klavye odağı) sola doğru açılır. */
+.mini__vol-pop {
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  /* Satırın hoparlör dışındaki tamamı (kenar boşlukları + hoparlör ≈ 70 px). */
+  width: min(220px, calc(100vw - 70px));
+  height: 30px;
+  margin-top: -15px;
+  padding: 0 10px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  border-radius: 15px;
+  background: rgb(28 28 32 / 0.6);
+  opacity: 0;
+  transform: translateX(8px) scaleX(0.6);
+  transform-origin: right center;
+  pointer-events: none;
+  transition:
+    opacity 0.18s ease,
+    transform 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.mini__vol:hover .mini__vol-pop,
+.mini__vol:focus-within .mini__vol-pop {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+
+/* Ses çubuğu açıkken çal tuşları solar (çubuk satırı kaplar, üst üste binmez). */
+.mini__transport {
+  transition: opacity 0.18s ease;
+}
+
+.mini__buttons:has(.mini__vol:hover) .mini__transport,
+.mini__buttons:has(.mini__vol:focus-within) .mini__transport {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mini__icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: #fff;
+  background: transparent;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    transform 0.15s ease;
+}
+
+.mini__icon:hover:not(:disabled) {
+  background: rgb(255 255 255 / 0.16);
+}
+
+.mini__icon:active:not(:disabled) {
+  transform: scale(0.92);
+}
+
+.mini__icon:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.mini__icon:focus-visible {
+  outline: 2px solid rgb(255 255 255 / 0.8);
+  outline-offset: 1px;
+}
+
+.mini__icon--play {
+  width: 44px;
+  height: 44px;
+  color: #111;
+  background: rgb(255 255 255 / 0.92);
+}
+
+.mini__icon--play:hover:not(:disabled) {
+  background: #fff;
+}
+
+.mini__seek {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+  color: rgb(255 255 255 / 0.7);
+}
+
+/* Kaydırıcının izi saydam; dolu kısım ayrı katmanın `scaleX`'i (degrade piksele oturuyordu). */
+.mini__range-box {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  /* Fare kapsayıcıda (pointerRange.ts): kaydırıcının `change` olayı eski konuma geri sarıyordu. */
+  padding: 4px 0;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.mini__range-box .mini__range {
+  pointer-events: none;
+}
+
+.mini__range-box:hover .mini__range::-webkit-slider-thumb {
+  opacity: 1;
+}
+
+.mini__seek > span:not(.mini__range-box) {
+  flex: none;
+}
+
+.mini__range-track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 4px;
+  margin-top: -2px;
+  border-radius: 2px;
+  overflow: hidden;
+  background: rgb(255 255 255 / 0.28);
+  pointer-events: none;
+}
+
+.mini__range-fill {
+  position: absolute;
+  inset: 0;
+  background: #fff;
+  transform-origin: left center;
+  will-change: transform;
+}
+
+.mini__range {
+  position: relative;
+  z-index: 1;
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 14px;
+  margin: 0;
+  background: transparent;
+}
+
+.mini__range::-webkit-slider-runnable-track {
+  height: 4px;
+  background: transparent;
+}
+
+.mini__range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  margin-top: -4px;
+  border-radius: 50%;
+  background: #fff;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.mini__range:hover::-webkit-slider-thumb,
+.mini__range:focus-visible::-webkit-slider-thumb {
+  opacity: 1;
+}
+
+/* Alt kenarda hep görünen ince ilerleme çizgisi (kontroller açıkken gizlenir). */
+.mini__line {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 3px;
+  background: rgb(255 255 255 / 0.85);
+  transform-origin: left;
+  transition: opacity 0.2s ease;
+}
+
+.mini:hover .mini__line {
+  opacity: 0;
+}
+
+/* En küçük pencere (200 px): orta grup ve hoparlör sığsın diye tuşlar küçülür. */
+@media (max-width: 259px) {
+  .mini__controls {
+    padding: 10px 10px;
+  }
+
+  .mini__transport {
+    gap: 4px;
+  }
+
+  .mini__icon {
+    width: 30px;
+    height: 30px;
+  }
+
+  .mini__icon--play {
+    width: 38px;
+    height: 38px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mini__controls,
+  .mini__grip,
+  .mini__line,
+  .mini__vol-pop,
+  .mini__transport {
+    transition: none;
+  }
+}

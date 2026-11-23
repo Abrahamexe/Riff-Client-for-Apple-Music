@@ -1,0 +1,24 @@
+# Riff Client developer token servisi (PLAN 4.1) — Cloudflare Workers.
+# Gizli değerler BU DOSYADA DEĞİL: `npx wrangler secret put …` ile (README.md).
+name = "riff-client-token"
+main = "src/index.ts"
+compatibility_date = "2026-09-15"
+workers_dev = true
+
+# IP başına hız sınırı (Workers Rate Limiting; Wrangler ≥ 4.36). İstemci saatlerce bir kez ister;
+# dakikada 10 istek normal kullanımın çok üstündedir. `period` yalnızca 10 veya 60 olabilir.
+[[ratelimits]]
+name = "RATE_LIMITER"
+namespace_id = "4101"
+
+  [ratelimits.simple]
+  limit = 10
+  period = 60
+
+# Basit izleme: yapılandırılmış loglar (olay + durum; IP ve token yok) Workers Logs'ta.
+[observability]
+enabled = true
+
+[vars]
+# Token ömrü (sn). Kısa ömür: kötüye kullanılan token'ın etkisi sınırlı (6 sa).
+TOKEN_TTL_SECONDS = "21600"

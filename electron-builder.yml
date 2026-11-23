@@ -1,0 +1,57 @@
+# Paketleme (PLAN 1.10): NSIS installer, castlabs ECS binary'siyle.
+appId: com.riffclient.desktop
+productName: Riff Client
+copyright: Riff Client
+
+directories:
+  output: dist
+
+files:
+  - out/**/*
+  - package.json
+
+asar: true
+
+# Açık kaynak lisans bildirimleri (PLAN_v5 A2): `npm run build`/`build:dev` sonunda
+# scripts/third-party-notices.mjs üretir; kurulum klasörüne (exe'nin yanına) kopyalanır.
+extraFiles:
+  - from: build/THIRD_PARTY_NOTICES.txt
+    to: THIRD_PARTY_NOTICES.txt
+
+# Stok Electron İNDİRİLMEZ: node_modules/electron/dist (ECS, "+wvcus") kullanılır.
+# Sürüm electron-builder'a bu dizinden verilir.
+electronDist: node_modules/electron/dist
+
+# Uygulama ikonu (geliştirici seçimi 2026-10-15, "Pena r"): kaynak build/icon.svg, `npm run icons` üretir.
+win:
+  icon: build/icon.ico
+  target:
+    - target: nsis
+      arch: x64
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  installerIcon: build/icon.ico
+  uninstallerIcon: build/icon.ico
+  installerHeaderIcon: build/icon.ico
+  shortcutName: Riff Client
+
+# PLAN 2.4: binary sertleştirme (Electron fuses) — DEVRE DIŞI (2026-10-12 gözlemi):
+# fuse'lar uygulanınca castlabs EVS imzası REDDEDİLDİ ("HTTPError 400 … ValidityError: Binary signature
+# denied"); fuse'suz aynı paket imzalandı ("Signature is valid: streaming"). EVS yalnızca resmi ECS
+# binary'lerini imzalıyor; VMP imzası olmadan Apple Music tam şarkı çalmaz (V4). Karar geliştiricide
+# (docs/SECURITY.md). Sıra bilgisi (geçerli olsaydı): fuse → code-signing → VMP (afterSign).
+# electronFuses:
+#   runAsNode: false
+#   enableCookieEncryption: true
+#   enableNodeOptionsEnvironmentVariable: false
+#   enableNodeCliInspectArguments: false
+#   enableEmbeddedAsarIntegrityValidation: true
+#   onlyLoadAppFromAsar: true
+#   grantFileProtocolExtraPrivileges: false
+
+# Windows'ta VMP imzası code-signing'den SONRA yapılmalıdır (castlabs EVS wiki). electron-builder,
+# afterSign hook'unu code-signing'den sonra çalıştırır; hook ayrıntıları scripts/evs-vmp-sign.cjs içindedir.
+afterSign: scripts/evs-vmp-sign.cjs
