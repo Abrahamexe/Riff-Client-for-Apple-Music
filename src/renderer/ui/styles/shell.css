@@ -186,106 +186,26 @@
   z-index: 40;
   overflow: hidden;
   -webkit-app-region: no-drag;
-  /* Açıkken yükseklik içeriğe göre (`height: auto`, en fazla `max-height`): bölüm kapanınca küçülür. */
+  /* 2026-11-23: sağ panelin aynası — tam boy, oynatıcının sol ucundaki tuşun köşesinden ölçeklenir
+     (`sidebarPanelMotion`). */
   display: flex;
   flex-direction: column;
-  /* Panel damlanın köşesinden ölçeklenir (`sidebarPanelMotion`). */
-  transform-origin: top left;
-}
-
-/* Aç/kapa düğmesi: panelden ayrı, hep yerinde; camı yalnızca panel kapalıyken görünür. */
-.sidebar-droplet {
-  position: absolute;
-  z-index: 41;
-  width: 36px;
-  height: 36px;
-  -webkit-app-region: no-drag;
-}
-
-.sidebar-droplet > .glass {
-  position: absolute;
-  inset: 0;
-  border-radius: 18px;
-  pointer-events: none;
-}
-
-/* Eş merkezli yuva (motion.ts SIDEBAR_SLOT_INSET): panel köşesi 28 px, yuva 10 px içeride, 36 px daire
-   (18 = 28 − 10). Merkezi listedeki ikon sütunuyla aynı (panel içinde 28 px). */
-.glass.sidebar {
-  border-radius: 28px;
-}
-
-.sidebar-droplet__slot {
-  position: absolute;
-  inset: 0;
-  border-radius: 18px;
-  background: var(--hover);
-  box-shadow: inset 0 0 0 1px var(--glass-edge);
-  pointer-events: none;
-}
-
-.sidebar-droplet:has(.sidebar__toggle[aria-expanded='true']:hover) .sidebar-droplet__slot {
-  background: var(--press);
-}
-
-.sidebar__toggle {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 36px;
-  height: 36px;
-  display: grid;
-  place-items: center;
-  border: 0;
-  border-radius: 18px;
-  background: transparent;
-  color: var(--text);
-  z-index: 2;
-}
-
-.sidebar__pin {
-  position: absolute;
-  /* Yuvayla aynı satırda (merkez 28 px). */
-  top: 13px;
-  left: 52px;
-  width: 30px;
-  height: 30px;
-  display: grid;
-  place-items: center;
-  border: 0;
-  border-radius: 15px;
-  background: transparent;
-  color: var(--text-secondary);
-  cursor: pointer;
-  z-index: 2;
-}
-
-.sidebar__pin:hover,
-.sidebar__pin--on {
-  color: var(--text);
-}
-
-.sidebar__pin:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+  transform-origin: bottom left;
 }
 
 .sidebar__content {
-  flex: 0 1 auto;
+  flex: 1 1 auto;
   min-height: 0;
-  padding-top: 54px;
+  padding-top: 10px;
   display: flex;
   flex-direction: column;
   min-width: 248px;
-  /* İçerik düğmenin olduğu köşeden büyür (menü animasyonu). */
-  transform-origin: top left;
 }
 
 .sidebar__scroll {
-  flex: 0 1 auto;
+  flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
-  /* Sol 9 px: ikon merkezi 9 + 10 + 9 = 28 px, yuvanın merkeziyle aynı sütun. */
   padding: 0 10px 8px 9px;
 }
 
@@ -517,9 +437,8 @@
      değişip içeriği kabın dışına itiyordu (2026-10-19). Aşağıdaki değer yedek. */
   width: max(720px, calc(100vw - 160px));
   box-sizing: border-box;
-  /* Dikey bütçe (çubuk 92 px): 8 + ilerleme 22 + 2 + satır 55 = 87. İlerleme çubuğuna 4 px pay eklenince
-     (18.10) satır 8 px aşağı kaymış, şarkı kutusu çubuktan taşıyordu (2026-10-19). */
-  padding: 8px 18px 8px;
+  /* Dikey bütçe (çubuk 116 px, layout.ts PLAYER_HEIGHT; 2026-11-23): 6 + ilerleme 22 + kutu 80 + 8. */
+  padding: 6px 18px 8px;
 }
 
 .player__time {
@@ -548,46 +467,77 @@
 
 .player__row {
   display: grid;
-  grid-template-columns: 1fr minmax(260px, 400px) 1fr;
+  grid-template-columns: 1fr minmax(300px, 400px) 1fr;
   align-items: center;
   gap: 16px;
-  margin-top: 2px;
 }
 
-.player__controls {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.player__now {
+/* Sol uç: sağdaki panel tuşlarının aynası (menü, baloncuğa küçült | arşive ekle, favori). */
+.player__left {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px;
+}
+
+/* Şarkı kutusu (2026-11-23): üstte kapak + ad, altında çalma tuşları; tek, hafif dolgulu yüzey. */
+.player__now {
+  display: flex;
+  flex-direction: column;
+  height: 80px;
+  box-sizing: border-box;
+  padding: 6px 8px 4px;
   min-width: 0;
 }
 
 /* İç içe cam (kapsül `backdrop-filter`'ı oynatıcının camı içinde) arkadaki satırları görmüyor, kutu
-   köşeleriyle belli oluyordu (2026-10-19): kapsülün kendi camı yok, oynatıcının camı yeter. */
+   köşeleriyle belli oluyordu (2026-10-19): kapsülün kendi camı yok; yalnızca hafif bir dolgu. */
 .player__now.glass {
-  background: none;
+  background: var(--card);
   backdrop-filter: none;
   box-shadow: none;
+  border-radius: 16px;
 }
 
 .player__now.glass::after {
   display: none;
 }
 
+.player__now-info {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
 .player__now img,
 .player__art {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   border-radius: 6px;
   object-fit: cover;
   background: var(--card);
   flex: none;
+}
+
+.player__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: auto;
+}
+
+.player__controls .icon-button {
+  width: 30px;
+  height: 30px;
+  border-radius: 15px;
+}
+
+.player__controls .icon-button--large {
+  width: 34px;
+  height: 34px;
+  border-radius: 17px;
 }
 
 .player__now-text {
@@ -595,6 +545,7 @@
 }
 
 .player__now-title {
+  font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
@@ -860,12 +811,16 @@
    2026-10-19: `@media (max-width: 1199px)` yerine `.player--narrow` (PlayerDock, içerik genişliğinden):
    medya sorgusu React güncellemesinden bir kare önce dönüp tuşları kabın dışına itiyordu. */
 .player--narrow .player__row {
-  grid-template-columns: 1fr minmax(180px, 360px) 1fr;
+  grid-template-columns: 1fr minmax(240px, 340px) 1fr;
   gap: 10px;
 }
 
+.player--narrow .player__left {
+  gap: 4px;
+}
+
 .player--narrow .player__controls {
-  gap: 2px;
+  gap: 8px;
 }
 
 .player--narrow .player__right {
@@ -882,6 +837,12 @@
   width: 38px;
   height: 38px;
   border-radius: 19px;
+}
+
+.player--narrow .player__controls .icon-button--large {
+  width: 34px;
+  height: 34px;
+  border-radius: 17px;
 }
 
 .player--narrow .player__divider {
@@ -4062,25 +4023,61 @@
   transform: scale(1.04);
 }
 
-/* Oynatma tuşları (geliştirici seçimi 2026-10-15: Apple Music iOS): zemin ve daire yok; kalın dolu
-   ikonlar, ⏯ en büyük; basınca arkada yumuşak bir halka belirip kaybolur. Karıştır / tekrar soluk,
-   açıkken beyaz. */
+/* Oynatma tuşları. 2026-11-23 (geliştirici: "büyük oynatıcıdaki tuşlar temaya uymuyor"; seçim "cam
+   kapsül"): tuşlar uygulamanın camı gibi tek bir kapsülde; ⏯ kapsülün içinde cam daire. Karıştır /
+   tekrar soluk, açıkken kapağın vurgu rengi (koyu zemin için `--cover-accent-dark`). Büyük oynatıcı hep
+   koyu: renkler temadan bağımsız. Basınca arkada yumuşak bir halka belirip kaybolur. */
+.np__controls {
+  position: relative;
+  isolation: isolate;
+  padding: 8px 18px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.09);
+  backdrop-filter: blur(28px) saturate(170%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.2),
+    inset 0 0 0 1px rgb(255 255 255 / 0.12),
+    0 12px 32px rgb(0 0 0 / 0.22);
+}
+
 .np__controls .np__icon {
   position: relative;
   background: none;
-  color: rgb(255 255 255 / 0.5);
+  color: rgb(255 255 255 / 0.55);
   transition:
     color 160ms ease,
+    background-color 160ms ease,
     transform 160ms ease;
 }
 
-.np__controls .np__icon--big,
-.np__controls .np__icon--play {
+.np__controls .np__icon--big {
+  width: 48px;
+  height: 48px;
   color: #fff;
 }
 
-.np__controls .np__icon--on {
+.np__controls .np__icon--big svg {
+  width: 28px;
+  height: 28px;
+}
+
+.np__controls .np__icon--play {
+  width: 60px;
+  height: 60px;
   color: #fff;
+  background: rgb(255 255 255 / 0.16);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.3),
+    inset 0 0 0 1px rgb(255 255 255 / 0.16);
+}
+
+.np__controls .np__icon--play svg {
+  width: 30px;
+  height: 30px;
+}
+
+.np__controls .np__icon--on {
+  color: var(--cover-accent-dark, #fff);
 }
 
 .np__controls .np__icon::before {
@@ -4108,12 +4105,17 @@
   color: #fff;
 }
 
+.np__controls .np__icon--on:hover:not(:disabled) {
+  color: var(--cover-accent-dark, #fff);
+}
+
 .np__controls .np__icon:active {
   transform: scale(0.9);
 }
 
-.np__controls .np__icon--play:hover {
+.np__controls .np__icon--play:hover:not(:disabled) {
   transform: none;
+  background: rgb(255 255 255 / 0.24);
 }
 
 .np__controls .np__icon--play:active {
@@ -4180,24 +4182,25 @@
 }
 
 .np__body--artist .np__controls {
+  align-self: center;
   justify-content: center;
   gap: 22px;
 }
 
-/* Sanatçı modunda tuşlar küçük (2026-10-19): ⏯ 72 → 56, ⏮⏭ 52 → 42, karıştır/tekrar 40 → 34. */
+/* Sanatçı modunda tuşlar küçük (2026-10-19; 2026-11-23 cam kapsül): ⏯ 48, ⏮⏭ 40, karıştır/tekrar 34. */
 .np__body--artist .np__controls .np__icon {
   width: 34px;
   height: 34px;
 }
 
 .np__body--artist .np__controls .np__icon--big {
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
 }
 
 .np__body--artist .np__controls .np__icon--play {
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
 }
 
 .np__body--artist .np__controls .np__icon svg {
@@ -4206,13 +4209,13 @@
 }
 
 .np__body--artist .np__controls .np__icon--big svg {
-  width: 27px;
-  height: 27px;
+  width: 24px;
+  height: 24px;
 }
 
 .np__body--artist .np__controls .np__icon--play svg {
-  width: 36px;
-  height: 36px;
+  width: 26px;
+  height: 26px;
 }
 
 .np__body--artist .np__volume {
@@ -4345,7 +4348,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 4px;
+  margin-top: 10px;
 }
 
 .np__lyrics {
@@ -4469,8 +4472,8 @@
 
 .quality-badge--dock {
   position: absolute;
-  top: 6px;
-  right: 10px;
+  top: 0;
+  right: 2px;
 }
 
 /* Büyük oynatıcı: kapakla oynatıcı çubuğu arasında, ortada. */

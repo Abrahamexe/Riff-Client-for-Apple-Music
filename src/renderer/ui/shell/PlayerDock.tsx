@@ -13,6 +13,7 @@ import {
   ChevronsLeft,
   Info,
   ListMusic,
+  Menu,
   MessageSquareQuote,
   PictureInPicture2,
   Pause,
@@ -60,6 +61,8 @@ import { QualityBadge } from './QualityBadge'
 // Alt oynatıcı (B3): referans cam çubuk (Desktop/tasarım örneği.png) + Apple Music'teki düğmeler.
 // Kullanıcı basınca sol alttaki baloncuğa küçülür (ilerleme halkalı); baloncuğa basınca soldan
 // sağa açılır. AirPlay MusicKit JS'te olmadığı için yok.
+// 2026-11-23 (geliştirici): çalma tuşları şarkı kutusunun içine, kapak + adın altına indi; sol uçta
+// sağdaki panel tuşlarının aynası olarak sol menü tuşu (sol panel o köşeden açılır).
 
 const RING = 2 * Math.PI * 27
 const REPEAT_ORDER = ['none', 'all', 'one'] as const
@@ -155,6 +158,8 @@ export function PlayerDock({
   contentWidth,
   expanded,
   rightPanel,
+  sidebarOpen,
+  onSidebarToggle,
   onExpandedChange,
   onRightPanel,
   nowPlayingOpen,
@@ -165,6 +170,8 @@ export function PlayerDock({
   contentWidth: number
   expanded: boolean
   rightPanel: RightPanel
+  sidebarOpen: boolean
+  onSidebarToggle: () => void
   onExpandedChange: (expanded: boolean) => void
   onRightPanel: (panel: RightPanel) => void
   /** Büyük oynatıcı açıkken küçük kapak gizlenir (kapak oraya uçmuş durumda). */
@@ -292,65 +299,19 @@ export function PlayerDock({
           loading={pending !== null}
         />
         <div className="player__row">
-          <div className="player__controls">
+          <div className="player__left">
+            <button
+              type="button"
+              className={`icon-button sidebar__toggle${sidebarOpen ? ' icon-button--on' : ''}`}
+              aria-label={i18n.t(sidebarOpen ? 'nav.closeMenu' : 'nav.openMenu')}
+              title={i18n.t(sidebarOpen ? 'nav.closeMenu' : 'nav.openMenu')}
+              aria-expanded={sidebarOpen}
+              onClick={onSidebarToggle}
+            >
+              <Menu size={18} strokeWidth={1.8} aria-hidden="true" />
+            </button>
             <IconButton label={i18n.t('player.collapse')} onClick={() => onExpandedChange(false)}>
               <ChevronsLeft size={18} strokeWidth={1.9} aria-hidden="true" />
-            </IconButton>
-            <IconButton
-              label={i18n.t('player.shuffle')}
-              on={snapshot?.shuffle ?? false}
-              disabled={!player}
-              onClick={() => player?.setShuffle(!snapshot?.shuffle)}
-            >
-              <Shuffle size={17} strokeWidth={1.9} aria-hidden="true" />
-            </IconButton>
-            <IconButton
-              label={i18n.t('player.previous')}
-              disabled={!player}
-              onClick={run(() => player?.previous())}
-            >
-              <SkipBack size={19} fill="currentColor" strokeWidth={1.5} aria-hidden="true" />
-            </IconButton>
-            <IconButton
-              large
-              label={i18n.t(playing ? 'player.pause' : 'player.play')}
-              disabled={!player}
-              onClick={run(() => (playing ? player?.pause() : player?.play()))}
-            >
-              {playing ? (
-                <Pause size={24} fill="currentColor" strokeWidth={1.5} aria-hidden="true" />
-              ) : (
-                <Play size={24} fill="currentColor" strokeWidth={1.5} aria-hidden="true" />
-              )}
-            </IconButton>
-            <IconButton
-              label={i18n.t('player.next')}
-              disabled={!player}
-              onClick={run(() => player?.next())}
-            >
-              <SkipForward size={19} fill="currentColor" strokeWidth={1.5} aria-hidden="true" />
-            </IconButton>
-            <IconButton
-              label={i18n.t(
-                repeat === 'one'
-                  ? 'player.repeatOne'
-                  : repeat === 'all'
-                    ? 'player.repeatAll'
-                    : 'player.repeatOff'
-              )}
-              on={repeat !== 'none'}
-              disabled={!player}
-              onClick={() =>
-                player?.setRepeat(
-                  REPEAT_ORDER[(REPEAT_ORDER.indexOf(repeat) + 1) % REPEAT_ORDER.length]!
-                )
-              }
-            >
-              {repeat === 'one' ? (
-                <Repeat1 size={17} strokeWidth={1.9} aria-hidden="true" />
-              ) : (
-                <Repeat size={17} strokeWidth={1.9} aria-hidden="true" />
-              )}
             </IconButton>
             <span className="player__divider" aria-hidden="true" />
             <IconButton
@@ -380,54 +341,114 @@ export function PlayerDock({
             </IconButton>
           </div>
           <Glass variant="capsule" className="player__now">
-            <button
-              type="button"
-              className="player__art-button"
-              aria-label={i18n.t('player.openNowPlaying')}
-              title={i18n.t('player.openNowPlaying')}
-              disabled={!now}
-              onClick={onOpenNowPlaying}
-              onPointerEnter={() => {
-                preloadLargeArt(now?.artworkTemplate)
-                prefetchArtistImage(app.library, now)
-              }}
-            >
-              {nowPlayingOpen ? (
-                <span className="player__art player__art--away" />
-              ) : art ? (
-                <motion.img
-                  layoutId={NP_ART_LAYOUT_ID}
-                  className="player__art"
-                  src={art}
-                  alt=""
-                  draggable={false}
-                  transition={{
-                    layout: { type: 'tween', duration: 0.45, ease: [0.45, 0, 0.15, 1] }
-                  }}
+            <div className="player__now-info">
+              <button
+                type="button"
+                className="player__art-button"
+                aria-label={i18n.t('player.openNowPlaying')}
+                title={i18n.t('player.openNowPlaying')}
+                disabled={!now}
+                onClick={onOpenNowPlaying}
+                onPointerEnter={() => {
+                  preloadLargeArt(now?.artworkTemplate)
+                  prefetchArtistImage(app.library, now)
+                }}
+              >
+                {nowPlayingOpen ? (
+                  <span className="player__art player__art--away" />
+                ) : art ? (
+                  <motion.img
+                    layoutId={NP_ART_LAYOUT_ID}
+                    className="player__art"
+                    src={art}
+                    alt=""
+                    draggable={false}
+                    transition={{
+                      layout: { type: 'tween', duration: 0.45, ease: [0.45, 0, 0.15, 1] }
+                    }}
+                  />
+                ) : (
+                  <span className="player__art" />
+                )}
+              </button>
+              <div className="player__now-text">
+                <div className="player__now-title">
+                  {now?.title ?? i18n.t('player.nothingPlaying')}
+                </div>
+                <div className="player__now-sub">
+                  {now?.artist ? (
+                    <button type="button" className="player__now-link" onClick={openArtist}>
+                      {now.artist}
+                    </button>
+                  ) : null}
+                  {now?.album ? ` — ${now.album}` : ''}
+                </div>
+              </div>
+              {now ? (
+                <QualityBadge
+                  className="quality-badge--dock"
+                  quality={settings?.playback.streamingQuality ?? 'high'}
                 />
-              ) : (
-                <span className="player__art" />
-              )}
-            </button>
-            <div className="player__now-text">
-              <div className="player__now-title">
-                {now?.title ?? i18n.t('player.nothingPlaying')}
-              </div>
-              <div className="player__now-sub">
-                {now?.artist ? (
-                  <button type="button" className="player__now-link" onClick={openArtist}>
-                    {now.artist}
-                  </button>
-                ) : null}
-                {now?.album ? ` — ${now.album}` : ''}
-              </div>
+              ) : null}
             </div>
-            {now ? (
-              <QualityBadge
-                className="quality-badge--dock"
-                quality={settings?.playback.streamingQuality ?? 'high'}
-              />
-            ) : null}
+            <div className="player__controls">
+              <IconButton
+                label={i18n.t('player.shuffle')}
+                on={snapshot?.shuffle ?? false}
+                disabled={!player}
+                onClick={() => player?.setShuffle(!snapshot?.shuffle)}
+              >
+                <Shuffle size={17} strokeWidth={1.9} aria-hidden="true" />
+              </IconButton>
+              <IconButton
+                label={i18n.t('player.previous')}
+                disabled={!player}
+                onClick={run(() => player?.previous())}
+              >
+                <SkipBack size={19} fill="currentColor" strokeWidth={1.5} aria-hidden="true" />
+              </IconButton>
+              <IconButton
+                large
+                label={i18n.t(playing ? 'player.pause' : 'player.play')}
+                disabled={!player}
+                onClick={run(() => (playing ? player?.pause() : player?.play()))}
+              >
+                {playing ? (
+                  <Pause size={24} fill="currentColor" strokeWidth={1.5} aria-hidden="true" />
+                ) : (
+                  <Play size={24} fill="currentColor" strokeWidth={1.5} aria-hidden="true" />
+                )}
+              </IconButton>
+              <IconButton
+                label={i18n.t('player.next')}
+                disabled={!player}
+                onClick={run(() => player?.next())}
+              >
+                <SkipForward size={19} fill="currentColor" strokeWidth={1.5} aria-hidden="true" />
+              </IconButton>
+              <IconButton
+                label={i18n.t(
+                  repeat === 'one'
+                    ? 'player.repeatOne'
+                    : repeat === 'all'
+                      ? 'player.repeatAll'
+                      : 'player.repeatOff'
+                )}
+                on={repeat !== 'none'}
+                disabled={!player}
+                onClick={() =>
+                  player?.setRepeat(
+                    REPEAT_ORDER[(REPEAT_ORDER.indexOf(repeat) + 1) % REPEAT_ORDER.length]!
+                  )
+                }
+              >
+                {repeat === 'one' ? (
+                  <Repeat1 size={17} strokeWidth={1.9} aria-hidden="true" />
+                ) : (
+                  <Repeat size={17} strokeWidth={1.9} aria-hidden="true" />
+                )}
+              </IconButton>
+            </div>
           </Glass>
           <div className="player__right">
             <IconButton

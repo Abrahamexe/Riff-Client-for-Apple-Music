@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 import {
   BUBBLE_SIZE,
   computeLayout,
-  DROPLET_SIZE,
   GUTTER,
   PLAYER_SIDE_INSET,
   RIGHT_MIN_WINDOW,
@@ -30,38 +29,47 @@ describe('kabuk yerleşimi (B2)', () => {
       for (const state of ALL) {
         const l = computeLayout(size, state)
         const label = JSON.stringify({ size, state })
-        expect(overlaps(l.sidebar, l.player), label).toBe(false)
+        if (l.sidebar) expect(overlaps(l.sidebar, l.player), label).toBe(false)
         if (l.right) {
           expect(overlaps(l.right, l.player), label).toBe(false)
-          expect(overlaps(l.right, l.sidebar), label).toBe(false)
+          if (l.sidebar) expect(overlaps(l.right, l.sidebar), label).toBe(false)
         }
       }
     }
   })
 
-  it('içerik sola kadar: menü açık da kapalı da damlanın sağından başlar (menü üstüne biner)', () => {
-    const open = computeLayout(
-      { width: 1440, height: 900 },
-      { sidebarOpen: true, rightOpen: false, playerExpanded: true }
+  it('sol panel sağ panelin aynası: aynı üst ve alt, kapalıyken yok (2026-11-23)', () => {
+    const l = computeLayout(
+      { width: 1600, height: 900 },
+      { sidebarOpen: true, rightOpen: true, playerExpanded: true }
     )
-    const closed = computeLayout(
-      { width: 1440, height: 900 },
-      { sidebarOpen: false, rightOpen: false, playerExpanded: true }
-    )
-    expect(closed.mainPadding.left).toBeGreaterThan(closed.sidebar.x + closed.sidebar.width)
-    // İçeriğe göre küçülen menünün üst sınırı açık/kapalı durumda aynı (kapanış animasyonu sıçramasın).
-    expect(closed.sidebarMaxHeight).toBe(open.sidebar.height)
-    // Menü açılıp kapanınca içerik yeniden dizilmez.
-    expect(open.mainPadding.left).toBe(closed.mainPadding.left)
-    expect(open.mainPadding.left).toBeLessThan(open.sidebar.x + open.sidebar.width)
+    expect(l.sidebar!.x).toBe(GUTTER)
+    expect(l.sidebar!.y).toBe(l.right!.y)
+    expect(l.sidebar!.y + l.sidebar!.height).toBe(l.right!.y + l.right!.height)
+    expect(
+      computeLayout(
+        { width: 1600, height: 900 },
+        { sidebarOpen: false, rightOpen: true, playerExpanded: true }
+      ).sidebar
+    ).toBeNull()
   })
 
-  it('ana ekran sola kadar uzanır (sol menü üstüne biner); sağ panelin altına girmez', () => {
+  it('küçük oynatıcıda sol panel baloncuğun üstünde biter', () => {
+    const l = computeLayout(
+      { width: 1600, height: 900 },
+      { sidebarOpen: true, rightOpen: false, playerExpanded: false }
+    )
+    expect(l.sidebar!.y + l.sidebar!.height).toBe(l.player.y - GUTTER)
+  })
+
+  it('ana ekran iki panelin de altına girmez (ikisi de iter); içerik boşluğu sabit', () => {
     const size = { width: 1600, height: 900 }
     for (const sidebarOpen of [true, false]) {
       const l = computeLayout(size, { sidebarOpen, rightOpen: true, playerExpanded: true })
-      expect(l.main.left).toBe(0)
       expect(size.width - l.main.right).toBeLessThanOrEqual(l.right!.x)
+      if (l.sidebar) expect(l.main.left).toBeGreaterThanOrEqual(l.sidebar.x + l.sidebar.width)
+      else expect(l.main.left).toBe(0)
+      expect(l.mainPadding.left).toBe(24)
     }
   })
 
@@ -87,12 +95,11 @@ describe('kabuk yerleşimi (B2)', () => {
     })
   })
 
-  it('kapalı menü sol üstte damla; küçük oynatıcı sol altta baloncuk', () => {
+  it('küçük oynatıcı sol altta baloncuk', () => {
     const l = computeLayout(
       { width: 1280, height: 800 },
       { sidebarOpen: false, rightOpen: false, playerExpanded: false }
     )
-    expect(l.sidebar).toEqual({ x: GUTTER, y: GUTTER, width: DROPLET_SIZE, height: DROPLET_SIZE })
     expect(l.player.x).toBe(GUTTER)
     expect(l.player.y + l.player.height).toBe(800 - GUTTER)
     expect(l.player.width).toBe(l.player.height)

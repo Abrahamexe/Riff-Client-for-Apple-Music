@@ -11,6 +11,7 @@ import {
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { i18n } from '@core/i18n'
+import { isEdgeMoving, onEdgeSettled } from '../hooks/edgeMotion'
 import { CARD_GAP, fitCardWidth, shelfEdges, shelfTarget } from './shelfScroll'
 
 // Yatay raf (B4 ek; Apple Music Ana Sayfa rafları): başlık + yana kayan kart sırası. Fareyle üzerine
@@ -67,6 +68,8 @@ export function Shelf({
     if (!row) return
     const base = CARD_STEP[size] - CARD_GAP
     const update = (): void => {
+      // Yan panel açılıp kapanırken kart genişliği sabit; bitince bir kez (edgeMotion.ts).
+      if (isEdgeMoving()) return
       const width = row.clientWidth - ROW_PADDING * 2
       if (width <= 0) return
       const next = fitCardWidth(width, base, columns)
@@ -75,7 +78,11 @@ export function Shelf({
     update()
     const observer = new ResizeObserver(update)
     observer.observe(row)
-    return () => observer.disconnect()
+    const offSettled = onEdgeSettled(update)
+    return () => {
+      observer.disconnect()
+      offSettled()
+    }
   }, [size, columns])
 
   useEffect(() => {
@@ -83,6 +90,7 @@ export function Shelf({
     if (!row) return
     let frame = 0
     const measure = (): void => {
+      if (isEdgeMoving()) return
       cancelAnimationFrame(frame)
       frame = requestAnimationFrame(() => {
         const next = shelfEdges(row)
@@ -95,10 +103,12 @@ export function Shelf({
     row.addEventListener('scroll', measure, { passive: true })
     const observer = new ResizeObserver(measure)
     observer.observe(row)
+    const offSettled = onEdgeSettled(measure)
     return () => {
       cancelAnimationFrame(frame)
       row.removeEventListener('scroll', measure)
       observer.disconnect()
+      offSettled()
     }
   }, [])
 

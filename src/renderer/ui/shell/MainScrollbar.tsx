@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type PointerEvent } from 'react'
+import { isEdgeMoving, onEdgeSettled } from '../hooks/edgeMotion'
 
 // Ana ekranın kaydırma çubuğu (2026-10-19, geliştirici: "sağdaki çubuk ayrı bir bölme olmasın,
 // uygulamaya dahil, hafif şeffaf olsun; sayfa tonu orada koyu kalmasın"). Yerel çubuk gizlenir (yer
@@ -62,8 +63,12 @@ export function MainScrollbar({
       })
     }
     const schedule = (): void => {
+      // Yan panel açılıp kapanırken ölçülmez (2026-11-23): ana ekran her karede daralırken buradaki
+      // `getBoundingClientRect` her karede zorunlu yerleşim yaptırıyordu (700 ms'de 156 ms). Bitince bir kez.
+      if (isEdgeMoving()) return
       if (!frame) frame = requestAnimationFrame(measure)
     }
+    const offSettled = onEdgeSettled(schedule)
     const onScroll = (): void => {
       schedule()
       setAwake(true)
@@ -79,6 +84,7 @@ export function MainScrollbar({
     if (stack) observer.observe(stack)
     schedule()
     return () => {
+      offSettled()
       element.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', schedule)
       observer.disconnect()

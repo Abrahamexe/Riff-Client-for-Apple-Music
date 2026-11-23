@@ -22,7 +22,7 @@ export function RightPanel({
 }: {
   rect: Rect
   mode: Exclude<RightPanelMode, 'none'>
-  /** Açılış animasyonu bitti (ana ekran yeni genişliğini ancak o zaman alır, Shell.tsx). */
+  /** Açılış animasyonu bitti. */
   onSettled?: () => void
 }) {
   // 2026-11-02 (geliştirici: "açılınca ana ekranda kasma"): ölçüm (1920 px, 144 Hz) Sıradaki açılışında

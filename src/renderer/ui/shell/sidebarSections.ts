@@ -42,24 +42,25 @@ export function saveCollapsed(
   }
 }
 
-// Menü kilidi (geliştirici isteği 2026-10-15): kilit açıkken menüden bir yere gidilince menü kapanır;
-// kilitliyken hep açık kalır. Kilit durumu hatırlanır (varsayılan: açık kilit).
-const PIN_KEY = 'am-client.sidebar.pinned'
+// Sol panelin açık / kapalı durumu (2026-11-23, geliştirici: "sağ paneller gibi olsun"): sağ panel gibi
+// hatırlanır. Kilit kalktı: panel açıkken ana ekranı iter, sayfaya gidince kapanmaz. Varsayılan kapalı
+// (geliştirici isteği 2026-10-15: uygulama menü kapalı açılır).
+const OPEN_KEY = 'am-client.sidebar.open'
 
-export function loadPinned(storage: Pick<Storage, 'getItem'> | null = safeStorage()): boolean {
+export function loadSidebarOpen(storage: Pick<Storage, 'getItem'> | null = safeStorage()): boolean {
   try {
-    return storage?.getItem(PIN_KEY) === '1'
+    return storage?.getItem(OPEN_KEY) === '1'
   } catch {
     return false
   }
 }
 
-export function savePinned(
-  pinned: boolean,
+export function saveSidebarOpen(
+  open: boolean,
   storage: Pick<Storage, 'setItem'> | null = safeStorage()
 ): void {
   try {
-    storage?.setItem(PIN_KEY, pinned ? '1' : '0')
+    storage?.setItem(OPEN_KEY, open ? '1' : '0')
   } catch {
     // yazılamazsa yalnızca bu oturumda geçerli kalır
   }

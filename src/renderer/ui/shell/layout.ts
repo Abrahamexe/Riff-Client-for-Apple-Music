@@ -1,26 +1,28 @@
 // Kabuk yerleşimi (PLAN_v5 B2): "yüzen cam sütunlar". Saf hesap (testli): pencere boyutu + panel
 // durumları → her yüzeyin dikdörtgeni. Kurallar (geliştirici kararları):
 //  - sol menü, alt oynatıcı ve sağ panel (sözler / Sıradaki) birbirinin üstüne binmez;
-//  - ana ekran sola kadar uzanır; sol menü açıkken onun üstüne biner (geliştirici kararı, B3
-//    geri bildirimi); sağ panelin altına girmez; oynatıcının ve arama çubuğunun altından geçer;
+//  - 2026-11-23 (geliştirici: "sol menüyü sağ paneller gibi yap"): sol panel sağ panelin aynası —
+//    üst şeritten oynatıcının üstüne kadar tam boy; açılınca ana ekranı iter (ikisinin de altına
+//    girmez); oynatıcının ve arama çubuğunun altından geçer. Aç/kapa tuşu oynatıcının sol ucunda;
 //  - dar pencerede önce sağ panel, sonra sol menü kendiliğinden kapanır (genişleyince geri açılır);
-//  - kapalı sol menü sol üstte damla, küçük oynatıcı sol altta baloncuk.
+//  - küçük oynatıcı sol altta baloncuk.
 // Ölçüler geliştiricinin onayına sunulan başlangıç değerleridir.
 
 export const GUTTER = 12
 export const SIDEBAR_WIDTH = 248
 const RIGHT_WIDTH = 340
-const PLAYER_HEIGHT = 92
+/** 2026-11-23: çalma tuşları şarkı kutusunun altına indi (ilerleme 22 + kutu 74 + boşluklar). */
+const PLAYER_HEIGHT = 116
 /** Açık oynatıcı çubuğunun sağ ve sol boşluğu (geliştirici kararı: "sağdan soldan biraz boşluk"). */
 export const PLAYER_SIDE_INSET = 80
 /** İçerik bu genişliğin altındaysa (pencere < 1200 px) tuşlar küçülür (`.player--narrow`). */
 export const PLAYER_NARROW_BELOW = 1200 - 2 * PLAYER_SIDE_INSET
 /** `.player__content`'in en dar genişliği (CSS'teki eski `max(720px, …)` ile aynı). */
 const PLAYER_MIN_CONTENT = 720
-/** 2026-10-30: köşedeki düğmeler eşit (36 px, kenarlardan 12 px = GUTTER). 2026-11-02 (geliştirici:
- * "sol altta çok küçük kalıyor"): oynatıcı baloncuğu 48 px, kenar boşluğu yine 12 px. */
+/** 2026-11-02 (geliştirici: "sol altta çok küçük kalıyor"): oynatıcı baloncuğu 48 px, kenar 12 px. */
 export const BUBBLE_SIZE = 48
-export const DROPLET_SIZE = 36
+/** Geri + Ana Sayfa düğmeleri (sol üst köşe, kenardan GUTTER). */
+export const NAV_BUTTON_SIZE = 36
 /** Üst şerit: arama çubuğu ve pencere düğmeleri. */
 const TOP_STRIP = 60
 /** Bu genişliğin altında sağ panel kendiliğinden kapanır. */
@@ -44,13 +46,8 @@ export interface ShellState {
 export interface ShellLayout {
   /** Kullanıcı tercihi + pencere genişliğinden çıkan gerçek durum. */
   effective: ShellState
-  /**
-   * Açık sol menünün EN BÜYÜK dikdörtgeni; gerçek yükseklik içeriğe göre (kapalı bölümler küçültür,
-   * geliştirici isteği 2026-10-14). Kapalıyken damla.
-   */
-  sidebar: Rect
-  /** Sol menünün çıkabileceği en büyük yükseklik (açık / kapalı durumdan bağımsız). */
-  sidebarMaxHeight: number
+  /** Sol panel (menü) kapalıysa `null`. */
+  sidebar: Rect | null
   player: Rect
   /**
    * Oynatıcı içeriğinin sabit genişliği (açık çubuğun genişliği; en az 720). Baloncuğa küçülünce de
@@ -88,9 +85,10 @@ export function computeLayout(
   // Yan paneller oynatıcının (veya baloncuğun) üstünde biter: üst üste binme yok.
   const panelBottom = player.y - GUTTER
 
-  const sidebar: Rect = effective.sidebarOpen
-    ? { x: GUTTER, y: GUTTER, width: SIDEBAR_WIDTH, height: panelBottom - GUTTER }
-    : { x: GUTTER, y: GUTTER, width: DROPLET_SIZE, height: DROPLET_SIZE }
+  // Sol panel: baloncuk sol altta olduğu için hep oynatıcının (ya da baloncuğun) üstünde biter.
+  const sidebar: Rect | null = effective.sidebarOpen
+    ? { x: GUTTER, y: TOP_STRIP, width: SIDEBAR_WIDTH, height: panelBottom - TOP_STRIP }
+    : null
 
   // Sağ panel: oynatıcı küçükken baloncuk solda olduğu için sağ panel en alta kadar uzanır.
   const rightBottom = effective.playerExpanded ? panelBottom : height - GUTTER
@@ -104,23 +102,21 @@ export function computeLayout(
     : null
 
   const rightEdge = right ? width - right.x + GUTTER : 0
+  const leftEdge = sidebar ? sidebar.x + sidebar.width + GUTTER : 0
   return {
     effective,
     sidebar,
-    sidebarMaxHeight: panelBottom - GUTTER,
     player,
     playerContentWidth: Math.max(PLAYER_MIN_CONTENT, width - 2 * PLAYER_SIDE_INSET),
     right,
-    main: { left: 0, right: rightEdge },
+    main: { left: leftEdge, right: rightEdge },
     mainPadding: {
       top: TOP_STRIP + 8,
       // Oynatıcının açık hâline göre sabit: baloncuğa küçülünce sayfa yeniden dizilmez (B5 akıcılık:
       // değişen alt boşluk tüm sayfayı bir kez yeniden diziyordu, 28–42 ms'lik kare).
       bottom: PLAYER_HEIGHT + 2 * GUTTER,
-      // Ana ekran ve içeriği sola kadar uzanır; açık menü içeriğin üstüne biner (geliştirici, B5
-      // geri bildirimi: "ana ekran sol tarafa kadar gitsin"). İçerik her zaman damlanın sağından
-      // başlar: menü açılıp kapanırken sayfa yeniden dizilmez (akıcılık).
-      left: GUTTER + DROPLET_SIZE + 16
+      // Sağdaki boşlukla aynı (Shell.tsx MAIN_PADDING_RIGHT); sol panel artık ana ekranı iter.
+      left: 24
     }
   }
 }

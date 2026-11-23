@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import {
   loadCollapsed,
-  loadPinned,
+  loadSidebarOpen,
   parseCollapsed,
   saveCollapsed,
-  savePinned
+  saveSidebarOpen
 } from './sidebarSections'
 
 describe('sol menü bölümleri', () => {
@@ -37,24 +37,24 @@ describe('sol menü bölümleri', () => {
   })
 })
 
-describe('menü kilidi', () => {
-  it('kaydedilir ve okunur; okunamazsa açık kilit', () => {
+describe('sol panel durumu', () => {
+  it('kaydedilir ve okunur; okunamazsa kapalı', () => {
     const store = new Map<string, string>()
     const storage = {
       getItem: (k: string) => store.get(k) ?? null,
       setItem: (k: string, v: string) => void store.set(k, v)
     }
-    expect(loadPinned(storage)).toBe(false)
-    savePinned(true, storage)
-    expect(loadPinned(storage)).toBe(true)
-    savePinned(false, storage)
-    expect(loadPinned(storage)).toBe(false)
+    expect(loadSidebarOpen(storage)).toBe(false)
+    saveSidebarOpen(true, storage)
+    expect(loadSidebarOpen(storage)).toBe(true)
+    saveSidebarOpen(false, storage)
+    expect(loadSidebarOpen(storage)).toBe(false)
     const broken = {
       getItem: (): string => {
         throw new Error('yok')
       }
     }
-    expect(loadPinned(broken)).toBe(false)
-    expect(loadPinned(null)).toBe(false)
+    expect(loadSidebarOpen(broken)).toBe(false)
+    expect(loadSidebarOpen(null)).toBe(false)
   })
 })

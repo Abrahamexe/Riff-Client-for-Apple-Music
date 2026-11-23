@@ -1,8 +1,9 @@
-import { memo, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { TintProvider } from '../components/PageTint'
 import { useLocale } from '../hooks/useLocale'
+import { setEdgeMoving } from '../hooks/edgeMotion'
 import { MainScrollbar } from './MainScrollbar'
-import { AnimatePresence, motion } from 'motion/react'
+import { animate, AnimatePresence, motion, useMotionValue, useMotionValueEvent } from 'motion/react'
 import { createWarmup } from '@core/musickit/warmup'
 import {
   anchoredZoomTransform,
@@ -32,7 +33,7 @@ import { CompilationsPage, FilteredSongsPage, NamedListPage } from '../pages/lib
 import { TitleBar } from '../window/TitleBar'
 import { computeLayout } from './layout'
 import { RightPanel } from './RightPanel'
-import { pageTransition, SPRING_SOFT } from './motion'
+import { pageTransition, sidebarPanelMotion } from './motion'
 import { PlayerDock } from './PlayerDock'
 import { routeKey, RouterProvider, useRouter, type Route } from './router'
 import { MainScrollProvider } from './scroll'
@@ -47,6 +48,7 @@ import { stepVolume } from '../theme/tweaks'
 import { FpsMeter } from './FpsMeter'
 import { CoverAccent } from '../components/CoverAccent'
 import { Sidebar } from './Sidebar'
+import { loadSidebarOpen, saveSidebarOpen } from './sidebarSections'
 
 // Uygulama kabuğu (PLAN_v5 B2): yüzen cam sütunlar. Açılışta sol menü ve oynatıcı açık gelir;
 // sözler paneli kapalı (durumu ayarlarda hatırlanır). Dar pencerede paneller kendiliğinden kapanır.
@@ -403,8 +405,12 @@ function ShellBody() {
   usePlaybackWarmup(settings?.tweaks.playbackWarmup ?? true)
   const { route, restoreScroll, direction } = useRouter()
   const [mainEl, setMainEl] = useState<HTMLElement | null>(null)
-  // Geliştirici isteği (2026-10-15): uygulama menü kapalı açılır.
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  // Sol panel sağ panel gibi hatırlanır (2026-11-23); ilk açılışta kapalı (geliştirici 2026-10-15).
+  const [sidebarOpen, setSidebarOpenState] = useState(loadSidebarOpen)
+  const setSidebarOpen = (open: boolean): void => {
+    setSidebarOpenState(open)
+    saveSidebarOpen(open)
+  }
   const [playerExpanded, setPlayerExpanded] = useState(true)
   const [nowPlayingOpen, setNowPlayingOpen] = useState(false)
   const rightPanel = settings?.appearance.rightPanel ?? 'none'
@@ -421,7 +427,7 @@ function ShellBody() {
   // Pencere daralınca panel kendiliğinden kapanır; düğmeye basılırsa yeniden açılmaya çalışılmaz.
   const shownPanel = effective.rightOpen ? rightPanel : 'none'
   // Arama çubuğu, açık menü ve sağ panel dışındaki görünür alanın ortasında.
-  const visibleLeft = effective.sidebarOpen ? layout.sidebar.x + layout.sidebar.width : 0
+  const visibleLeft = layout.sidebar ? layout.sidebar.x + layout.sidebar.width : 0
   const visibleWidth = viewport.width - visibleLeft - layout.main.right
   const searchLeft = visibleLeft + visibleWidth / 2 - 210
 
@@ -432,31 +438,67 @@ function ShellBody() {
     if (mainEl) mainEl.scrollTop = restoreScroll
   }, [key, mainEl, restoreScroll])
 
-  // 2026-11-02 (geliştirici: "sağ panel açılınca ana ekranda kasma"): ana ekranın sağ kenarı panel
-  // canlanırken DEĞİŞMEZ. Ölçüm: kenar yayla daralırken kaydırma çubuğunun ölçümü her karede tüm sayfayı
-  // yeniden dizdiriyordu (`getBoundingClientRect` ~100 ms, 42–63 ms'lik kareler). Yeni genişlik panel
-  // açılınca yerine oturduktan sonra, kapanınca tamamen kaybolduktan sonra tek seferde uygulanır.
-  const [panelSettled, setPanelSettled] = useState(false)
-  const [mainRight, setMainRight] = useState(layout.main.right)
-  const targetRight = layout.main.right
-  useEffect(() => {
-    if (layout.right && panelSettled) setMainRight(targetRight)
-  }, [layout.right, panelSettled, targetRight])
-
-  const pageWidth = Math.max(
-    320,
-    viewport.width - layout.main.left - mainRight - layout.mainPadding.left - MAIN_PADDING_RIGHT
-  )
+  // Ana ekranın kenarları panellerle birlikte (2026-11-23, geliştirici: "panel önce sayfanın üstüne
+  // biniyor, sonra arka sayfa aniden kayıyor" → "hâlâ smooth değil"). Kenarlar panelle aynı yayla, kare
+  // kare değişir (React yeniden çizilmez: motion değerleri doğrudan stile yazılır). Yalnızca panel açılıp
+  // kapanınca yay; pencere boyutu değişince kenarlar aynı işlemde atlar.
+  const mainLeft = useMotionValue(layout.main.left)
+  const mainRight = useMotionValue(layout.main.right)
+  const pageWidth = useMotionValue(0)
+  const sizeRef = useRef({ width: viewport.width, padding: layout.mainPadding.left })
+  sizeRef.current = { width: viewport.width, padding: layout.mainPadding.left }
+  const updatePageWidth = useCallback((): void => {
+    const { width, padding } = sizeRef.current
+    pageWidth.set(
+      Math.max(320, width - mainLeft.get() - mainRight.get() - padding - MAIN_PADDING_RIGHT)
+    )
+  }, [mainLeft, mainRight, pageWidth])
+  useMotionValueEvent(mainLeft, 'change', updatePageWidth)
+  useMotionValueEvent(mainRight, 'change', updatePageWidth)
+  const panelKey = `${layout.sidebar !== null}|${layout.right !== null}`
+  const lastPanelKey = useRef(panelKey)
+  useLayoutEffect(() => {
+    const springing = lastPanelKey.current !== panelKey
+    lastPanelKey.current = panelKey
+    const targets: [typeof mainLeft, number][] = [
+      [mainLeft, layout.main.left],
+      [mainRight, layout.main.right]
+    ]
+    if (!springing) {
+      for (const [value, target] of targets) value.jump(target)
+      updatePageWidth()
+      return
+    }
+    const runs = targets.map(([value, target]) =>
+      animate(value, target, sidebarPanelMotion.animate.transition)
+    )
+    setEdgeMoving(true)
+    let live = true
+    void Promise.all(runs).then(() => {
+      if (live) setEdgeMoving(false)
+    })
+    return () => {
+      live = false
+      runs.forEach((run) => run.stop())
+      setEdgeMoving(false)
+    }
+  }, [
+    panelKey,
+    layout.main.left,
+    layout.main.right,
+    viewport.width,
+    mainLeft,
+    mainRight,
+    updatePageWidth
+  ])
 
   return (
     <MainScrollProvider element={mainEl}>
       <motion.main
         ref={setMainEl}
         className="main"
-        initial={false}
-        animate={{ left: layout.main.left }}
-        transition={SPRING_SOFT}
         style={{
+          left: mainLeft,
           right: mainRight,
           paddingLeft: layout.mainPadding.left,
           paddingTop: layout.mainPadding.top,
@@ -465,8 +507,8 @@ function ShellBody() {
       >
         {/* Kapaktan büyüme: sayfanın kendisi karttan büyür (useZoomPages); kapak ayrıca uçmaz. */}
         {/* Sayfalar aynı ızgara hücresinde üst üste: çıkan sayfa yeni sayfayı aşağı itmez (B4). */}
-        {/* Sağ panelin animasyonu sürerken genişlik sabit (yukarıdaki `mainRight`). */}
-        <div className="page-stack" style={{ width: pageWidth }}>
+        {/* Genişlik panellerle birlikte kare kare (yukarıdaki `pageWidth`). */}
+        <motion.div className="page-stack" style={{ width: pageWidth }}>
           <AnimatePresence initial={false} custom={zoom.custom}>
             <motion.div
               key={key}
@@ -480,7 +522,7 @@ function ShellBody() {
               <Page route={route} />
             </motion.div>
           </AnimatePresence>
-        </div>
+        </motion.div>
       </motion.main>
       <MainScrollbar
         element={mainEl}
@@ -492,29 +534,22 @@ function ShellBody() {
       ) : null}
       <TitleBar />
       <CoverAccent />
-      <NavControls sidebar={layout.sidebar} sidebarOpen={effective.sidebarOpen} />
+      <NavControls
+        onHome={() => {
+          // 2026-11-23 (geliştirici): Ana Sayfa tuşu açık panellerin hepsini kapatır.
+          setSidebarOpen(false)
+          if (rightPanel !== 'none') setRightPanel('none')
+        }}
+      />
       <SearchBar centerX={searchLeft} />
       {settings?.tweaks.fpsMeter ? <FpsMeter /> : null}
       <Notices centerX={searchLeft + 210} />
-      <Sidebar
-        rect={layout.sidebar}
-        maxHeight={layout.sidebarMaxHeight}
-        open={effective.sidebarOpen}
-        onToggle={() => setSidebarOpen(!effective.sidebarOpen)}
-      />
-      <AnimatePresence
-        onExitComplete={() => {
-          setPanelSettled(false)
-          setMainRight(layout.main.right)
-        }}
-      >
+      <AnimatePresence>
+        {layout.sidebar && <Sidebar key="left" rect={layout.sidebar} />}
+      </AnimatePresence>
+      <AnimatePresence>
         {layout.right && shownPanel !== 'none' && (
-          <RightPanel
-            key="right"
-            rect={layout.right}
-            mode={shownPanel}
-            onSettled={() => setPanelSettled(true)}
-          />
+          <RightPanel key="right" rect={layout.right} mode={shownPanel} />
         )}
       </AnimatePresence>
       <PlayerDock
@@ -522,6 +557,8 @@ function ShellBody() {
         contentWidth={layout.playerContentWidth}
         expanded={effective.playerExpanded}
         rightPanel={shownPanel}
+        sidebarOpen={effective.sidebarOpen}
+        onSidebarToggle={() => setSidebarOpen(!effective.sidebarOpen)}
         onExpandedChange={setPlayerExpanded}
         onRightPanel={setRightPanel}
         nowPlayingOpen={nowPlayingOpen}
