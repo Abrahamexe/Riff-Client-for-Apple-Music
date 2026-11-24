@@ -2214,6 +2214,32 @@
   scroll-snap-align: start;
 }
 
+/* Ekran dışındaki raflar çizilmez ve yerleşime girmez (2026-11-24, geliştirici: "menüler açılırken fps
+   düşüyor"): yan panel açılıp kapanırken ana ekran kare kare yeniden dizilir; Ana Sayfa'da raflar sayfanın
+   ~%70'ini kaplıyor, görünmeyenleri de her karede dizip çiziyorduk (ölçüm: ~7,4 ms/kare, 144 Hz'de 7 ms
+   bütçe). Satır zaten kaydırma kabı (`overflow`), yani içerik kırpılması değişmez. `auto`: görününce
+   ölçülen yükseklik hatırlanır; ilk değer yaklaşık boy (kaymayı küçük tutar). */
+.shelf-row {
+  content-visibility: auto;
+  contain-intrinsic-block-size: auto 245px;
+}
+
+.shelf-row--large {
+  contain-intrinsic-block-size: auto 315px;
+}
+
+.shelf-row--wide {
+  contain-intrinsic-block-size: auto 305px;
+}
+
+.shelf-row--songs {
+  contain-intrinsic-block-size: auto 200px;
+}
+
+.shelf-row--chart {
+  contain-intrinsic-block-size: auto 260px;
+}
+
 .shelf-row--large {
   --shelf-card: 248px;
 }

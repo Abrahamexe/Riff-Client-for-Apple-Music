@@ -31,7 +31,7 @@ import { PlaylistPage } from '../pages/library/PlaylistPage'
 import { SongsPage } from '../pages/library/SongsPage'
 import { CompilationsPage, FilteredSongsPage, NamedListPage } from '../pages/library/BrowseByPages'
 import { TitleBar } from '../window/TitleBar'
-import { computeLayout } from './layout'
+import { computeLayout, SIDEBAR_MIN_WINDOW } from './layout'
 import { RightPanel } from './RightPanel'
 import { pageTransition, sidebarPanelMotion } from './motion'
 import { PlayerDock } from './PlayerDock'
@@ -137,6 +137,28 @@ function usePlaybackWarmup(enabled: boolean): void {
       for (const name of events) window.removeEventListener(name, onActivity)
     }
   }, [enabled])
+}
+
+/**
+ * Cam panel ısıtma (2026-11-24, geliştirici: "menüleri açarken fps düşüyor"): ölçüm — ilk açılışta GPU'da
+ * ~21–27 ms'lik çizim kareleri (sonraki açılışlar 7 ms). Uygulama açıldıktan biraz sonra, boştayken,
+ * kapalı panelin görünmez (%1 opaklık) bir kopyası birkaç kare çizdirilir.
+ */
+function useGlassWarmup(enabled: boolean): boolean {
+  const [warm, setWarm] = useState(false)
+  useEffect(() => {
+    if (!enabled) return
+    let off: ReturnType<typeof setTimeout> | undefined
+    const on = setTimeout(() => {
+      setWarm(true)
+      off = setTimeout(() => setWarm(false), 450)
+    }, 2500)
+    return () => {
+      clearTimeout(on)
+      clearTimeout(off)
+    }
+  }, [enabled])
+  return warm
 }
 
 /** Karttan büyüyen sayfa açılan sayfalar. */
@@ -421,6 +443,10 @@ function ShellBody() {
     playerExpanded
   })
   const { effective } = layout
+  const warming = useGlassWarmup(!sidebarOpen && viewport.width >= SIDEBAR_MIN_WINDOW)
+  const warmGhost = warming
+    ? computeLayout(viewport, { sidebarOpen: true, rightOpen: false, playerExpanded }).sidebar
+    : null
   const setRightPanel = (panel: typeof rightPanel): void => {
     void app.settings.update({ appearance: { rightPanel: panel } }).catch(() => {})
   }
@@ -558,6 +584,7 @@ function ShellBody() {
       <AnimatePresence>
         {layout.sidebar && <Sidebar key="left" rect={layout.sidebar} />}
       </AnimatePresence>
+      {warmGhost && !layout.sidebar ? <Sidebar key="ghost" rect={warmGhost} ghost /> : null}
       <AnimatePresence>
         {layout.right && shownPanel !== 'none' && (
           <RightPanel key="right" rect={layout.right} mode={shownPanel} />

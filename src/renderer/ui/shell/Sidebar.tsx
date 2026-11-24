@@ -157,7 +157,7 @@ function Section({
   )
 }
 
-export function Sidebar({ rect }: { rect: Rect }) {
+export function Sidebar({ rect, ghost = false }: { rect: Rect; ghost?: boolean }) {
   const [collapsed, setCollapsed] = useState(loadCollapsed)
   const isOpen = (s: SidebarSection): boolean => !collapsed.has(s)
   const toggle = (s: SidebarSection) => (): void => {
@@ -176,7 +176,17 @@ export function Sidebar({ rect }: { rect: Rect }) {
       className="glass sidebar"
       aria-label={i18n.t('nav.menu')}
       style={{ left: rect.x, top: rect.y, width: rect.width, height: rect.height }}
-      {...sidebarPanelMotion}
+      // `ghost`: ısıtma (Shell.tsx `useGlassWarmup`) — görünmez çizim; ilk gerçek açılışta GPU'nun
+      // gölgelendirici derlemesi / ilk çizimi (21–27 ms'lik kareler) önceden yapılmış olur.
+      {...(ghost
+        ? {
+            initial: false,
+            animate: { opacity: 0.01, scale: 0.9 },
+            transition: { duration: 0 },
+            'aria-hidden': true,
+            inert: true
+          }
+        : sidebarPanelMotion)}
     >
       <div className="sidebar__content">
         <div className="sidebar__scroll">

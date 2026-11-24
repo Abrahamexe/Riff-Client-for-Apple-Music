@@ -111,7 +111,9 @@ export function SearchBar({ centerX }: { centerX: number }) {
       <motion.div
         className={`glass glass--capsule searchbar${focused ? ' searchbar--focused' : ''}`}
         initial={false}
-        animate={{ left: centerX, width: focused ? BAR_WIDTH_FOCUSED : BAR_WIDTH }}
+        // `left` yerine `x`: panel açılıp kapanırken çubuk dönüşümle kayar (her karede yerleşim yok).
+        style={{ left: 0 }}
+        animate={{ x: centerX, width: focused ? BAR_WIDTH_FOCUSED : BAR_WIDTH }}
         transition={SPRING_SOFT}
       >
         <Search className="searchbar__icon" size={17} strokeWidth={2} aria-hidden="true" />

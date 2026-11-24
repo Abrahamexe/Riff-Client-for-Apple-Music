@@ -89,13 +89,19 @@ export function Shelf({
         const width = row.clientWidth - ROW_PADDING * 2
         from = fitFor(width)
         to = fitFor(width + delta)
+        // Hedef genişlik değişkene bir kez yazılır (oynat düğmesi gibi `--shelf-card`'a bağlı soy
+        // öğeler tek seferde kurulur); kareler yalnızca satırın kendi `grid-auto-columns`'ını sürer.
+        // Değişken kare kare yazılınca soyundaki ~600 öğenin stili her karede yeniden hesaplanıyordu
+        // (ölçüm: ~3 ms/kare, 144 Hz'de kare atlatıyordu).
+        if (to !== null) row.style.setProperty('--shelf-card', `${to}px`)
       },
       frame: (p) => {
         if (from === null || to === null) return
-        row.style.setProperty('--shelf-card', `${from + (to - from) * p}px`)
+        row.style.gridAutoColumns = `${from + (to - from) * p}px`
       },
       settled: () => {
         from = to = null
+        row.style.removeProperty('grid-auto-columns')
         update()
       }
     })
