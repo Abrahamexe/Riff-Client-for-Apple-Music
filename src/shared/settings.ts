@@ -54,14 +54,14 @@ const AdvancedSchema = z.strictObject({
 })
 /**
  * Görünüm (PLAN_v5 B0, geliştiricinin isteği: Apple Music'te yok, kendi arayüzümüzün ayarı).
- * `transparency`: cam yüzeylerin saydamlığı, 0 = en az (neredeyse opak) … 100 = en çok.
+ * 2026-11-27: tek tasarım (Gözlemevi; klasik cam tasarım ve onun saydamlık ayarı kaldırıldı). Eski
+ * kayıttaki `design` / `transparency` alanları göçte atılır.
  */
 export const THEME_MODES = ['system', 'light', 'dark'] as const
 /** 2026-10-14: `info` = çalan şarkının bilgisi (müzik arka planı: krediler, sample'lar, sanatçı). */
 export const RIGHT_PANELS = ['none', 'lyrics', 'queue', 'info'] as const
 const AppearanceSchema = z.strictObject({
   theme: z.enum(THEME_MODES),
-  transparency: z.number().check(z.int(), z.gte(0), z.lte(100)),
   /** B3: sağ sütunda ne açık (Apple Music gibi sözler ve Sıradaki aynı sütunu paylaşır); hatırlanır. */
   rightPanel: z.enum(RIGHT_PANELS)
 })
@@ -73,7 +73,6 @@ export const MOTION_MODES = ['system', 'reduced', 'full'] as const
 export const LYRICS_SIZES = ['small', 'medium', 'large'] as const
 const intIn = (min: number, max: number) => z.number().check(z.int(), z.gte(min), z.lte(max))
 export const TWEAK_LIMITS = {
-  pulseStrength: [0, 200],
   lyricsOffsetMs: [-3000, 3000],
   volumeStep: [1, 20],
   seekStep: [1, 30],
@@ -82,10 +81,7 @@ export const TWEAK_LIMITS = {
 const TweaksSchema = z.strictObject({
   /** Animasyonlar: Windows ayarına uy / her zaman azalt / her zaman tam. */
   motion: z.enum(MOTION_MODES),
-  /** Cam bulanıklığı (zayıf GPU'da kapatılır; cam yüzeyler daha opak olur). */
-  glassBlur: z.boolean(),
-  /** Büyük oynatıcıda müzikle nabız şiddeti (%; 0 = kapalı). */
-  pulseStrength: intIn(...TWEAK_LIMITS.pulseStrength),
+  // 2026-11-27: `glassBlur` ve `pulseStrength` klasik tasarımla kalktı (eski kayıtta göçte atılır).
   /** Senkron sözleri öne (+) / geriye (−) kaydırma (ms). */
   lyricsOffsetMs: intIn(...TWEAK_LIMITS.lyricsOffsetMs),
   lyricsSize: z.enum(LYRICS_SIZES),
@@ -203,12 +199,10 @@ export function defaultSettings(): Settings {
     },
     audioLab: { enabled: false, clarity: 35, air: 25, limiter: true },
     // B1: varsayılanlar geliştiricinin onayına sunulur (referans: koyu, arkası hafif seçilen cam).
-    appearance: { theme: 'system', transparency: 60, rightPanel: 'none' },
+    appearance: { theme: 'system', rightPanel: 'none' },
     profile: { displayName: '' },
     tweaks: {
       motion: 'system',
-      glassBlur: true,
-      pulseStrength: 100,
       lyricsOffsetMs: 0,
       lyricsSize: 'medium',
       volumeStep: 5,

@@ -23,11 +23,11 @@ describe('ince ayarın köke uygulanması', () => {
     expect(root.vars.get('--lyrics-scale')).toBe('1')
   })
 
-  it('azaltılmış animasyon, bulanıklık kapalı, büyük söz', () => {
+  it('azaltılmış animasyon, büyük söz', () => {
     const root = fakeRoot()
     const tweaks = { ...defaultSettings().tweaks }
-    applyTweaks(root, { ...tweaks, motion: 'reduced', glassBlur: false, lyricsSize: 'large' })
-    expect([...root.classes].sort()).toEqual(['tw-no-blur', 'tw-reduced-motion'])
+    applyTweaks(root, { ...tweaks, motion: 'reduced', lyricsSize: 'large' })
+    expect([...root.classes]).toEqual(['tw-reduced-motion'])
     expect(root.vars.get('--lyrics-scale')).toBe('1.25')
     applyTweaks(root, tweaks)
     expect([...root.classes]).toEqual([])

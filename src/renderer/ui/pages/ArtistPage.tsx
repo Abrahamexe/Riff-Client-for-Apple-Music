@@ -16,7 +16,6 @@ import { SongCell } from '../components/SongCell'
 import { isCurrent } from '../components/TrackTable'
 import { releaseYear } from '../format'
 import { ShelvesSkeleton } from './HomePage'
-import { PageTint } from '../components/PageTint'
 
 // Sanatçı sayfası (B5; geliştirici kararı: "Geniş kapak görseli"): üstte sanatçının geniş görseli,
 // üzerinde adı ve çal düğmesi (popüler parçaları çalar). Altında Son Çıkan + Popüler Parçalar
@@ -42,7 +41,6 @@ export function ArtistPage({ id, title }: { id: string; title: string }) {
 
   return (
     <>
-      <PageTint artwork={detail?.artist.artworkUrl} size={HERO_SIZE} />
       <ArtistHero
         name={detail?.artist.name ?? title}
         artworkUrl={detail?.artist.artworkUrl ?? null}
@@ -85,9 +83,11 @@ function ArtistHero({
 }) {
   const src = cachedArtworkUrl(artworkUrl, HERO_SIZE)
   const [failed, setFailed] = useState<string | null>(null)
+  // 2026-11-27: fotoğraf yoksa boş gri kutu yerine sade başlık; adın üstünde etiket.
+  const bare = !src || src === failed
   return (
     <motion.div
-      className="artist-hero"
+      className={`artist-hero${bare ? ' artist-hero--bare' : ''}`}
       initial={{ opacity: 0, scale: 0.985 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ type: 'spring', stiffness: 220, damping: 28 }}
@@ -117,7 +117,10 @@ function ArtistHero({
         >
           <Play size={22} fill="currentColor" strokeWidth={0} />
         </motion.button>
-        <h1 className="artist-hero__name">{name}</h1>
+        <div className="artist-hero__titles">
+          <span className="artist-hero__kicker">{i18n.t('artist.kicker')}</span>
+          <h1 className="artist-hero__name">{name}</h1>
+        </div>
       </div>
     </motion.div>
   )

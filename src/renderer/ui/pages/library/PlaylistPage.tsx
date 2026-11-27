@@ -6,7 +6,6 @@ import { i18n } from '@core/i18n'
 import { useApp } from '../../context'
 import { usePlayer } from '../../hooks/usePlayer'
 import { Artwork } from '../../components/Artwork'
-import { PageTint } from '../../components/PageTint'
 import { TrackTable } from '../../components/TrackTable'
 import { playlistStart } from '../../components/playlistWindow'
 import { useScopeVersion } from './common'
@@ -123,7 +122,6 @@ export function PlaylistPage({
 
   return (
     <>
-      <PageTint artwork={artworkUrl} />
       <div className="collection-header">
         <Artwork url={artworkUrl} size={480} kind="playlist" className="collection-header__art" />
         <motion.div

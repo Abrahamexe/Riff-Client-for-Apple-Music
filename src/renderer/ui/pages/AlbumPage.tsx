@@ -9,7 +9,6 @@ import { displayedTrack, formatTime, usePlayer } from '../hooks/usePlayer'
 import { useRemote } from '../hooks/useRemote'
 import { useGo } from '../shell/scroll'
 import { Artwork } from '../components/Artwork'
-import { PageTint } from '../components/PageTint'
 import { PendingBars } from '../components/PendingBars'
 import { ExpandableNote, LoadFailed, RowsSkeleton, Sections } from '../components/Sections'
 import { isCurrent } from '../components/TrackTable'
@@ -71,7 +70,6 @@ export function AlbumPage({
 
   return (
     <>
-      <PageTint artwork={album?.artworkUrl ?? artworkUrl} />
       <div className="collection-header">
         <Artwork
           url={album?.artworkUrl ?? artworkUrl}

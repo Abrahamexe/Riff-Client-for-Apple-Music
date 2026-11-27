@@ -622,58 +622,9 @@
 }
 
 .icon-button:focus-visible,
-.nav-item:focus-visible,
-.sidebar__toggle:focus-visible,
-.bubble:focus-visible {
+.nav-item:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-}
-
-/* Küçük oynatıcı: kapak + ilerleme halkası. */
-.bubble {
-  position: absolute;
-  top: 0;
-  left: 0;
-  /* Baloncuk boyutunda sabit (layout.ts BUBBLE_SIZE): çubuk açılırken gerilmez. 2026-10-30: 60 → 36
-     (köşedeki düğmeler eşit: 36 px, kenarlardan 12 px); 2026-11-02: 36 → 48 (geliştirici: "çok küçük"). */
-  width: 48px;
-  height: 48px;
-  border: 0;
-  padding: 3px;
-  border-radius: 50%;
-  background: transparent;
-}
-
-.bubble img,
-.bubble__art {
-  width: 100%;
-  height: 100%;
-  display: block;
-  border-radius: 50%;
-  object-fit: cover;
-  background: var(--card);
-}
-
-.bubble__ring {
-  position: absolute;
-  inset: 0;
-  transform: rotate(-90deg);
-  pointer-events: none;
-}
-
-.bubble__ring-track {
-  fill: none;
-  stroke: var(--glass-edge);
-  stroke-width: 2.5;
-}
-
-.bubble__ring-fill {
-  fill: none;
-  stroke: var(--accent);
-  stroke-opacity: 0.85;
-  stroke-width: 2.5;
-  stroke-linecap: round;
-  transition: stroke-dashoffset 250ms linear;
 }
 
 /* ---- Sağ panel (sözler / Sıradaki) ----------------------------------------------------------------------------- */
@@ -1436,7 +1387,6 @@
 @media (prefers-reduced-motion: reduce) {
   .nav-item,
   .icon-button,
-  .bubble__ring-fill,
   .window-drop,
   .slider::-webkit-slider-runnable-track,
   .seek__track {
@@ -1457,270 +1407,6 @@
   /* Sayfa tonu (PageTint) sayfanın arkasında ama uygulama arka planının önünde kalsın. */
   position: relative;
   isolation: isolate;
-}
-
-/* Yaşayan küreler (AmbientOrbs.tsx): tüm pencerede sabit, tonun ve içeriğin arkasında. Yalnızca transform
-   animasyonu (kompozitörde); gradyanın kendisi bulanık, `filter` yok. */
-.ambient-orbs {
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-  opacity: 1;
-  transition: opacity 0.7s ease;
-}
-
-.ambient-orbs--dimmed {
-  opacity: 0;
-}
-
-.ambient-orb {
-  position: absolute;
-  width: 56vmax;
-  height: 56vmax;
-  border-radius: 50%;
-  will-change: transform;
-  /* Renk her açılışta paletten (AmbientOrbs.tsx `--orb-color`); güç küreye göre. */
-  background: radial-gradient(
-    circle,
-    rgb(var(--orb-color, 124 82 255) / calc(var(--orb-alpha) * var(--orb-strength, 1))),
-    transparent 66%
-  );
-  animation-timing-function: ease-in-out;
-  animation-iteration-count: infinite;
-}
-
-/* 2026-11-02: yedi küre; her biri birkaç ara noktadan geçen kapalı bir yolda 10–16 sn'de döner. Süreler
-   farklı: renkler hep yeni biçimde karışır. Başlangıç noktası ve yönü her açılışta rastgele (satır içi
-   negatif `animation-delay`, `animation-direction`). */
-.ambient-orb--a {
-  top: -22vmax;
-  left: -12vmax;
-  animation-name: orb-drift-a;
-  animation-duration: 13s;
-}
-
-.ambient-orb--b {
-  right: -20vmax;
-  top: 4vh;
-  animation-name: orb-drift-b;
-  animation-duration: 16s;
-}
-
-.ambient-orb--c {
-  bottom: -28vmax;
-  left: 16vw;
-  --orb-strength: 0.85;
-  animation-name: orb-drift-c;
-  animation-duration: 14s;
-}
-
-.ambient-orb--d {
-  top: 30vh;
-  left: 34vw;
-  width: 44vmax;
-  height: 44vmax;
-  --orb-strength: 0.75;
-  animation-name: orb-drift-d;
-  animation-duration: 11s;
-}
-
-.ambient-orb--e {
-  bottom: -18vmax;
-  right: -10vmax;
-  width: 48vmax;
-  height: 48vmax;
-  --orb-strength: 0.8;
-  animation-name: orb-drift-e;
-  animation-duration: 15s;
-}
-
-.ambient-orb--f {
-  top: -14vmax;
-  left: 40vw;
-  width: 40vmax;
-  height: 40vmax;
-  --orb-strength: 0.7;
-  animation-name: orb-drift-f;
-  animation-duration: 12s;
-}
-
-.ambient-orb--g {
-  top: 44vh;
-  left: -16vmax;
-  width: 42vmax;
-  height: 42vmax;
-  --orb-strength: 0.7;
-  animation-name: orb-drift-g;
-  animation-duration: 10s;
-}
-
-@keyframes orb-drift-a {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  33% {
-    transform: translate3d(22vmax, 12vmax, 0) scale(1.18);
-  }
-  66% {
-    transform: translate3d(8vmax, 26vmax, 0) scale(0.92);
-  }
-}
-
-@keyframes orb-drift-b {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  30% {
-    transform: translate3d(-24vmax, 16vmax, 0) scale(0.88);
-  }
-  65% {
-    transform: translate3d(-10vmax, -8vmax, 0) scale(1.15);
-  }
-}
-
-@keyframes orb-drift-c {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  35% {
-    transform: translate3d(20vmax, -18vmax, 0) scale(1.14);
-  }
-  70% {
-    transform: translate3d(-14vmax, -10vmax, 0) scale(0.9);
-  }
-}
-
-@keyframes orb-drift-d {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  25% {
-    transform: translate3d(-26vmax, -12vmax, 0) scale(1.2);
-  }
-  50% {
-    transform: translate3d(-6vmax, 14vmax, 0) scale(0.85);
-  }
-  75% {
-    transform: translate3d(18vmax, -6vmax, 0) scale(1.1);
-  }
-}
-
-@keyframes orb-drift-e {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  40% {
-    transform: translate3d(-28vmax, -14vmax, 0) scale(1.16);
-  }
-  75% {
-    transform: translate3d(-8vmax, -26vmax, 0) scale(0.9);
-  }
-}
-
-@keyframes orb-drift-f {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  30% {
-    transform: translate3d(16vmax, 18vmax, 0) scale(1.12);
-  }
-  60% {
-    transform: translate3d(-20vmax, 10vmax, 0) scale(0.9);
-  }
-  85% {
-    transform: translate3d(-8vmax, -6vmax, 0) scale(1.05);
-  }
-}
-
-@keyframes orb-drift-g {
-  0%,
-  100% {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  35% {
-    transform: translate3d(24vmax, -16vmax, 0) scale(1.15);
-  }
-  70% {
-    transform: translate3d(30vmax, 8vmax, 0) scale(0.88);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .ambient-orb {
-    animation: none;
-  }
-}
-
-/* Sayfa tonu (2026-10-18, iOS Apple Music gibi): kapağın / sanatçı fotoğrafının rengi üstten başlar,
-   aşağı doğru arka plana erir. Ana pencerenin kenarlarına kadar taşar (main yatayda kırpar). */
-/* Sayfa tonu (PageTint.tsx `TintProvider`): tüm pencereyi kaplayan tek katman, ana ekranın ve panellerin
-   arkasında. Sayfa içinde olsaydı ana ekran kenarında kırpılır (sağ panelin arkası koyu kalırdı) ve sayfa
-   boyunca uzardı (1204 şarkılık listede 77.000 px). Sabit: aşağı inince renk değişmez. */
-.page-tint-root {
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.page-tint {
-  --tint-top: 0.8;
-  --tint-mid: 0.5;
-  --tint-low: 0.3;
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(640px 420px at 78% 140px, rgb(var(--tint-b) / 0.5), transparent 72%),
-    radial-gradient(520px 360px at 12% 300px, rgb(var(--tint-a) / 0.3), transparent 75%),
-    linear-gradient(
-      180deg,
-      rgb(var(--tint-a) / var(--tint-top)) 0,
-      rgb(var(--tint-a) / var(--tint-mid)) 320px,
-      rgb(var(--tint-a) / var(--tint-low)) 900px
-    );
-  animation: page-tint-in 0.6s ease both;
-}
-
-/* Açık temada koyu metin: ton daha hafif tutulur. */
-:root[data-theme='light'] .page-tint {
-  --tint-top: 0.55;
-  --tint-mid: 0.34;
-  --tint-low: 0.18;
-}
-
-/* Sayfa değişince eski ton söner (yenisi `page-tint-in` ile belirir). */
-.page-tint--leaving {
-  animation: page-tint-out 0.55s ease both;
-}
-
-@keyframes page-tint-out {
-  to {
-    opacity: 0;
-  }
-}
-
-@keyframes page-tint-in {
-  from {
-    opacity: 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .page-tint {
-    animation: none;
-  }
-
-  .page-tint--leaving {
-    display: none;
-  }
 }
 
 /* ==== Arşiv sayfaları (PLAN_v5 B4) ============================================================ */
@@ -2617,6 +2303,11 @@
   gap: 16px;
 }
 
+/* Ad sarmalayıcısı (Gözlemevi etiketi için, 2026-11-27): uzun ad yine kısaltılsın. */
+.artist-hero__titles {
+  min-width: 0;
+}
+
 .artist-hero__name {
   margin: 0;
   min-width: 0;
@@ -2695,6 +2386,17 @@
 .song-cell .artwork {
   width: 48px;
   border-radius: 6px;
+}
+
+/* Kapak sarmalayıcısı; çal işareti yalnızca Gözlemevi'nde (observatory.css). */
+.song-cell__art {
+  position: relative;
+  display: block;
+  width: 48px;
+}
+
+.song-cell__play {
+  display: none;
 }
 
 .song-cell__title {
@@ -3592,24 +3294,6 @@
   background: rgb(var(--glass-tint) / 0.75);
 }
 
-/* Kart düğmelerinde bulanıklık yalnızca görünürken (performans, 2026-10-14): gizli (opaklık 0)
-   düğmelerin `backdrop-filter`'ı da kompozit katman açıyordu; "Yeni" sayfasında 206 katman kaydırmada
-   her karede yeniden bulanıklaştırılıyordu. Artık aynı anda en fazla üzerine gelinen kartınki. */
-.media-card__play.glass {
-  backdrop-filter: none;
-}
-
-.media-card:hover .media-card__play.glass,
-.media-card__play.glass:focus-visible {
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-}
-
-.grid-card-wrap:hover .card-more,
-.media-card:hover .card-more,
-.card-more:focus-visible {
-  backdrop-filter: blur(12px);
-}
-
 .media-card--wide .card-more {
   top: calc(var(--shelf-card) * 9 / 16 - 42px);
 }
@@ -3854,70 +3538,6 @@
   position: absolute;
   inset: 0;
   --pulse: 0;
-}
-
-/* Kapak renkleri: 4 büyük bulanık bulut, yavaş dalgalanır; `--pulse` (ses düzeyi) ile büyüyüp parlar. */
-.np__clouds {
-  position: absolute;
-  inset: -20%;
-  filter: blur(90px) saturate(140%);
-}
-
-.np__cloud {
-  position: absolute;
-  width: 60%;
-  height: 60%;
-  border-radius: 50%;
-  opacity: calc(0.55 + var(--pulse) * 0.35);
-  transform: scale(calc(1 + var(--pulse) * 0.12));
-  transition: background-color 1.4s ease;
-}
-
-.np__cloud--0 {
-  left: 0;
-  top: 0;
-  animation: np-drift-a 26s ease-in-out infinite alternate;
-}
-
-.np__cloud--1 {
-  right: 0;
-  top: 10%;
-  animation: np-drift-b 31s ease-in-out infinite alternate;
-}
-
-.np__cloud--2 {
-  left: 15%;
-  bottom: 0;
-  animation: np-drift-c 23s ease-in-out infinite alternate;
-}
-
-.np__cloud--3 {
-  right: 10%;
-  bottom: 5%;
-  animation: np-drift-a 35s ease-in-out infinite alternate-reverse;
-}
-
-@keyframes np-drift-a {
-  to {
-    translate: 18% 14%;
-  }
-}
-
-@keyframes np-drift-b {
-  to {
-    translate: -16% 18%;
-  }
-}
-
-@keyframes np-drift-c {
-  to {
-    translate: 14% -16%;
-  }
-}
-
-.np--still .np__cloud {
-  animation: none;
-  transform: none;
 }
 
 /* Sanatçı fotoğrafı (Spotify gibi): tüm arka planı kaplar, karartılır. */
@@ -4414,12 +4034,6 @@
 
 .lyrics--stage .lyrics__source {
   color: rgb(255 255 255 / 0.55);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .np__cloud {
-    animation: none;
-  }
 }
 
 /* İnce ayar: kare hızı göstergesi (FpsMeter.tsx). */

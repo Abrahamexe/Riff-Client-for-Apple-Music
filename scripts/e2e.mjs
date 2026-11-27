@@ -101,20 +101,20 @@ async function main() {
     )
     check('çökme: renderer toparlandı', r?.rendererRecovered && r?.readAfterRendererCrash === 'ok')
 
-    // 4) Kabuk tıklamaları (hamburger ve arama sürükleme şeridinin altında kalmaz)
+    // 4) Kabuk tıklamaları (geri / ev, arama ve kitaplık sürükleme şeridinin altında kalmaz)
     d = fresh()
     dirs.push(d)
     ;({ result: r } = await run('shell', d))
     check(
-      'kabuk: hamburger ve arama tıklanabilir',
-      r?.toggleHit === true && r?.searchHit === true,
-      r?.error ?? `${r?.toggleHit}/${r?.searchHit}`
+      'kabuk: geri / ev, arama ve kitaplık tıklanabilir',
+      r?.navHit === true && r?.searchHit === true && r?.libraryHit === true,
+      r?.error ?? `${r?.navHit}/${r?.searchHit}/${r?.libraryHit}`
     )
     check(
-      // 2026-10-15: uygulama menü kapalı açılır; ilk tık açar, ikincisi kapatır.
-      'kabuk: menü kapalı açılır, hamburger açar ve kapatır',
-      r?.menuBefore === 'false' && r?.menuAfterClose === 'true' && r?.menuAfterOpen === 'false',
-      `${r?.menuBefore}→${r?.menuAfterClose}→${r?.menuAfterOpen}`
+      // 2026-11-27: kitaplık sabit; gerçek tıklama Ayarlar'ı açar.
+      'kabuk: kitaplıktan Ayarlar açılır',
+      r?.settingsOpened === true,
+      String(r?.settingsOpened)
     )
 
     // 5) X = çık

@@ -16,7 +16,9 @@ import {
 } from '@shared/settings'
 import { i18n } from '@core/i18n'
 import { useApp, useSettings } from '../../context'
+import { BrandMark } from '../../components/BrandMark'
 import { Picker } from '../../components/Picker'
+import { EqCurve } from './EqCurve'
 import { EASE_OUT } from '../../shell/motion'
 import { SHORTCUTS } from '../../shell/shortcuts'
 import { ABOUT_SOURCES as SOURCES, CC_BY_SA_URL } from './aboutSources'
@@ -180,17 +182,6 @@ function TabContent({ tab, settings }: { tab: Tab; settings: Settings }) {
               onChange={(v) => update({ appearance: { theme: v } })}
             />
           </Row>
-          <Row label="settings.appearance.transparency" hint="settings.appearance.transparencyHint">
-            <ThrottledSlider
-              className="settings-slider"
-              label={i18n.t('settings.appearance.transparency')}
-              min={0}
-              max={100}
-              step={1}
-              value={settings.appearance.transparency}
-              onCommit={(v) => update({ appearance: { transparency: Math.round(v) } })}
-            />
-          </Row>
         </Card>
       )
     case 'advanced':
@@ -211,7 +202,7 @@ function TweaksTab({ settings }: { settings: Settings }) {
   const t = settings.tweaks
   const set = (patch: Partial<Settings['tweaks']>): void => update({ tweaks: patch })
   const slider = (
-    key: 'pulseStrength' | 'lyricsOffsetMs' | 'volumeStep' | 'seekStep' | 'librarySyncMinutes',
+    key: 'lyricsOffsetMs' | 'volumeStep' | 'seekStep' | 'librarySyncMinutes',
     label: MessageKey,
     step: number,
     unit: 'tweaks.unit.ms' | 'tweaks.unit.percent' | 'tweaks.unit.seconds' | 'tweaks.unit.minutes'
@@ -247,16 +238,6 @@ function TweaksTab({ settings }: { settings: Settings }) {
             ]}
             onChange={(v) => set({ motion: v })}
           />
-        </Row>
-        <Row label="tweaks.glassBlur" hint="tweaks.glassBlurHint">
-          <Switch
-            on={t.glassBlur}
-            label="tweaks.glassBlur"
-            onChange={(v) => set({ glassBlur: v })}
-          />
-        </Row>
-        <Row label="tweaks.pulse" hint="tweaks.pulseHint">
-          {slider('pulseStrength', 'tweaks.pulse', 10, 'tweaks.unit.percent')}
         </Row>
       </Card>
       <Card>
@@ -333,6 +314,7 @@ function AboutTab() {
     <>
       <Card>
         <div className="about__head">
+          <BrandMark size={40} />
           <span className="about__name">{app.appInfo.name}</span>
           <span className="settings-row__hint">
             {i18n.t('about.version', { version: app.appInfo.build })}
@@ -566,6 +548,7 @@ function EqualizerTab({ settings }: { settings: Settings }) {
         </Row>
       </Card>
       <Card className={eq.enabled ? '' : 'settings-card--muted'}>
+        <EqCurve bands={eq.bands} />
         <div className="eq">
           <EqSlider
             label={i18n.t('settings.eq.preamp')}

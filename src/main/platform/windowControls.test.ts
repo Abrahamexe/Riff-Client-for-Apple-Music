@@ -30,11 +30,11 @@ function fakeWindow() {
 }
 
 describe('kendi pencere çubuğu (B1)', () => {
-  it('çerçevesiz pencere; yeniden boyutlandırma ve yuvarlak köşeler açık', () => {
+  it('çerçevesiz, yeniden boyutlandırılabilir, köşeli pencere (2026-11-27)', () => {
     expect(framelessWindowOptions()).toMatchObject({
       frame: false,
       resizable: true,
-      roundedCorners: true
+      roundedCorners: false
     })
     expect(framelessWindowOptions()).not.toHaveProperty('transparent')
   })

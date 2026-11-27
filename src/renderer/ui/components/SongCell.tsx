@@ -1,3 +1,4 @@
+import { Play } from 'lucide-react'
 import type { Track } from '@shared/ipc-contract'
 import { i18n } from '@core/i18n'
 import { Artwork } from './Artwork'
@@ -38,7 +39,13 @@ export function SongCell({
         onClick={onPlay}
       >
         {rank !== undefined && <span className="song-cell__rank">{rank}</span>}
-        <Artwork url={artworkUrl} size={96} kind="song" />
+        {/* Kapak + üzerine gelince çal işareti (Gözlemevi 2026-11-27; klasikte gizli, shell.css). */}
+        <span className="song-cell__art">
+          <Artwork url={artworkUrl} size={96} kind="song" />
+          <span className="song-cell__play" aria-hidden="true">
+            <Play size={18} fill="currentColor" strokeWidth={0} />
+          </span>
+        </span>
         <span className="album-row__main">
           <span className="song-cell__title">
             {title}

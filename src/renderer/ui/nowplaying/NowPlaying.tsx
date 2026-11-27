@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import { useEffect, useState } from 'react'
+import { AnimatePresence, motion } from 'motion/react'
 import {
   ChevronDown,
   MessageSquareQuote,
@@ -26,19 +26,18 @@ import { QualityBadge } from '../shell/QualityBadge'
 import { TitleBar } from '../window/TitleBar'
 import { NP_ART_LAYOUT_ID } from './ids'
 import { artistImage, prefetchArtistImage, readyArtistImage } from './artistImage'
-import { rgbCss, type Rgb } from './palette'
-import { useArtworkPalette } from '../hooks/useArtworkPalette'
+import { Satellites } from './Satellites'
+import { satelliteItems } from './satelliteItems'
 
-// Büyük oynatıcı (B12, geliştirici kararları 2026-10-14). İki mod (geçiş düğmesi, bu bilgisayarda
-// hatırlanır):
-//  - "Kapak renkleri": kapak ve sözler yan yana; sözler düğmeyle açılıp kapanır (hatırlanır), kapalıysa
-//    veya söz yoksa kapak ortada. Arka plan kapağın 4 baskın renginden bulanık bulutlar, yavaş
-//    dalgalanır ve müzikle nabız atar (Equalizer analizcisi; hareketi azalt açıksa durgun).
-//  - "Sanatçı fotoğrafı" (Spotify gibi): sanatçının görseli tüm arka planda; sözler kapalı, oynatıcı
+// Büyük oynatıcı (B12, geliştirici kararları 2026-10-14; 2026-11-27 tek tasarım). İki mod (geçiş
+// düğmesi, bu bilgisayarda hatırlanır; kayıttaki ad `colors` geriye uyum için kaldı):
+//  - Kapak: zemin temaya göre saf siyah / beyaz; kapak ve sözler yan yana, sözler düğmeyle açılıp
+//    kapanır (hatırlanır), kapalıysa veya söz yoksa kapak ortada. Kapağın iki yanında sıradaki iki şarkı
+//    uydu olarak, imleç kapağa gelince belirir (Satellites.tsx).
+//  - Sanatçı fotoğrafı (Spotify gibi): sanatçının görseli tüm arka planda; sözler kapalı, oynatıcı
 //    altta soldan sağa tam genişlikte (ilerleme + kontroller); kapak oynatıcının sol üstünde, şarkı adı
 //    kapağın sağında (geliştirici 2026-10-15).
-// Kapak oynatıcı çubuğundaki küçük kapaktan uçarak gelir (`layoutId`); kapağa kendi renginde ışık.
-// Esc veya ⌄ ile kapanır.
+// Kapak oynatıcı çubuğundaki küçük kapaktan uçarak gelir (`layoutId`). Esc veya ⌄ ile kapanır.
 
 type Mode = 'colors' | 'artist'
 const MODE_KEY = 'am-client.nowplaying.mode'
@@ -91,41 +90,8 @@ function useArtistImage(catalogId: string | undefined, artist: string, enabled: 
   return url
 }
 
-/**
- * "Müzikle nabız": çalarken her karede ses düzeyi okunur, yumuşatılıp arka plana `--pulse` (0..1)
- * olarak yazılır (React çizimi yok; yalnızca CSS değişkeni). Hareketi azaltta kapalı.
- */
-function usePulse(
-  target: React.RefObject<HTMLDivElement | null>,
-  active: boolean,
-  /** İnce ayar: nabız şiddeti (1 = varsayılan). */
-  strength = 1
-) {
-  const app = useApp()
-  useEffect(() => {
-    const el = target.current
-    if (!el || !active) {
-      el?.style.setProperty('--pulse', '0')
-      return
-    }
-    app.equalizer.startAnalysis([...document.querySelectorAll('audio')])
-    let frame = 0
-    let smooth = 0
-    const tick = (): void => {
-      const level = Math.min(1, app.equalizer.level() * strength)
-      // Yükselişte hızlı, inişte yavaş (nabız hissi).
-      smooth += (level - smooth) * (level > smooth ? 0.35 : 0.06)
-      el.style.setProperty('--pulse', smooth.toFixed(3))
-      frame = requestAnimationFrame(tick)
-    }
-    frame = requestAnimationFrame(tick)
-    return () => cancelAnimationFrame(frame)
-  }, [app, target, active, strength])
-}
-
 export function NowPlaying({ onClose }: { onClose: () => void }) {
   const { player, snapshot, currentTime, duration } = usePlayer()
-  const reduced = useReducedMotion() ?? false
   const track = displayedTrack(snapshot)
   const playing = snapshot?.state === 'playing'
   const repeat = snapshot?.repeat ?? 'none'
@@ -136,15 +102,12 @@ export function NowPlaying({ onClose }: { onClose: () => void }) {
   const [lyricsOpen, setLyricsOpen] = useState(loadLyricsOpen)
   const lyricsShown = mode === 'colors' && lyricsOpen && hasLyrics
   const layout = mode === 'artist' ? 'artist' : lyricsShown ? 'split' : 'center'
-  // Bulutların ilk çizimi (dev bulanıklık) ve dev söz listesinin ilk düzeni kapak uçarken kare
-  // atlatıyordu (104 / 90 ms): ikisi de uçuş bitince eklenir.
-  const [cloudsReady, setCloudsReady] = useState(false)
+  // Dev söz listesinin ilk düzeni kapak uçarken kare atlatıyordu (90 ms): uçuş bitince eklenir.
+  const [lyricsReady, setLyricsReady] = useState(false)
   useEffect(() => {
-    const t = setTimeout(() => setCloudsReady(true), 520)
+    const t = setTimeout(() => setLyricsReady(true), 520)
     return () => clearTimeout(t)
   }, [])
-  const bg = useRef<HTMLDivElement>(null)
-  const palette = useArtworkPalette(track?.artworkTemplate)
   const artistPhoto = useArtistImage(track?.catalogId, track?.artist ?? '', mode === 'artist')
   // Büyük oynatıcı açıkken çalan ve sıradaki şarkının sanatçı fotoğrafı mod kapalıyken de hazırlanır:
   // sanatçı moduna geçince ve şarkı değişince anında gelir.
@@ -156,20 +119,7 @@ export function NowPlaying({ onClose }: { onClose: () => void }) {
     prefetchArtistImage(app.library, next)
   }, [app, track?.catalogId, track?.artist, next?.catalogId, next?.artist])
   const settings = useSettings()
-  const pulseStrength = (settings?.tweaks.pulseStrength ?? 100) / 100
-  usePulse(bg, playing && !reduced && mode === 'colors' && pulseStrength > 0, pulseStrength)
   const art = cachedArtworkUrl(track?.artworkTemplate, 1200)
-  const colors = useMemo(
-    () =>
-      palette ??
-      ([
-        [40, 40, 52],
-        [28, 28, 36],
-        [60, 56, 72],
-        [20, 20, 26]
-      ] as Rgb[]),
-    [palette]
-  )
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
@@ -200,9 +150,6 @@ export function NowPlaying({ onClose }: { onClose: () => void }) {
       alt=""
       draggable={false}
       transition={{ layout: { type: 'tween', duration: 0.5, ease: [0.45, 0, 0.15, 1] } }}
-      style={{
-        boxShadow: `0 30px 90px ${rgbCss(colors[0]!, 0.55)}, 0 8px 30px rgb(0 0 0 / 0.45)`
-      }}
     />
   ) : (
     <motion.span layoutId={NP_ART_LAYOUT_ID} className="np__art np__art--empty" />
@@ -218,14 +165,14 @@ export function NowPlaying({ onClose }: { onClose: () => void }) {
 
   return (
     <motion.div
-      className={`np np--${mode}${reduced ? ' np--still' : ''}`}
+      className={`np np--${mode}`}
       role="dialog"
       aria-label={i18n.t('np.title')}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1, transition: { duration: 0.35 } }}
       exit={{ opacity: 0, transition: { duration: 0.3, delay: 0.05 } }}
     >
-      <div className="np__bg" ref={bg}>
+      <div className="np__bg">
         <AnimatePresence initial={false}>
           {mode === 'artist' && artistPhoto ? (
             <motion.img
@@ -238,26 +185,14 @@ export function NowPlaying({ onClose }: { onClose: () => void }) {
               animate={{ opacity: 1, scale: 1, transition: { duration: 0.8 } }}
               exit={{ opacity: 0, transition: { duration: 0.5 } }}
             />
-          ) : cloudsReady ? (
-            <motion.div
-              key="clouds"
-              className="np__clouds"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1, transition: { duration: 0.8 } }}
-              exit={{ opacity: 0, transition: { duration: 0.5 } }}
-            >
-              {colors.map((c, i) => (
-                <span
-                  key={i}
-                  className={`np__cloud np__cloud--${i}`}
-                  style={{ backgroundColor: rgbCss(c) }}
-                />
-              ))}
-            </motion.div>
           ) : null}
         </AnimatePresence>
-        <div className={`np__scrim${mode === 'artist' ? ' np__scrim--artist' : ''}`} />
-        {mode === 'artist' ? <div className="np__dock-blur" /> : null}
+        {mode === 'artist' ? (
+          <>
+            <div className="np__scrim np__scrim--artist" />
+            <div className="np__dock-blur" />
+          </>
+        ) : null}
       </div>
 
       <TitleBar />
@@ -311,7 +246,12 @@ export function NowPlaying({ onClose }: { onClose: () => void }) {
               {head}
             </div>
           ) : (
-            artEl
+            <Satellites
+              items={satelliteItems(queue?.items ?? [], queue?.position ?? 0)}
+              onPlay={(index) => void player?.playQueueIndex(index).catch(() => {})}
+            >
+              {artEl}
+            </Satellites>
           )}
           {track ? (
             <div className="np__quality">
@@ -407,7 +347,7 @@ export function NowPlaying({ onClose }: { onClose: () => void }) {
           initial={{ opacity: 0, x: 24 }}
           animate={{ opacity: 1, x: 0, transition: { delay: 0.2, duration: 0.45 } }}
         >
-          {cloudsReady && (
+          {lyricsReady && (
             <LyricsPanel
               variant="stage"
               onKind={(k) => {

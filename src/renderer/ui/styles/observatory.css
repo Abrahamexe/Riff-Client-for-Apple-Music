@@ -1,0 +1,1886 @@
+/*
+ * Arayüz görünümü (2026-11-27, tek tasarım; çalışma adı "Gözlemevi"): Desktop/space (Kosmos) arayüz
+ * dili müzik uygulamasına uyarlandı. shell.css'teki bileşen kurallarının üstüne biner (sonra yüklenir);
+ * belirteçler ui.css'te.
+ *
+ * Dil: neredeyse siyah (açıkta kâğıt beyazı) zemin, cam yerine düz yüzey, yüzeyler arasında 1 px ince
+ * çizgi, köşesiz kutular, Geist + Geist Mono (küçük, aralıklı, büyük harf etiketler), ince büyük
+ * başlıklar. Tek renk vurgu kapaktan gelir (CoverAccent, `--accent`), yalnızca işlevsel yerlerde.
+ * Yuvarlak kalanlar: çal düğmeleri ve sanatçı görselleri. Oynatıcılar yalnızca siyah / beyaz.
+ * Yerleşim (kenarlara yaslı yüzeyler) layout.ts'te.
+ */
+
+/* Köşesiz yüzeyler: tek kural (klasik katmanda 90'dan fazla yuvarlama var), istisnalar aşağıda. */
+/* `body`: portallar (kalite balonu) #ui-root dışında çizilir. */
+:root body *,
+:root body *::before,
+:root body *::after {
+  border-radius: 0 !important;
+}
+
+:root body .artwork--round::after,
+:root
+  #ui-root
+  :is(
+    .artwork--round,
+    .info-avatar,
+    .avatar,
+    .media-card__play,
+    .artist-hero__play,
+    .np__icon--play,
+    .player__controls .icon-button--large
+  ) {
+  border-radius: 50% !important;
+}
+
+:root .glass {
+  background: var(--obs-panel);
+  backdrop-filter: none;
+  box-shadow: inset 0 0 0 1px var(--obs-hairline);
+}
+
+:root .glass--capsule {
+  background: transparent;
+}
+
+/* ---- Etiket sesi: küçük, aralıklı, büyük harf mono ------------------------------------------- */
+
+:root
+  :is(
+    .sidebar__section,
+    .track-table__head,
+    .queue__heading,
+    .info__subheading,
+    .settings-card__title,
+    .album-tracks__disc,
+    .search-menu__header,
+    .player__time,
+    .named-list__count,
+    .eq__caption
+  ) {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--obs-muted);
+}
+
+:root :is(.player__time, .eq__value, .track-row__time, .album-row__time) {
+  font-family: var(--font-mono);
+  font-weight: 300;
+  letter-spacing: 0.02em;
+}
+
+/* ---- Üst şerit: pencere düğmeleri, geri / ev, arama ------------------------------------------ */
+
+:root .obs-topbar {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 29;
+  background: var(--bg);
+  border-bottom: 1px solid var(--obs-hairline);
+  pointer-events: none;
+}
+
+:root .titlebar {
+  height: 56px;
+}
+
+:root .titlebar__controls {
+  gap: 0;
+  margin: 0;
+  height: 56px;
+}
+
+:root .window-drop {
+  /* Çizgisiz, yalnızca ikon (2026-11-27 kararı): tıklama alanı büyük, görünen yalnızca ince ikon. */
+  width: 46px;
+  height: 56px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--obs-muted);
+}
+
+:root .window-drop:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+:root .window-drop--close:hover {
+  background: #c42b1c;
+  color: #fff;
+}
+
+:root .nav-control {
+  width: 32px !important;
+  height: 32px !important;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--obs-hairline);
+  color: var(--text-secondary);
+}
+
+:root .nav-control:hover:not(:disabled) {
+  color: var(--text);
+  background: var(--hover);
+}
+
+:root .nav-control--current {
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--obs-hairline-strong);
+}
+
+:root .searchbar {
+  /* Genişlik iç boşluk dahil (SearchBar 420 px): yoksa 444 px olup ortadan 12 px kayıyordu. */
+  box-sizing: border-box;
+  top: 12px;
+  height: 32px;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--obs-hairline-strong);
+}
+
+:root .searchbar--focused {
+  background: var(--obs-panel);
+  box-shadow: inset 0 0 0 1px var(--text);
+}
+
+:root .searchbar__input {
+  font-size: 13px;
+}
+
+:root :is(.search-menu, .offline-pill) {
+  top: 52px;
+}
+
+/* ---- Sabit kitaplık (sol) -------------------------------------------------------------------- */
+
+:root .sidebar {
+  background: var(--obs-panel);
+  box-shadow: inset -1px 0 0 var(--obs-hairline);
+}
+
+:root .sidebar__brand {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  height: 56px;
+  padding: 0 22px;
+  border-bottom: 1px solid var(--obs-hairline);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  -webkit-app-region: drag;
+}
+
+/* Marka işareti (BrandMark, logo 5D): kitaplığın üstünde ve Hakkında'da. */
+:root .brand-mark {
+  flex: none;
+  color: var(--text);
+}
+
+:root .about__head .brand-mark {
+  margin-bottom: 14px;
+}
+
+:root .sidebar__content {
+  min-width: 240px;
+  padding-top: 6px;
+}
+
+:root .sidebar__scroll {
+  padding: 0 0 8px;
+}
+
+:root .sidebar__section {
+  margin: 20px 22px 8px;
+}
+
+:root .sidebar__section-toggle {
+  margin: 0;
+  padding: 0;
+  /* Düğmeler büyük harf dönüşümünü devralmaz (tarayıcı varsayılanı `none`). */
+  text-transform: inherit;
+}
+
+:root .sidebar__section-toggle:hover {
+  background: none;
+  color: var(--text);
+}
+
+:root .nav-item {
+  position: relative;
+  gap: 12px;
+  height: 34px;
+  padding: 0 22px;
+  font-size: 13.5px;
+  color: var(--text-secondary);
+}
+
+:root .nav-item--art {
+  height: 42px;
+}
+
+:root .nav-item:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
+:root .nav-item--active {
+  background: linear-gradient(90deg, var(--press), transparent);
+  color: var(--text);
+  font-weight: 500;
+}
+
+:root .nav-item--active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: var(--text);
+}
+
+:root .nav-item__icon {
+  color: var(--obs-muted);
+}
+
+:root .nav-item--active .nav-item__icon {
+  color: var(--text);
+}
+
+:root .nav-item__art {
+  width: 28px;
+  height: 28px;
+  box-shadow: inset 0 0 0 1px var(--obs-hairline);
+}
+
+:root .sidebar__footer {
+  padding: 6px 0 8px;
+  border-top: 1px solid var(--obs-hairline);
+}
+
+:root .account-menu {
+  left: 12px;
+  right: 12px;
+  background: var(--obs-raised);
+  box-shadow:
+    inset 0 0 0 1px var(--obs-hairline-strong),
+    var(--obs-shadow);
+}
+
+/* ---- Alt şerit (oynatıcı) -------------------------------------------------------------------- */
+/* Tek şerit, üç simetrik sütun (2026-11-27 geri bildirim: "şarkı bilgisi solda ayrı duruyor, player ile
+   birleşsin; oynat tuşu tam ortada değil"): solda şarkı + arşive ekle / favori | ortada tuşlar + ilerleme
+   (pencerenin tam ortası) | sağda panel tuşları ve ses. Mevcut DOM `display: contents` ile ızgaraya açılır. */
+
+:root .player {
+  background: var(--obs-panel);
+  box-shadow: inset 0 1px 0 var(--obs-hairline);
+}
+
+:root .player__content {
+  display: grid;
+  /* Sol en az 200 px (dar pencerede şarkı adı kaybolmasın, 2026-11-27); sağ içerik kadar; geniş
+     pencerede iki yan eşit kalır, tuşlar ortada. */
+  grid-template-columns: minmax(220px, 1fr) minmax(240px, 1.4fr) minmax(min-content, 1fr);
+  /* Tuşlar + ilerleme içerik boyunda, şeridin ortasında (2026-11-27: ⏯ üstten taşıyordu). */
+  grid-template-rows: auto auto;
+  align-content: center;
+  column-gap: 24px;
+  row-gap: 8px;
+  align-items: center;
+  padding: 0;
+}
+
+:root :is(.player__row, .player__now) {
+  display: contents;
+}
+
+:root .player__now-info {
+  grid-column: 1;
+  grid-row: 1 / 3;
+  justify-self: start;
+  align-self: center;
+  max-width: calc(100% - 84px);
+  gap: 12px;
+  padding-left: 16px;
+}
+
+:root .player__now img,
+:root .player__art {
+  width: 56px;
+  height: 56px;
+}
+
+:root .player__now-title {
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+:root .player__now:has(.quality-badge) .player__now-text {
+  padding-right: 0;
+}
+
+:root .quality-badge--dock {
+  position: static;
+  flex: none;
+}
+
+:root .player__controls {
+  grid-column: 2;
+  grid-row: 1;
+  justify-self: center;
+  gap: 22px;
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+:root .player__controls .icon-button {
+  width: 32px;
+  height: 32px;
+  color: var(--text-secondary);
+}
+
+:root .player__controls .icon-button:hover:not(:disabled) {
+  color: var(--text);
+}
+
+:root .player__controls .icon-button--large {
+  width: 40px;
+  height: 40px;
+  background: var(--obs-invert-bg);
+  color: var(--obs-invert-text);
+}
+
+:root .player__controls .icon-button--large:hover:not(:disabled) {
+  background: var(--obs-invert-bg);
+  color: var(--obs-invert-text);
+  transform: scale(1.05);
+}
+
+/* Yalnızca alt şerit: büyük oynatıcıdaki ilerleme çubuğu da `.player__time` (orada tam genişlik). */
+:root .player .player__time {
+  grid-column: 2;
+  grid-row: 2;
+  width: 100%;
+  gap: 14px;
+  margin: 0;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+}
+
+/* Sol uçta arşive ekle ve favori (şarkının yanında). */
+:root .player__left {
+  grid-column: 1;
+  grid-row: 1 / 3;
+  justify-self: end;
+  gap: 2px;
+}
+
+:root .player__right {
+  grid-column: 3;
+  grid-row: 1 / 3;
+  gap: 6px;
+  padding-right: 20px;
+}
+
+:root .icon-button {
+  color: var(--text-secondary);
+}
+
+:root .icon-button:hover:not(:disabled) {
+  background: var(--hover);
+  color: var(--text);
+}
+
+:root .icon-button--on {
+  background: transparent;
+  color: var(--accent);
+}
+
+/* İnce kaydırıcılar: 2 px iz, köşeli; tutamaç küçük daire. */
+:root .seek__track {
+  height: 2px;
+  margin-top: -1px;
+  background: var(--obs-hairline-strong);
+  box-shadow: none;
+}
+
+:root .seek:hover .seek__track {
+  height: 4px;
+  margin-top: -2px;
+}
+
+:root .seek__fill {
+  background: var(--text);
+}
+
+:root .slider::-webkit-slider-runnable-track {
+  height: 2px;
+  background: linear-gradient(
+    to right,
+    var(--text-secondary) 0 var(--p, 0%),
+    var(--obs-hairline-strong) var(--p, 0%)
+  );
+  box-shadow: none;
+}
+
+:root .slider:hover::-webkit-slider-runnable-track {
+  height: 4px;
+}
+
+:root .slider::-webkit-slider-thumb {
+  width: 10px;
+  height: 10px;
+  margin-top: -4px;
+  border-radius: 50%;
+  background: var(--text);
+  box-shadow: none;
+}
+
+:root .slider:hover::-webkit-slider-thumb {
+  margin-top: -3px;
+}
+
+/* ---- Sağ panel: bilgi, sözler, Sıradaki ------------------------------------------------------- */
+
+:root .right-panel {
+  background: var(--obs-panel);
+  box-shadow: inset 1px 0 0 var(--obs-hairline);
+}
+
+:root .right-panel__content {
+  padding: 22px 16px 22px 24px;
+}
+
+:root .right-panel__title {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+:root .info {
+  gap: 0;
+}
+
+:root .info-card {
+  gap: 10px;
+  padding: 18px 0;
+  background: none;
+  box-shadow: inset 0 1px 0 var(--obs-hairline);
+}
+
+:root .info-card:first-child {
+  box-shadow: none;
+  padding-top: 0;
+}
+
+:root .info__artist-name {
+  font-size: 28px;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+}
+
+:root .info__heading {
+  font-size: 15px;
+  font-weight: 500;
+}
+
+:root .info__name {
+  font-weight: 500;
+}
+
+:root .info__row {
+  grid-template-columns: 112px minmax(0, 1fr);
+}
+
+:root .info__row dt {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  line-height: 1.9;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--obs-muted);
+}
+
+:root :is(.info__more, .info__link, .queue__clear, .search-menu__clear) {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+:root :is(.info__more, .info__link, .queue__clear):hover {
+  color: var(--text);
+  text-decoration: none;
+}
+
+:root .info__sources {
+  border-top-color: var(--obs-hairline);
+}
+
+:root .info-cover {
+  box-shadow: inset 0 0 0 1px var(--obs-hairline);
+}
+
+:root .lyrics__line {
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+:root .lyrics--synced .lyrics__line--past {
+  filter: none;
+  opacity: 0.4;
+}
+
+:root .lyrics--synced .lyrics__line--active {
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+
+:root .lyrics--synced .lyrics__line:hover {
+  background: var(--hover);
+}
+
+:root .lyrics__source {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+:root .lyrics__retry {
+  border-color: var(--obs-hairline-strong);
+  background: transparent;
+}
+
+:root .queue {
+  gap: 0;
+}
+
+:root .queue-row {
+  padding: 8px 6px;
+  box-shadow: inset 0 -1px 0 var(--obs-hairline);
+}
+
+:root .queue-row--current {
+  background: linear-gradient(90deg, var(--accent-ambient), transparent 75%);
+}
+
+:root .queue-row--current .queue-row__title {
+  color: var(--accent);
+}
+
+:root .queue-row img,
+:root .queue-row__art {
+  box-shadow: inset 0 0 0 1px var(--obs-hairline);
+}
+
+:root .queue-row__title {
+  font-weight: 400;
+}
+
+:root .queue-item--dragging {
+  background: var(--obs-raised);
+  box-shadow:
+    inset 0 0 0 1px var(--obs-hairline-strong),
+    var(--obs-shadow);
+}
+
+/* ---- Sayfalar: başlıklar, raflar, kartlar ---------------------------------------------------- */
+
+:root .page__title {
+  margin: 4px 0 26px;
+  font-size: 56px;
+  font-weight: 300;
+  line-height: 1;
+  letter-spacing: -0.035em;
+}
+
+:root .page-header {
+  align-items: flex-end;
+  margin-bottom: 26px;
+}
+
+:root .page-header .page__title {
+  margin: 0;
+}
+
+:root .shelf__title {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+:root .shelf__title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--obs-hairline);
+}
+
+:root .shelf-v2 {
+  margin-bottom: 36px;
+}
+
+:root :is(.artwork, .card img, .card__art) {
+  box-shadow: none;
+}
+
+/* İnce çizgi görselin üstünde (iç gölge görselin altında kalırdı). */
+:root .artwork::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  box-shadow: inset 0 0 0 1px var(--obs-hairline);
+  pointer-events: none;
+}
+
+:root :is(.media-card, .grid-card) {
+  transition: none;
+}
+
+:root :is(.media-card, .grid-card):hover {
+  transform: none;
+}
+
+:root :is(.media-card, .grid-card-wrap):hover .artwork:not(.artwork--round) {
+  outline: 1px solid var(--text);
+  outline-offset: 3px;
+}
+
+:root :is(.media-card__title, .grid-card__title) {
+  margin-top: 10px;
+  font-size: 13.5px;
+  font-weight: 500;
+}
+
+:root :is(.media-card__sub, .grid-card__sub, .card__sub) {
+  font-size: 12.5px;
+}
+
+:root .media-card__play {
+  background: var(--obs-invert-bg);
+  color: var(--obs-invert-text);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 0.45);
+  backdrop-filter: none !important;
+}
+
+:root .card-more {
+  background: var(--obs-panel);
+  box-shadow: inset 0 0 0 1px var(--obs-hairline-strong);
+  backdrop-filter: none !important;
+}
+
+:root .shelf-arrow {
+  width: 32px;
+  height: 32px;
+  background: var(--obs-panel);
+  box-shadow: inset 0 0 0 1px var(--obs-hairline-strong);
+}
+
+:root .live-badge {
+  font-family: var(--font-mono);
+  font-weight: 400;
+  letter-spacing: 0.16em;
+}
+
+:root .skeleton {
+  background: var(--card);
+}
+
+:root .song-cell {
+  box-shadow: inset 0 -1px 0 var(--obs-hairline);
+}
+
+:root .song-cell__title {
+  font-weight: 500;
+}
+
+:root .song-cell__rank {
+  font-family: var(--font-mono);
+  font-weight: 300;
+  color: var(--obs-muted);
+}
+
+/* Düğmeler: köşeli, ince çizgili; birincil ters renk (koyuda beyaz, açıkta siyah). */
+:root .pill-button {
+  height: 40px;
+  padding: 0 18px;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--obs-hairline-strong);
+  font-size: 13px;
+  font-weight: 400;
+}
+
+:root .pill-button:hover:not(:disabled) {
+  background: var(--hover);
+}
+
+:root .pill-button--primary {
+  background: var(--obs-invert-bg);
+  color: var(--obs-invert-text);
+  box-shadow: none;
+  font-weight: 500;
+}
+
+:root .pill-button--primary:hover:not(:disabled) {
+  background: var(--obs-invert-bg);
+  opacity: 0.88;
+}
+
+:root .pill-button--on {
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+:root .pill-button.playlist-search__toggle,
+:root .header-more {
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--obs-hairline-strong);
+}
+
+:root .playlist-search {
+  height: 40px;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--obs-hairline-strong);
+}
+
+:root .playlist-search:focus-within {
+  box-shadow: inset 0 0 0 1px var(--text);
+}
+
+:root .segmented {
+  gap: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--obs-hairline-strong);
+}
+
+:root .segmented__item {
+  padding: 7px 14px;
+  font-size: 12.5px;
+  font-weight: 400;
+  box-shadow: inset -1px 0 0 var(--obs-hairline);
+}
+
+:root .segmented__item:last-child {
+  box-shadow: none;
+}
+
+:root .segmented__item--on {
+  background: var(--obs-invert-bg);
+  color: var(--obs-invert-text);
+}
+
+:root .picker__button {
+  box-shadow: inset 0 0 0 1px var(--obs-hairline-strong);
+  font-weight: 400;
+}
+
+:root .link-button {
+  color: var(--text);
+  text-decoration: underline;
+  text-decoration-color: var(--obs-hairline-strong);
+  text-underline-offset: 3px;
+}
+
+:root .explicit {
+  width: 14px;
+  height: 14px;
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  font-weight: 500;
+}
+
+/* Şarkı listeleri: satırlar arası ince çizgi, çalan satır vurgu renginde. */
+:root .track-table__head {
+  padding: 0 16px 10px;
+  border-bottom: 1px solid var(--obs-hairline);
+}
+
+:root :is(.track-row-wrap, .album-row-wrap) {
+  padding: 0;
+}
+
+:root :is(.track-row, .album-row) {
+  box-shadow: inset 0 -1px 0 var(--obs-hairline);
+}
+
+:root .album-row {
+  min-height: 50px;
+  padding: 6px 16px;
+}
+
+:root :is(.track-row--active, .album-row--active) {
+  background: linear-gradient(90deg, var(--accent-ambient), transparent 70%);
+}
+
+:root :is(.track-row--active, .album-row--active) :is(.track-row__name, .album-row__title) {
+  color: var(--accent);
+}
+
+:root :is(.track-row__name, .album-row__title) {
+  font-weight: 400;
+}
+
+:root :is(.track-row__index, .album-row__index) {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--obs-muted);
+}
+
+:root .track-row__art {
+  box-shadow: inset 0 0 0 1px var(--obs-hairline);
+}
+
+:root .named-list__row {
+  border-bottom-color: var(--obs-hairline);
+}
+
+:root .named-list__name {
+  font-weight: 400;
+}
+
+/* Albüm / çalma listesi başlığı: ince dev başlık, rozetler mono. */
+:root .collection-header {
+  gap: 32px;
+  margin: 4px 0 28px;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--obs-hairline);
+}
+
+:root .collection-header__art {
+  width: 232px;
+  box-shadow: var(--obs-shadow);
+}
+
+:root .collection-header__title {
+  font-size: clamp(40px, 5vw, 68px);
+  font-weight: 300;
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+}
+
+:root .collection-header__kicker {
+  margin: 0 0 10px;
+  font-size: 15px;
+  font-weight: 400;
+}
+
+:root .collection-header__meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 300;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--obs-muted);
+}
+
+:root .collection-header__actions {
+  gap: 8px;
+  margin-top: 20px;
+}
+
+:root .audio-badge,
+:root .quality-badge {
+  padding: 3px 7px;
+  border: 1px solid var(--obs-hairline-strong);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+:root .audio-badge:first-child {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  color: var(--accent);
+}
+
+:root .note__toggle {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+:root .album-footer {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  color: var(--obs-muted);
+}
+
+/* Sanatçı (2026-11-27): fotoğraf varsa geniş, altı zemine erir; üstünde etiket, ince dev ad, kapak
+   renginde çal. Fotoğraf yoksa (`--bare`) boş kutu yok: albüm başlığı gibi sade, altında ince çizgi. */
+:root .artist-hero {
+  height: clamp(300px, 46vh, 520px);
+  margin: 0 0 32px;
+  background: none;
+  box-shadow: none;
+  border-bottom: 1px solid var(--obs-hairline);
+}
+
+:root .artist-hero::after {
+  background: linear-gradient(0deg, var(--bg) 0, transparent 58%);
+}
+
+:root .artist-hero--bare {
+  height: auto;
+  padding: 36px 0 30px;
+}
+
+:root .artist-hero--bare::after {
+  display: none;
+}
+
+:root .artist-hero__bar {
+  left: 0;
+  right: 0;
+  bottom: 28px;
+  align-items: flex-end;
+  gap: 22px;
+}
+
+:root .artist-hero--bare .artist-hero__bar {
+  position: static;
+}
+
+:root .artist-hero__titles {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+:root .artist-hero__kicker {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--obs-muted);
+}
+
+:root .artist-hero__name {
+  color: var(--text);
+  font-size: clamp(44px, 6vw, 92px);
+  font-weight: 300;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  text-shadow: none;
+}
+
+:root .artist-hero__play {
+  width: 56px;
+  height: 56px;
+  margin-bottom: 4px;
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: none;
+}
+
+:root .artist-hero__play:disabled {
+  opacity: 0.35;
+}
+
+:root .artist-about__genre {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--obs-muted);
+}
+
+/* Ayar kaydırıcıları (2026-11-27): ince iz + her zaman görünen dikey çubuk tutamaç (EQ ile aynı dil),
+   değer mono. */
+:root .settings-panel .slider::-webkit-slider-thumb {
+  width: 6px;
+  height: 18px;
+  margin-top: -8px;
+  border-radius: 0;
+  background: var(--text);
+  opacity: 1;
+}
+
+:root .settings-panel .slider:hover::-webkit-slider-thumb {
+  margin-top: -7px;
+  background: var(--accent);
+}
+
+:root .settings-panel .slider:focus-visible {
+  outline: 1px solid var(--accent);
+  outline-offset: 6px;
+}
+
+:root .tweak-slider__value {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--text);
+}
+
+/* ---- Ayarlar ---------------------------------------------------------------------------------- */
+
+:root .settings-tabs.segmented {
+  box-shadow: none;
+  border-bottom: 1px solid var(--obs-hairline);
+  margin-bottom: 26px;
+}
+
+:root .settings-tabs .segmented__item {
+  padding: 0 2px 12px;
+  margin-right: 26px;
+  background: none;
+  box-shadow: none;
+  color: var(--text-secondary);
+  font-size: 13.5px;
+}
+
+:root .settings-tabs .segmented__item--on {
+  color: var(--text);
+  box-shadow: inset 0 -1px 0 var(--text);
+}
+
+:root .settings-card {
+  padding: 4px 20px;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--obs-hairline);
+}
+
+:root .settings-row + .settings-row {
+  border-top-color: var(--obs-hairline);
+}
+
+:root .settings-row__label {
+  font-weight: 400;
+}
+
+:root :is(.settings-input, .dialog__textarea) {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--obs-hairline-strong);
+}
+
+:root :is(.settings-input, .dialog__textarea):focus-visible {
+  box-shadow: inset 0 0 0 1px var(--text);
+}
+
+:root .icon-pill {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--obs-hairline-strong);
+}
+
+:root .switch {
+  background: var(--obs-hairline-strong);
+}
+
+:root .switch--on {
+  background: var(--obs-invert-bg);
+}
+
+:root .switch--on .switch__knob {
+  background: var(--obs-invert-text);
+}
+
+:root .kbd {
+  border-color: var(--obs-hairline-strong);
+  background: transparent;
+  font-family: var(--font-mono);
+  font-weight: 400;
+}
+
+:root .about__name {
+  font-weight: 400;
+}
+
+/* Ekolayzır: frekans eğrisi (EqCurve.tsx) + ince dikey kaydırıcılar, köşeli tutamaç. */
+:root .eq {
+  padding: 8px 0 14px;
+}
+
+/* Ön kazanç sabit sütun, 10 bant eşit: eğri (EqCurve) aynı sütunlara oturur. */
+:root :is(.eq, .eq-curve-row) {
+  display: grid;
+  grid-template-columns: 84px repeat(10, minmax(0, 1fr));
+  gap: 0;
+}
+
+:root .eq-curve-row {
+  padding-top: 14px;
+}
+
+:root .eq-curve-row .eq-curve {
+  grid-column: 2 / -1;
+}
+
+:root .eq__band--preamp {
+  margin-right: 0;
+  padding-right: 0;
+  border-right-color: var(--obs-hairline);
+}
+
+:root .eq__slider::-webkit-slider-runnable-track {
+  width: 1px;
+  background: var(--obs-hairline-strong);
+}
+
+:root .eq__slider:hover::-webkit-slider-runnable-track {
+  width: 1px;
+}
+
+:root .eq__slider::-webkit-slider-thumb {
+  width: 20px;
+  height: 7px;
+  margin-left: -10px;
+  border-radius: 0;
+  background: var(--text);
+}
+
+:root .eq__slider:hover::-webkit-slider-thumb {
+  margin-left: -10px;
+  background: var(--accent);
+}
+
+:root .eq-curve {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 6px 0 2px;
+  overflow: visible;
+}
+
+:root .eq-curve__grid {
+  stroke: var(--obs-hairline);
+  stroke-dasharray: 2 4;
+}
+
+:root .eq-curve__zero {
+  stroke: var(--obs-hairline-strong);
+}
+
+:root .eq-curve__band {
+  stroke: var(--obs-hairline);
+}
+
+:root .eq-curve__label {
+  fill: var(--obs-muted);
+  font-family: var(--font-mono);
+  /* SVG genişliğe göre küçülür (görünüm 1000 birim, kart ~700 px): ekranda ~10 px. */
+  font-size: 14px;
+  letter-spacing: 0.1em;
+}
+
+:root .eq-curve__line {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 1.6;
+}
+
+:root .eq-curve__area {
+  fill: var(--accent);
+  opacity: 0.14;
+}
+
+:root .eq-curve__dot {
+  fill: var(--text);
+}
+
+:root .settings-card--muted .eq-curve__line {
+  stroke: var(--obs-muted);
+}
+
+/* ---- Menüler, bildirimler, pencereler --------------------------------------------------------- */
+
+:root
+  :is(.context-menu, .search-menu, .picker__list, .quality-pop, .dialog, .toast, .offline-pill) {
+  background: var(--obs-raised);
+  box-shadow:
+    inset 0 0 0 1px var(--obs-hairline-strong),
+    var(--obs-shadow);
+}
+
+:root :is(.context-menu, .search-menu, .picker__list) {
+  padding: 4px 0;
+}
+
+:root :is(.context-menu__item, .search-menu__item, .picker__option, .account-menu__item) {
+  padding-left: 14px;
+  padding-right: 14px;
+}
+
+:root :is(.context-menu__separator, .account-menu__separator) {
+  margin: 4px 0;
+  background: var(--obs-hairline);
+}
+
+:root .search-menu__art {
+  box-shadow: inset 0 0 0 1px var(--obs-hairline);
+}
+
+:root .toast--error {
+  box-shadow:
+    inset 2px 0 0 var(--danger),
+    inset 0 0 0 1px var(--obs-hairline-strong),
+    var(--obs-shadow);
+}
+
+:root .toast__action {
+  background: var(--obs-invert-bg);
+  color: var(--obs-invert-text);
+}
+
+:root .quality-pop {
+  padding: 12px 16px;
+  font-family: var(--font-ui);
+  color: var(--text);
+}
+
+:root .quality-pop__title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--obs-muted);
+}
+
+:root .quality-pop__value {
+  margin-top: 4px;
+  font-family: var(--font-mono);
+  font-weight: 300;
+}
+
+:root .dialog-backdrop {
+  background: rgb(0 0 0 / 0.5);
+}
+
+:root .dialog__title {
+  font-size: 22px;
+  font-weight: 300;
+  letter-spacing: -0.02em;
+}
+
+:root .fps-meter {
+  font-family: var(--font-mono);
+  bottom: 100px;
+}
+
+:root .zoom-flight {
+  box-shadow: var(--obs-shadow);
+}
+
+/* ---- Büyük oynatıcı: koyu sahne, kapak yörüngede, ilerleme halkası --------------------------- */
+/* Büyük oynatıcı her temada koyu (klasikte de öyle). */
+
+:root .np {
+  background: #060708;
+  font-family: var(--font-ui);
+}
+
+:root .np__clouds {
+  opacity: 0.55;
+  filter: blur(120px) saturate(120%);
+}
+
+:root .np__scrim {
+  background:
+    radial-gradient(ellipse 60% 70% at 30% 50%, transparent, rgb(6 7 8 / 0.7) 75%),
+    rgb(6 7 8 / 0.25);
+}
+
+:root .np__top .np__icon {
+  width: 36px;
+  height: 36px;
+  background: rgb(0 0 0 / 0.2);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14);
+}
+
+:root .np__top .np__icon:hover:not(:disabled) {
+  background: rgb(255 255 255 / 0.08);
+}
+
+:root .np__top .np__icon--on {
+  background: #fff;
+  color: #000;
+}
+
+:root .np__title {
+  font-size: 30px;
+  font-weight: 300;
+  letter-spacing: -0.025em;
+}
+
+:root .np__body--artist .np__title {
+  font-size: 40px;
+}
+
+:root .np__artist-name {
+  font-size: 15px;
+}
+
+:root .np__controls {
+  padding: 4px 0;
+  background: none;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+:root .np__controls .np__icon--play {
+  background: #fff;
+  color: #000;
+  box-shadow: none;
+}
+
+:root .np__controls .np__icon--play:hover:not(:disabled) {
+  background: #fff;
+  transform: scale(1.04);
+}
+
+:root .np__controls .np__icon--on {
+  color: var(--cover-accent-dark, #fff);
+}
+
+:root .np .seek__track {
+  background: rgb(255 255 255 / 0.18);
+}
+
+:root .np .player__time {
+  gap: 14px;
+  margin-top: 12px;
+  color: rgb(255 255 255 / 0.55);
+}
+
+:root .np .quality-badge {
+  border-color: rgb(255 255 255 / 0.3);
+  color: rgb(255 255 255 / 0.75);
+}
+
+:root .lyrics--stage .lyrics__line {
+  font-weight: 500;
+  text-shadow: none;
+}
+
+:root .lyrics--stage.lyrics--synced .lyrics__line--active {
+  box-shadow: none;
+}
+
+/* Uydular (NowPlaying `Satellites`, 2026-11-27 geri bildirim: "daireyi kaldıralım, uydu mantığı kalsın,
+   daha işlevsel olsun"): kapak ortada; sol üstte sıradaki, sağ üstte sonraki şarkı (küçük kapak + ad),
+   basınca o şarkı çalar. Çizgi / halka yok. */
+:root .np {
+  --np-art: min(44vh, 30vw);
+}
+
+:root .np__body--center {
+  --np-art: min(48vh, 36vw);
+}
+
+:root .np__body:not(.np__body--artist) .np__art {
+  width: var(--np-art);
+}
+
+:root .np__body:not(.np__body--artist) .np__meta {
+  width: min(var(--np-art), 100%);
+}
+
+.obs-sats {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) var(--np-art) minmax(0, 1fr);
+  align-items: start;
+  gap: 20px;
+  width: 100%;
+}
+
+.obs-sats > .np__art {
+  grid-column: 2;
+}
+
+.obs-sat {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  max-width: 150px;
+  margin-top: 12px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #fff;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  /* Gizli (2026-11-27 geliştirici: "ilk başta gözükmesin, imleç kapağa gelince ortaya çıksın"): kapağın
+     arkasından dışarı kayarak belirir; imleç uyduya geçince açık kalır; klavyeyle odakta da görünür. */
+  opacity: 0;
+  visibility: hidden;
+  transform: translateX(var(--sat-from, 40px)) scale(0.86);
+  /* Gizlenme gecikmeli: imleç kapaktan uyduya geçerken aradaki boşlukta kapanmasın. */
+  transition:
+    opacity 260ms var(--obs-ease) 280ms,
+    transform 420ms var(--obs-ease) 280ms,
+    visibility 0s linear 700ms;
+}
+
+.obs-sats:has(.np__art:hover, .obs-sat:hover, .obs-sat:focus-visible) .obs-sat {
+  opacity: 0.7;
+  visibility: visible;
+  transform: none;
+  transition:
+    opacity 260ms var(--obs-ease),
+    transform 420ms var(--obs-ease),
+    visibility 0s;
+}
+
+.obs-sats:has(.np__art:hover, .obs-sat:hover, .obs-sat:focus-visible) .obs-sat--right {
+  transition-delay: 60ms, 60ms, 0s;
+}
+
+.obs-sat--left {
+  --sat-from: 40px;
+  grid-column: 1;
+  justify-self: end;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.obs-sat--right {
+  --sat-from: -40px;
+  grid-column: 3;
+  justify-self: start;
+}
+
+.obs-sats .obs-sat:hover,
+.obs-sats .obs-sat:focus-visible {
+  opacity: 1;
+}
+
+.obs-sat:active {
+  transform: scale(0.97);
+}
+
+.obs-sat:focus-visible {
+  outline: 1px solid #fff;
+  outline-offset: 4px;
+}
+
+.obs-sat__art {
+  display: block;
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  background: rgb(255 255 255 / 0.08);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14);
+}
+
+.obs-sat__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.obs-sat__kicker {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgb(255 255 255 / 0.55);
+}
+
+.obs-sat__title,
+.obs-sat__artist {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.obs-sat__title {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.obs-sat__artist {
+  font-size: 12px;
+  color: rgb(255 255 255 / 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .obs-sat {
+    transform: none;
+  }
+}
+
+/* ---- Kapak rengi vurgu (2026-11-27 kararı: "vurgu rengi belirgin olsun") -------------------- */
+/* Zemin siyah / beyaz kalır; çalan şarkının kapak rengi (CoverAccent, `--accent` / `--on-accent`)
+   işlevsel yerlere yayılır: logo noktası, etkin menü çizgisi, ilerleme, ⏯ ve Çal, anahtar, sekme. */
+
+:root .nav-item--active::before,
+:root .seek__fill {
+  background: var(--accent);
+}
+
+:root .nav-item--active {
+  background: linear-gradient(90deg, var(--accent-ambient), transparent);
+}
+
+:root .player__controls .icon-button--large,
+:root .player__controls .icon-button--large:hover:not(:disabled),
+:root .pill-button--primary,
+:root .pill-button--primary:hover:not(:disabled),
+:root .media-card__play {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+:root .slider::-webkit-slider-runnable-track {
+  background: linear-gradient(
+    to right,
+    var(--accent) 0 var(--p, 0%),
+    var(--obs-hairline-strong) var(--p, 0%)
+  );
+}
+
+:root .switch--on {
+  background: var(--accent);
+}
+
+:root .switch--on .switch__knob {
+  background: var(--on-accent);
+}
+
+:root .settings-tabs .segmented__item--on {
+  box-shadow: inset 0 -2px 0 var(--accent);
+}
+
+:root .searchbar--focused {
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+/* ---- Büyük oynatıcı: saf siyah / saf beyaz zemin (2026-11-27 kararı) ------------------------- */
+/* Renkler modunda bulut yok; renk yalnızca kapakta ve vurguda. Açık temada yazılar siyah. Sanatçı
+   modu fotoğrafla kalır (yazılar beyaz). */
+
+:root .np {
+  background: #000;
+}
+
+/* Saf zemin: kapağın renkli gölgesi de yok (satır içi stil, NowPlaying). */
+:root .np--colors .np__art {
+  box-shadow: none !important;
+}
+
+/* Dar pencerede kalite rozeti gizli: şarkı adına yer kalsın (rozet büyük oynatıcıda da var). */
+:root .player--narrow .quality-badge--dock {
+  display: none;
+}
+
+:root .np .titlebar .window-drop {
+  color: rgb(255 255 255 / 0.55);
+}
+
+:root .np .seek__fill {
+  background: var(--cover-accent-dark, #fff);
+}
+
+:root .np .obs-sat__kicker {
+  color: var(--cover-accent-dark, rgb(255 255 255 / 0.55));
+}
+
+:root .np__controls .np__icon--play,
+:root .np__controls .np__icon--play:hover:not(:disabled) {
+  background: var(--cover-accent-dark, #fff);
+  color: var(--cover-on-accent-dark, #000);
+}
+
+:root[data-theme='light'] .np--colors {
+  background: #fff;
+  color: #000;
+}
+
+:root[data-theme='light'] .np--colors .np__top .np__icon {
+  background: transparent;
+  color: #000;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.16);
+}
+
+:root[data-theme='light'] .np--colors .np__top .np__icon--on {
+  background: #000;
+  color: #fff;
+}
+
+:root[data-theme='light'] .np--colors .titlebar .window-drop {
+  color: rgb(0 0 0 / 0.5);
+}
+
+:root[data-theme='light'] .np--colors .window-drop:hover {
+  background: rgb(0 0 0 / 0.05);
+  color: #000;
+}
+
+:root[data-theme='light'] .np--colors .window-drop--close:hover {
+  background: #c42b1c;
+  color: #fff;
+}
+
+:root[data-theme='light'] .np--colors :is(.np__artist-name, .np__volume) {
+  color: rgb(0 0 0 / 0.6);
+}
+
+:root[data-theme='light'] .np--colors .np__controls .np__icon {
+  color: rgb(0 0 0 / 0.5);
+}
+
+:root[data-theme='light'] .np--colors .np__controls .np__icon--big,
+:root[data-theme='light'] .np--colors .np__controls .np__icon:hover:not(:disabled) {
+  color: #000;
+}
+
+:root[data-theme='light'] .np--colors .np__controls .np__icon--on {
+  color: var(--cover-accent-light, #000);
+}
+
+:root[data-theme='light'] .np--colors .np__controls .np__icon--play,
+:root[data-theme='light'] .np--colors .np__controls .np__icon--play:hover:not(:disabled) {
+  background: var(--cover-accent-light, #000);
+  color: var(--cover-on-accent-light, #fff);
+}
+
+:root[data-theme='light'] .np--colors .seek__track {
+  background: rgb(0 0 0 / 0.14);
+}
+
+:root[data-theme='light'] .np--colors .seek__fill {
+  background: var(--cover-accent-light, #000);
+}
+
+:root[data-theme='light'] .np--colors .player__time {
+  color: rgb(0 0 0 / 0.55);
+}
+
+:root[data-theme='light'] .np--colors .slider::-webkit-slider-runnable-track {
+  background: linear-gradient(
+    to right,
+    var(--cover-accent-light, #000) 0 var(--p, 0%),
+    rgb(0 0 0 / 0.14) var(--p, 0%)
+  );
+}
+
+:root[data-theme='light'] .np--colors .slider::-webkit-slider-thumb {
+  background: #000;
+}
+
+:root[data-theme='light'] .np--colors .quality-badge {
+  border-color: rgb(0 0 0 / 0.24);
+  color: rgb(0 0 0 / 0.65);
+}
+
+:root[data-theme='light'] .np--colors .lyrics--stage .lyrics__line {
+  color: #000;
+}
+
+:root[data-theme='light'] .np--colors .lyrics--stage .lyrics__source {
+  color: rgb(0 0 0 / 0.5);
+}
+
+:root[data-theme='light'] .np--colors .obs-sat {
+  color: #000;
+}
+
+:root[data-theme='light'] .np--colors .obs-sat__artist {
+  color: rgb(0 0 0 / 0.55);
+}
+
+:root[data-theme='light'] .np--colors .obs-sat__kicker {
+  color: var(--cover-accent-light, rgb(0 0 0 / 0.55));
+}
+
+:root[data-theme='light'] .np--colors .obs-sat:focus-visible {
+  outline-color: #000;
+}
+
+/* ---- Beşinci tur (2026-11-27 geri bildirim) ------------------------------------------------- */
+
+/* Oynatıcılar yalnızca siyah / beyaz (temaya göre), kapak rengine göre değil: ⏯, ilerleme, ses,
+   açık karıştır / tekrar. Kapak rengi vurgusu oynatıcı dışında kalır (menü, Çal, anahtar…). */
+:root .player__controls .icon-button--large,
+:root .player__controls .icon-button--large:hover:not(:disabled) {
+  background: var(--obs-invert-bg);
+  color: var(--obs-invert-text);
+}
+
+:root .player .seek__fill {
+  background: var(--text);
+}
+
+:root .player .slider::-webkit-slider-runnable-track {
+  background: linear-gradient(
+    to right,
+    var(--text) 0 var(--p, 0%),
+    var(--obs-hairline-strong) var(--p, 0%)
+  );
+}
+
+/* Açık tuş (karıştır, tekrar, panel): renk değil, tam parlaklık + altında küçük kare nokta. */
+:root :is(.player .icon-button--on, .np__controls .np__icon--on) {
+  position: relative;
+  background: none;
+  color: var(--text);
+}
+
+:root :is(.player .icon-button--on, .np__controls .np__icon--on)::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  width: 4px;
+  height: 4px;
+  margin-left: -2px;
+  background: currentColor;
+}
+
+:root .np__controls .np__icon--on,
+:root .np__controls .np__icon--on:hover:not(:disabled) {
+  color: #fff;
+}
+
+:root .np .seek__fill {
+  background: #fff;
+}
+
+:root .np .slider::-webkit-slider-runnable-track {
+  background: linear-gradient(to right, #fff 0 var(--p, 0%), rgb(255 255 255 / 0.2) var(--p, 0%));
+}
+
+:root .np__controls .np__icon--play,
+:root .np__controls .np__icon--play:hover:not(:disabled) {
+  background: #fff;
+  color: #000;
+}
+
+:root .np .obs-sat__kicker {
+  color: rgb(255 255 255 / 0.55);
+}
+
+:root[data-theme='light'] .np--colors .seek__fill {
+  background: #000;
+}
+
+:root[data-theme='light'] .np--colors .slider::-webkit-slider-runnable-track {
+  background: linear-gradient(to right, #000 0 var(--p, 0%), rgb(0 0 0 / 0.16) var(--p, 0%));
+}
+
+:root[data-theme='light'] .np--colors .np__controls .np__icon--play,
+:root[data-theme='light'] .np--colors .np__controls .np__icon--play:hover:not(:disabled) {
+  background: #000;
+  color: #fff;
+}
+
+:root[data-theme='light'] .np--colors .np__controls .np__icon--on,
+:root[data-theme='light'] .np--colors .np__controls .np__icon--on:hover:not(:disabled) {
+  color: #000;
+}
+
+:root[data-theme='light'] .np--colors .obs-sat__kicker {
+  color: rgb(0 0 0 / 0.5);
+}
+
+/* Kaydırıcı tutamaçları (ilerleme, ses): top yerine ince dikey çubuk. Ses tutamacı hep görünür,
+   ilerlemeninki üzerine gelince. */
+:root .slider::-webkit-slider-thumb {
+  width: 4px;
+  height: 14px;
+  margin-top: -6px;
+  border-radius: 0;
+  background: var(--text);
+  box-shadow: none;
+}
+
+:root .slider:hover::-webkit-slider-thumb {
+  margin-top: -5px;
+}
+
+:root .slider--volume::-webkit-slider-thumb {
+  opacity: 1;
+}
+
+:root .seek .slider--seek::-webkit-slider-thumb {
+  height: 14px;
+  margin-top: -4px;
+}
+
+:root .np .slider::-webkit-slider-thumb {
+  background: #fff;
+}
+
+:root[data-theme='light'] .np--colors .slider::-webkit-slider-thumb {
+  background: #000;
+}
+
+/* Ayar anahtarları köşeli: ince çizgili dikdörtgen yuva, kare tutamaç; açıkken kapak rengi. */
+:root .switch {
+  width: 40px;
+  height: 22px;
+  padding: 3px;
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--obs-hairline-strong);
+}
+
+:root .switch__knob {
+  width: 16px;
+  height: 16px;
+  background: var(--text-secondary);
+  box-shadow: none;
+}
+
+:root .switch--on {
+  background: var(--accent);
+  box-shadow: none;
+}
+
+:root .switch--on .switch__knob {
+  background: var(--on-accent);
+}
+
+/* Sanatçı fotoğrafında çal + ad fotoğrafın kenarına yapışmasın. */
+:root .artist-hero:not(.artist-hero--bare) .artist-hero__bar {
+  left: 32px;
+  right: 32px;
+}
+
+/* Şarkı hücresi (sanatçı Popüler Parçalar, Yeni listeleri): üzerine gelince kapakta çal işareti. */
+:root .song-cell__play {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  background: rgb(0 0 0 / 0.5);
+  color: #fff;
+  opacity: 0;
+  transition: opacity 140ms ease;
+  pointer-events: none;
+}
+
+:root :is(.song-cell:hover, .song-cell:focus-visible) .song-cell__play {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root .nav-item--active::before {
+    transition: none;
+  }
+}

@@ -1,4 +1,4 @@
-// Uygulama ikonlarını build/icon.svg'den üretir (`npm run icons`; Electron ile çalışır, yeni bağımlılık
+// Uygulama ikonlarını build/icon.svg'den (32 px ve altında build/icon-small.svg) üretir (`npm run icons`; Electron ile çalışır, yeni bağımlılık
 // yok). SVG her boyutta ayrı çizilir (küçültme değil), böylece 16 px'te de keskin kalır.
 // Çıktılar: build/icon.ico (kurulum, kısayol, exe), build/icon.png (256 px),
 // src/main/platform/appIcon.ts (tray + pencere ikonu). Çıktılar commit edilir; derleme bunu çalıştırmaz.
@@ -36,10 +36,17 @@ app
       pathToFileURL(join(__dirname, 'icon-encode.mjs')).href
     )
     const svg = readFileSync(join(ROOT, 'build', 'icon.svg'), 'utf8')
+    // 2026-11-27: 32 px ve altı için ayrı, sade çizim (işaret büyük, ince ayrıntı yok) — varsa.
+    let small = svg
+    try {
+      small = readFileSync(join(ROOT, 'build', 'icon-small.svg'), 'utf8')
+    } catch {
+      // yoksa büyük çizim kullanılır
+    }
     const win = new BrowserWindow({ show: false, webPreferences: { offscreen: true } })
     await win.loadURL('data:text/html,<!doctype html><title>icons</title>')
     const images = []
-    for (const size of ICO_SIZES) images.push(await rasterize(win, svg, size))
+    for (const size of ICO_SIZES) images.push(await rasterize(win, size <= 32 ? small : svg, size))
     writeFileSync(join(ROOT, 'build', 'icon.ico'), encodeIco(images))
     const bySize = Object.fromEntries(images.map((i) => [i.size, i.png]))
     writeFileSync(join(ROOT, 'build', 'icon.png'), bySize[256])

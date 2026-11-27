@@ -1,7 +1,7 @@
 import { motion, useAnimationControls } from 'motion/react'
 import { ChevronLeft, House } from 'lucide-react'
 import { i18n } from '@core/i18n'
-import { GUTTER, NAV_BUTTON_SIZE } from './layout'
+import { NAV_BUTTON_SIZE } from './layout'
 import { useRouter } from './router'
 import { useGo } from './scroll'
 
@@ -12,7 +12,16 @@ import { useGo } from './scroll'
 
 const BUTTON_SIZE = NAV_BUTTON_SIZE
 
-export function NavControls({ onHome }: { onHome?: () => void }) {
+export function NavControls({
+  onHome,
+  left,
+  top
+}: {
+  onHome?: () => void
+  /** Üst şeridin solunda, kitaplığın sağında (Shell.tsx). */
+  left: number
+  top: number
+}) {
   const { canGoBack, back, route } = useRouter()
   const go = useGo()
   const arrow = useAnimationControls()
@@ -21,7 +30,7 @@ export function NavControls({ onHome }: { onHome?: () => void }) {
     back()
   }
   return (
-    <div className="nav-controls" style={{ left: GUTTER, top: GUTTER }}>
+    <div className="nav-controls" style={{ left, top }}>
       <motion.button
         type="button"
         className="glass glass--capsule nav-control"

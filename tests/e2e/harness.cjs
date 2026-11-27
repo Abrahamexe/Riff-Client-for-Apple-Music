@@ -145,37 +145,31 @@ const scenarios = {
     result.readAfterRendererCrash = await read(w)
   },
 
-  // Kabuk tıklamaları: üst şeritteki yüzen denetimler (hamburger, arama) pencere sürükleme şeridinin
-  // altında kalmamalı; gerçek fare tıklaması menüyü kapatıp açar.
+  // Kabuk tıklamaları (2026-11-27, tek tasarım): üst şeritteki geri / ev ve arama, sabit kitaplığın
+  // öğeleri pencere sürükleme şeridinin altında kalmamalı; gerçek fare tıklaması sayfa açar.
   async shell() {
     const w = await waitFor(async () => mainWindow())
     w.setSize(1440, 900)
-    await waitFor(() => js(w, `!!document.querySelector('.sidebar__toggle')`))
+    await waitFor(() => js(w, `!!document.querySelector('.sidebar .nav-item')`))
     await sleep(500)
     const hit = (selector) =>
       js(
         w,
         `(() => { const t = document.querySelector('${selector}'); if (!t) return 'yok'; const r = t.getBoundingClientRect(); const e = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2); return !!e && t.contains(e) })()`
       )
-    result.toggleHit = await hit('.sidebar__toggle')
+    result.navHit = await hit('.nav-control')
     result.searchHit = await hit('.searchbar__input')
-    const expanded = () =>
-      js(w, `document.querySelector('.sidebar__toggle').getAttribute('aria-expanded')`)
-    const click = async () => {
-      const { x, y } = await js(
-        w,
-        `(() => { const r = document.querySelector('.sidebar__toggle').getBoundingClientRect(); return { x: Math.round(r.x + r.width / 2), y: Math.round(r.y + r.height / 2) } })()`
-      )
-      w.focus()
-      w.webContents.sendInputEvent({ type: 'mouseDown', x, y, button: 'left', clickCount: 1 })
-      w.webContents.sendInputEvent({ type: 'mouseUp', x, y, button: 'left', clickCount: 1 })
-      await sleep(800)
-    }
-    result.menuBefore = await expanded()
-    await click()
-    result.menuAfterClose = await expanded()
-    await click()
-    result.menuAfterOpen = await expanded()
+    result.libraryHit = await hit('.sidebar .nav-item')
+    const settingsItem = `[...document.querySelectorAll('.sidebar__footer .nav-item')][0]`
+    const { x, y } = await js(
+      w,
+      `(() => { const r = ${settingsItem}.getBoundingClientRect(); return { x: Math.round(r.x + r.width / 2), y: Math.round(r.y + r.height / 2) } })()`
+    )
+    w.focus()
+    w.webContents.sendInputEvent({ type: 'mouseDown', x, y, button: 'left', clickCount: 1 })
+    w.webContents.sendInputEvent({ type: 'mouseUp', x, y, button: 'left', clickCount: 1 })
+    await sleep(800)
+    result.settingsOpened = await js(w, `!!document.querySelector('.settings-tabs')`)
   },
 
   // X: uygulamadan çıkar (varsayılan, V6 kararı).

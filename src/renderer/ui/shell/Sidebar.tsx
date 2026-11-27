@@ -20,13 +20,14 @@ import {
 import type { MessageKey } from '@shared/i18n'
 import { i18n } from '@core/i18n'
 import { Artwork } from '../components/Artwork'
+import { BrandMark } from '../components/BrandMark'
 import { useApp } from '../context'
 import { usePlaylists } from '../hooks/usePlaylists'
 import { useOverlays } from '../overlays/Overlays'
 import { playlistCard, useCardMenu } from '../overlays/itemMenus'
 import { AccountRow } from './AccountRow'
 import type { Rect } from './layout'
-import { sidebarPanelMotion, SPRING_SOFT } from './motion'
+import { SPRING_SOFT } from './motion'
 import { sameRoute, useRouter, type Route } from './router'
 import { useGo } from './scroll'
 import { loadCollapsed, saveCollapsed, type SidebarSection } from './sidebarSections'
@@ -157,7 +158,8 @@ function Section({
   )
 }
 
-export function Sidebar({ rect, ghost = false }: { rect: Rect; ghost?: boolean }) {
+/** Sabit kitaplık (2026-11-27, tek tasarım): solda tam boy, üstte uygulama adı; açılıp kapanmaz. */
+export function Sidebar({ rect }: { rect: Rect }) {
   const [collapsed, setCollapsed] = useState(loadCollapsed)
   const isOpen = (s: SidebarSection): boolean => !collapsed.has(s)
   const toggle = (s: SidebarSection) => (): void => {
@@ -172,22 +174,16 @@ export function Sidebar({ rect, ghost = false }: { rect: Rect; ghost?: boolean }
   const { openMenu, newPlaylist } = useOverlays()
   const cardMenu = useCardMenu()
   return (
-    <motion.nav
+    <nav
       className="glass sidebar"
       aria-label={i18n.t('nav.menu')}
       style={{ left: rect.x, top: rect.y, width: rect.width, height: rect.height }}
-      // `ghost`: ısıtma (Shell.tsx `useGlassWarmup`) — görünmez çizim; ilk gerçek açılışta GPU'nun
-      // gölgelendirici derlemesi / ilk çizimi (21–27 ms'lik kareler) önceden yapılmış olur.
-      {...(ghost
-        ? {
-            initial: false,
-            animate: { opacity: 0.01, scale: 0.9 },
-            transition: { duration: 0 },
-            'aria-hidden': true,
-            inert: true
-          }
-        : sidebarPanelMotion)}
     >
+      {/* `lang="en"`: büyük harfte Türkçe kuralı "RİFF" yazıyordu. */}
+      <div className="sidebar__brand" lang="en">
+        <BrandMark size={18} />
+        {i18n.t('app.brand')}
+      </div>
       <div className="sidebar__content">
         <div className="sidebar__scroll">
           {TOP.map((i) => (
@@ -256,6 +252,6 @@ export function Sidebar({ rect, ghost = false }: { rect: Rect; ghost?: boolean }
           <AccountRow />
         </div>
       </div>
-    </motion.nav>
+    </nav>
   )
 }

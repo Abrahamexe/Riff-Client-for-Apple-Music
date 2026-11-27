@@ -54,6 +54,8 @@ export const tr = {
 
   // --- Tray ve pencere (PLAN 1.8a) -----------------------------------------------------------
   'tray.tooltip': 'Riff Client',
+  'app.brand': 'Riff Client',
+  'artist.kicker': 'Sanatçı',
   'tray.show': 'Pencereyi göster',
   'tray.playPause': 'Çal / Duraklat',
   'tray.next': 'Sonraki şarkı',
@@ -81,8 +83,6 @@ export const tr = {
   'settings.appearance.themeSystem': 'Windows temasını kullan',
   'settings.appearance.themeLight': 'Açık',
   'settings.appearance.themeDark': 'Koyu',
-  'settings.appearance.transparency': 'Saydamlık',
-  'settings.appearance.transparencyHint': 'Cam yüzeylerin arkasının ne kadar görüneceği.',
   'settings.title': 'Ayarlar',
   'settings.tabs': 'Ayar bölümleri',
   'settings.tab.general': 'Genel',
@@ -120,11 +120,6 @@ export const tr = {
   'tweaks.motion.system': 'Windows',
   'tweaks.motion.reduced': 'Azalt',
   'tweaks.motion.full': 'Tam',
-  'tweaks.glassBlur': 'Cam bulanıklığı',
-  'tweaks.glassBlurHint':
-    'Zayıf ekran kartında kapat: kaydırma akıcılaşır, cam yüzeyler daha opak olur.',
-  'tweaks.pulse': 'Büyük oynatıcıda müzikle nabız',
-  'tweaks.pulseHint': 'Kapak renkleri modunda arka planın müziğe tepkisi. 0 = kapalı.',
   'tweaks.lyricsOffset': 'Söz zamanlaması',
   'tweaks.lyricsOffsetHint': 'Sözler geç geliyorsa artı, erken geliyorsa eksi yönde kaydır.',
   'tweaks.lyricsSize': 'Söz yazı boyutu',
@@ -221,10 +216,6 @@ export const tr = {
 
   // --- Kabuk (PLAN_v5 B2) ----------------------------------------------------------------------
   'nav.menu': 'Menü',
-  'nav.openMenu': 'Menüyü aç',
-  'nav.pinMenu': 'Menüyü açık tut',
-  'nav.unpinMenu': 'Menü kilidini aç',
-  'nav.closeMenu': 'Menüyü kapat',
   'nav.new': 'Yeni',
   'nav.radio': 'Radyo',
   'nav.library': 'Arşiv',
@@ -262,8 +253,6 @@ export const tr = {
   'player.pause': 'Duraklat',
   'player.next': 'Sonraki',
   'player.previous': 'Önceki',
-  'player.collapse': 'Oynatıcıyı küçült',
-  'player.expand': 'Oynatıcıyı aç',
   'player.lyrics': 'Sözler',
   'player.volume': 'Ses düzeyi',
   'player.nothingPlaying': 'Çalan şarkı yok',
@@ -272,7 +261,7 @@ export const tr = {
   'np.title': 'Şu An Çalıyor',
   'np.close': 'Büyük oynatıcıyı kapat',
   'np.modeArtist': 'Arka plan: sanatçı fotoğrafı',
-  'np.modeColors': 'Arka plan: kapak renkleri',
+  'np.modeColors': 'Arka plan: sade',
   'player.openNowPlaying': 'Büyük oynatıcıyı aç',
   'player.quality': 'Ses kalitesi',
   'player.qualityFormat': 'AAC · {kbps} kbps',

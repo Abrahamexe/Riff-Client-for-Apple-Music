@@ -76,6 +76,24 @@ describe('dil tercihi (2026-10-19)', () => {
   })
 })
 
+describe('tek tasarım (2026-11-27)', () => {
+  it('eski kayıttaki tasarım / saydamlık / cam / nabız alanları atılır, diğerleri korunur', () => {
+    const { settings, repaired } = migrateSettings({
+      ...defaultSettings(),
+      appearance: { theme: 'dark', design: 'classic', transparency: 30, rightPanel: 'lyrics' },
+      tweaks: { ...defaultSettings().tweaks, glassBlur: false, pulseStrength: 40, volumeStep: 7 }
+    })
+    expect(settings.appearance).toEqual({ theme: 'dark', rightPanel: 'lyrics' })
+    expect(settings.tweaks).not.toHaveProperty('glassBlur')
+    expect(settings.tweaks).not.toHaveProperty('pulseStrength')
+    expect(settings.tweaks.volumeStep).toBe(7)
+    expect(repaired).toBe(true)
+    expect(SettingsPatchSchema.safeParse({ appearance: { design: 'observatory' } }).success).toBe(
+      false
+    )
+  })
+})
+
 describe('ince ayar bölümü (2026-10-14)', () => {
   it('eski kayıtta bölüm yok: varsayılanlar eklenir, diğer ayarlar korunur', () => {
     const old = { ...defaultSettings(), general: { useListeningHistory: false } } as Record<

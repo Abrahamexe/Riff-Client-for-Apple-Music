@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <!-- Riff Client uygulama ikonu, KÜÇÜK boylar (16–32 px; geliştirici seçimi 2026-11-27, logo 5D): aynı ses ızgarası, %30 büyük, ayrıntısız. `npm run icons` 32 px ve altında bunu kullanır. -->
+  
+  <rect width="256" height="256" fill="#060708"/>
+  <rect x="21.50" y="21.50" width="33.28" height="33.28" fill="rgba(236,238,242,.14)"/>
+  <rect x="21.50" y="68.10" width="33.28" height="33.28" fill="rgba(236,238,242,.14)"/>
+  <rect x="21.50" y="114.69" width="33.28" height="33.28" fill="rgba(236,238,242,.14)"/>
+  <rect x="21.50" y="161.28" width="33.28" height="33.28" fill="#eceef2"/>
+  <rect x="21.50" y="207.87" width="33.28" height="33.28" fill="#eceef2"/>
+  <rect x="68.10" y="21.50" width="33.28" height="33.28" fill="rgba(236,238,242,.14)"/>
+  <rect x="68.10" y="68.10" width="33.28" height="33.28" fill="#eceef2"/>
+  <rect x="68.10" y="114.69" width="33.28" height="33.28" fill="#eceef2"/>
+  <rect x="68.10" y="161.28" width="33.28" height="33.28" fill="#eceef2"/>
+  <rect x="68.10" y="207.87" width="33.28" height="33.28" fill="#eceef2"/>
+  <rect x="114.69" y="21.50" width="33.28" height="33.28" fill="#ff5a1f"/>
+  <rect x="114.69" y="68.10" width="33.28" height="33.28" fill="#eceef2"/>
+  <rect x="114.69" y="114.69" width="33.28" height="33.28" fill="#eceef2"/>
+  <rect x="114.69" y="161.28" width="33.28" height="33.28" fill="#eceef2"/>
+  <rect x="114.69" y="207.87" width="33.28" height="33.28" fill="#eceef2"/>
+  <rect x="161.28" y="21.50" width="33.28" height="33.28" fill="rgba(236,238,242,.14)"/>
+  <rect x="161.28" y="68.10" width="33.28" height="33.28" fill="rgba(236,238,242,.14)"/>
+  <rect x="161.28" y="114.69" width="33.28" height="33.28" fill="#eceef2"/>
+  <rect x="161.28" y="161.28" width="33.28" height="33.28" fill="#eceef2"/>
+  <rect x="161.28" y="207.87" width="33.28" height="33.28" fill="#eceef2"/>
+  <rect x="207.87" y="21.50" width="33.28" height="33.28" fill="rgba(236,238,242,.14)"/>
+  <rect x="207.87" y="68.10" width="33.28" height="33.28" fill="rgba(236,238,242,.14)"/>
+  <rect x="207.87" y="114.69" width="33.28" height="33.28" fill="rgba(236,238,242,.14)"/>
+  <rect x="207.87" y="161.28" width="33.28" height="33.28" fill="rgba(236,238,242,.14)"/>
+  <rect x="207.87" y="207.87" width="33.28" height="33.28" fill="#eceef2"/>
+</svg>

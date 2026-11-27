@@ -17,3 +17,6 @@ secrets/
 # Belgeler yalnızca bu bilgisayarda (geliştirici kararı 2026-10-14); README'ler GitHub'da kalır.
 *.md
 !README.md
+
+# Tarayıcı aracı (Playwright MCP) ekran görüntüleri ve yan dosyaları
+.playwright-mcp/

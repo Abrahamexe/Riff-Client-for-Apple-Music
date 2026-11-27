@@ -6,7 +6,6 @@ import { useApp } from '../context'
 import { usePlayer } from '../hooks/usePlayer'
 import { useRemote } from '../hooks/useRemote'
 import { Artwork } from '../components/Artwork'
-import { PageTint } from '../components/PageTint'
 import { ExpandableNote, LoadFailed, RowsSkeleton, Sections } from '../components/Sections'
 import { TrackTable } from '../components/TrackTable'
 import { playlistStart } from '../components/playlistWindow'
@@ -95,7 +94,6 @@ export function CatalogPlaylistPage({
 
   return (
     <>
-      <PageTint artwork={detail?.playlist.artworkUrl ?? artworkUrl} />
       <div className="collection-header">
         <Artwork
           url={detail?.playlist.artworkUrl ?? artworkUrl}

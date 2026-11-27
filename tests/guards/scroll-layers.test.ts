@@ -24,11 +24,11 @@ function rules(selector: string): string[] {
 }
 
 describe('kaydırma katmanları', () => {
-  it('kart düğmeleri yalnızca üzerine gelinince bulanıklaşır', () => {
+  // 2026-11-27: tek tasarımda cam yok; kaydırırken katman açan bulanıklık hiçbir kart düğmesinde olmasın.
+  it('kart düğmelerinde bulanıklık yok', () => {
     for (const sel of ['.card-more', '.media-card__play', '.more-button']) {
       for (const body of rules(sel)) expect(body, sel).not.toMatch(/backdrop-filter:\s*blur/)
     }
-    expect(rules('.media-card__play.glass').join('')).toMatch(/backdrop-filter:\s*none/)
   })
 
   it('iskelet nabzı kutularda değil kapta', () => {

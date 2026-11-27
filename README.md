@@ -15,17 +15,17 @@
 </p>
 
 <p align="center">
-  <img src=".github/assets/now-playing.png" width="860" alt="Full-screen player with album-colour backdrop" />
+  <img src=".github/assets/album.png" width="860" alt="Album page: square surfaces, hairlines and a pinned library" />
 </p>
 
 <table>
   <tr>
-    <td><img src=".github/assets/album.png" alt="Playlist page with a cover-tinted background" /></td>
-    <td><img src=".github/assets/artist.png" alt="Artist page" /></td>
+    <td><img src=".github/assets/artist.png" alt="Artist page with a full-bleed photo" /></td>
+    <td><img src=".github/assets/browse.png" alt="New: editorial playlists and top songs" /></td>
   </tr>
   <tr>
-    <td><img src=".github/assets/tweaks.png" alt="Tweaks settings" /></td>
-    <td><img src=".github/assets/equalizer.png" alt="10-band equalizer" /></td>
+    <td><img src=".github/assets/light.png" alt="Light theme" /></td>
+    <td><img src=".github/assets/equalizer.png" alt="10-band equalizer with a frequency-response curve" /></td>
   </tr>
 </table>
 
@@ -33,9 +33,16 @@
 
 ## English
 
-Riff Client brings your Apple Music subscription to Windows with a liquid-glass interface, smooth
-motion and a focus on speed. You sign in with your own Apple ID; everything plays from your own
-subscription.
+Riff Client brings your Apple Music subscription to Windows with a quiet, precise interface and a focus
+on speed. You sign in with your own Apple ID; everything plays from your own subscription.
+
+### Design
+
+A calm, instrument-like interface: near-black (or paper-white) surfaces separated by hairlines, square
+corners everywhere — down to the window itself — Geist and Geist Mono type, and small spaced-out
+labels. Colour comes from the music: the artwork of the playing song tints the accents (active menu
+line, Play buttons, switches, sliders), while the players stay strictly black and white. The app icon is
+a 5 × 5 "sound grid": lit columns draw the sound, the highest peak glows signal orange.
 
 ### Features
 
@@ -46,17 +53,21 @@ subscription.
   Play Later.
 - **Full-length playback** with Widevine DRM (castlabs ECS), 256 kbps AAC, editable Up Next with
   autoplay, shuffle and repeat, Windows media keys and media overlay.
-- **Cover-tinted pages** — album, playlist and artist pages take their colour from the artwork (or the
-  artist photo) and fade into the app background; spacious, rounded song rows.
-- **Full-screen player** — album-colour backdrop that pulses with the music, time-synced lyrics,
-  artist-photo mode, quality badge. Clicking the progress bar seeks almost instantly.
+- **Pinned library and a full-width player bar** — Home, New, Radio, your library and playlists always one
+  click away; play controls sit in the exact centre of the window, song info on the left, panels on the
+  right (song info, lyrics, Up Next).
+- **Artist pages** — full-bleed artist photo that melts into the page, large thin name, popular songs
+  with a play mark on hover, latest release, albums, singles and more.
+- **Full-screen player** — pure black (or white) stage with the artwork and time-synced lyrics; hover the
+  artwork and the next two songs slide out as "satellites" you can click to play. Artist-photo mode,
+  quality badge, seek almost instantly.
 - **MiniPlayer** — a square, optionally always-on-top artwork window.
 - **Song info** — credits (writers, producers, performers, engineers) and samples from MusicBrainz,
   artist summaries from Wikipedia.
-- **10-band equalizer** with presets and per-song presets.
-- **Tweaks** for enthusiasts — motion, glass blur, lyric timing and size, volume/seek steps, Fast
-  DNS, library refresh interval, FPS meter.
-- **Light / dark / system theme**, adjustable transparency, and a **language setting**
+- **10-band equalizer** with a live frequency-response curve, presets and per-song presets.
+- **Tweaks** for enthusiasts — motion, lyric timing and size, volume/seek steps, Fast DNS, library
+  refresh interval, FPS meter.
+- **Light / dark / system theme** and a **language setting**
   (Settings → General: System, Türkçe or English) that also switches the language of Apple Music's
   album and artist texts.
 
@@ -110,7 +121,7 @@ npm run check               # typecheck, lint, format, architecture rules, tests
 | `npm run evs:sign-dev`              | VMP-sign the local Electron binary (required for full-length playback) |
 | `EVS_REQUIRED=1 npm run dist:dev`   | Signed NSIS installer for personal use (`dist/`)                       |
 | `npm run dist:release`              | Release installer (developer token from the token service)             |
-| `npm run icons`                     | Regenerate the app icons from `build/icon.svg`                         |
+| `npm run icons`                     | Regenerate the app icons from `build/icon.svg` / `icon-small.svg`      |
 
 The `.env` and `.p8` files are never committed, and the code that reads them exists only in
 development builds; `npm run build` fails if it ever reaches a release bundle. Release builds fetch a
@@ -119,7 +130,7 @@ short-lived developer token from a small Cloudflare Worker (`server/token-servic
 ### Tech stack
 
 castlabs Electron for Content Security 44 (Electron + Widevine) · TypeScript (strict) · electron-vite
-· MusicKit JS v3 · React + Motion · Lucide icons · Inter · SQLite (`node:sqlite`) in a utility
+· MusicKit JS v3 · React + Motion · Lucide icons · Geist / Geist Mono · SQLite (`node:sqlite`) in a utility
 process · zod · Vitest + MSW · dependency-cruiser.
 
 ```
@@ -157,8 +168,16 @@ countries. This project is not affiliated with Apple Inc.
 
 > **Kaynak kodu görülebilir, açık kaynak değildir:** kodu okuyabilirsin, kullanamazsın (bkz. Lisans).
 
-Riff Client, Apple Music aboneliğini Windows'a liquid glass bir arayüz, akıcı animasyonlar ve hız
-odağıyla getirir. Kendi Apple ID'nle giriş yaparsın; her şey kendi aboneliğinden çalar.
+Riff Client, Apple Music aboneliğini Windows'a sakin, hassas bir arayüz ve hız odağıyla getirir. Kendi
+Apple ID'nle giriş yaparsın; her şey kendi aboneliğinden çalar.
+
+### Tasarım
+
+Bir ölçü aleti kadar sakin bir arayüz: ince çizgilerle ayrılan neredeyse siyah (ya da kâğıt beyazı)
+yüzeyler, pencerenin kendisi dahil her yerde köşeli kenarlar, Geist ve Geist Mono yazı, küçük ve
+aralıklı etiketler. Renk müzikten gelir: çalan şarkının kapağı vurguları renklendirir (etkin menü çizgisi,
+Çal düğmeleri, anahtarlar, kaydırıcılar); oynatıcılar ise yalnızca siyah ve beyazdır. Uygulama ikonu
+5 × 5 bir "ses ızgarası": yanan sütunlar sesi çizer, en yüksek tepe sinyal turuncusu ışır.
 
 ### Özellikler
 
@@ -169,17 +188,21 @@ odağıyla getirir. Kendi Apple ID'nle giriş yaparsın; her şey kendi aboneli�
   Sonra Çal.
 - **Tam şarkı çalma** — Widevine DRM (castlabs ECS), 256 kbps AAC, düzenlenebilir Sıradaki + otomatik
   çalma, karıştırma ve tekrar, Windows medya tuşları ve medya paneli.
-- **Kapak tonlu sayfalar** — albüm, çalma listesi ve sanatçı sayfaları rengini kapaktan (sanatçıda
-  fotoğraftan) alır ve uygulama arka planına erir; ferah, yuvarlak şarkı satırları.
-- **Büyük oynatıcı** — kapak renklerinden, müzikle nabız atan arka plan; zamanlı sözler; sanatçı
-  fotoğrafı modu; kalite rozeti. İlerleme çubuğuna basınca neredeyse anında sarar.
+- **Sabit kitaplık ve tam genişlikte oynatıcı şeridi** — Ana Sayfa, Yeni, Radyo, arşivin ve çalma listelerin
+  hep bir tık uzakta; çalma tuşları pencerenin tam ortasında, şarkı bilgisi solda, paneller sağda
+  (şarkı bilgisi, sözler, Sıradaki).
+- **Sanatçı sayfaları** — sayfaya eriyen geniş sanatçı fotoğrafı, ince ve büyük ad, üzerine gelince çal
+  işareti çıkan popüler şarkılar, son çıkan, albümler, single'lar ve dahası.
+- **Büyük oynatıcı** — saf siyah (ya da beyaz) sahnede kapak ve zamanlı sözler; imleç kapağa gelince
+  sıradaki iki şarkı "uydu" olarak iki yana kayar, basınca çalar. Sanatçı fotoğrafı modu, kalite rozeti,
+  neredeyse anında sarma.
 - **MiniPlayer** — kare, istenirse hep üstte kalan kapak penceresi.
 - **Şarkı bilgisi** — MusicBrainz'den krediler (söz/beste, yapım, icracılar, teknik) ve sample'lar,
   Wikipedia'dan sanatçı özeti.
-- **10 bantlı ekolayzır** — hazır ayarlar ve şarkıya özel ayar.
-- **İnce Ayar** — animasyon, cam bulanıklığı, söz zamanlaması ve boyutu, ses/sarma adımı, Hızlı DNS,
-  arşiv yenileme aralığı, FPS göstergesi.
-- **Açık / koyu / sistem teması**, saydamlık ayarı ve **dil ayarı** (Ayarlar → Genel: Sistem, Türkçe
+- **10 bantlı ekolayzır** — canlı frekans yanıtı eğrisi, hazır ayarlar ve şarkıya özel ayar.
+- **İnce Ayar** — animasyon, söz zamanlaması ve boyutu, ses/sarma adımı, Hızlı DNS, arşiv yenileme
+  aralığı, FPS göstergesi.
+- **Açık / koyu / sistem teması** ve **dil ayarı** (Ayarlar → Genel: Sistem, Türkçe
   veya English); Apple Music'in albüm ve sanatçı metinlerinin dilini de değiştirir.
 
 ### Hız

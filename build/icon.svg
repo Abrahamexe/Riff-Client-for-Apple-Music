@@ -1,19 +1,36 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
-  <!-- Riff Client uygulama ikonu (geliştirici seçimi 2026-10-19, "M2"): renkli bulanık cam zemin üzerinde,
-       ses çubuklarından oluşan gitar penası (riff = pena + ses). Eski "Pena r" ikonunun yerine geçti.
-       Kaynak bu dosya; icon.ico ve appIcon.ts `npm run icons` ile buradan üretilir. -->
+  <!-- Riff Client uygulama ikonu (geliştirici seçimi 2026-11-27, logo 5D "ses ızgarası, malzeme"): 5 × 5 kare ızgarada yanan sütunlar sesi çizer, en yüksek nokta sinyal turuncusu. Köşeli siyah döşeme, iç çerçeve, hücrelerde ışık geçişi. Kaynak bu dosya; icon.ico / icon.png / appIcon.ts `npm run icons` ile üretilir. -->
   <defs>
-    <clipPath id="tile"><rect x="16" y="16" width="224" height="224" rx="58"/></clipPath>
-    <filter id="blur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="30"/></filter>
-    <filter id="soft" filterUnits="userSpaceOnUse" x="0" y="0" width="256" height="256"><feGaussianBlur stdDeviation="8"/></filter>
-    <linearGradient id="w" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity=".45"/></linearGradient>
+    <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#15171b"/><stop offset="1" stop-color="#050607"/></linearGradient>
+    <linearGradient id="cell" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#b9bcc4"/></linearGradient>
+    <radialGradient id="glow"><stop offset="0" stop-color="#ff5a1f" stop-opacity=".5"/><stop offset="1" stop-color="#ff5a1f" stop-opacity="0"/></radialGradient>
   </defs>
-  <g clip-path="url(#tile)">
-    <rect x="16" y="16" width="224" height="224" fill="#0d0d11"/>
-    <circle cx="86" cy="76" r="78" fill="#fa2d48" filter="url(#blur)"/>
-    <circle cx="190" cy="196" r="74" fill="#7b2cff" filter="url(#blur)" opacity=".85"/>
-    <circle cx="200" cy="70" r="46" fill="#ff8a3d" filter="url(#blur)" opacity=".7"/>
-  </g>
-  <g filter="url(#soft)" opacity=".55" transform="translate(0 8)"><rect x="55.0" y="89.9" width="11" height="17.3" rx="5.5" fill="url(#w)"/><rect x="68.5" y="79.1" width="11" height="54.5" rx="5.5" fill="url(#w)"/><rect x="82.0" y="70.8" width="11" height="87.8" rx="5.5" fill="url(#w)"/><rect x="95.5" y="64.8" width="11" height="116.6" rx="5.5" fill="url(#w)"/><rect x="109.0" y="61.2" width="11" height="140.2" rx="5.5" fill="url(#w)"/><rect x="122.5" y="60.0" width="11" height="156.0" rx="5.5" fill="url(#w)"/><rect x="136.0" y="61.2" width="11" height="140.2" rx="5.5" fill="url(#w)"/><rect x="149.5" y="64.8" width="11" height="116.6" rx="5.5" fill="url(#w)"/><rect x="163.0" y="70.8" width="11" height="87.8" rx="5.5" fill="url(#w)"/><rect x="176.5" y="79.1" width="11" height="54.5" rx="5.5" fill="url(#w)"/><rect x="190.0" y="89.9" width="11" height="17.3" rx="5.5" fill="url(#w)"/></g>
-  <rect x="55.0" y="89.9" width="11" height="17.3" rx="5.5" fill="url(#w)"/><rect x="68.5" y="79.1" width="11" height="54.5" rx="5.5" fill="url(#w)"/><rect x="82.0" y="70.8" width="11" height="87.8" rx="5.5" fill="url(#w)"/><rect x="95.5" y="64.8" width="11" height="116.6" rx="5.5" fill="url(#w)"/><rect x="109.0" y="61.2" width="11" height="140.2" rx="5.5" fill="url(#w)"/><rect x="122.5" y="60.0" width="11" height="156.0" rx="5.5" fill="url(#w)"/><rect x="136.0" y="61.2" width="11" height="140.2" rx="5.5" fill="url(#w)"/><rect x="149.5" y="64.8" width="11" height="116.6" rx="5.5" fill="url(#w)"/><rect x="163.0" y="70.8" width="11" height="87.8" rx="5.5" fill="url(#w)"/><rect x="176.5" y="79.1" width="11" height="54.5" rx="5.5" fill="url(#w)"/><rect x="190.0" y="89.9" width="11" height="17.3" rx="5.5" fill="url(#w)"/>
+  <rect width="256" height="256" fill="url(#tile)"/>
+  <rect x="18" y="18" width="220" height="220" fill="none" stroke="rgba(255,255,255,.07)" stroke-width="1.5"/>
+  <rect x="47.10" y="47.10" width="23.55" height="23.55" fill="none" stroke="rgba(236,238,242,.22)" stroke-width="1.79"/>
+  <rect x="47.10" y="82.94" width="23.55" height="23.55" fill="none" stroke="rgba(236,238,242,.22)" stroke-width="1.79"/>
+  <rect x="47.10" y="118.78" width="23.55" height="23.55" fill="none" stroke="rgba(236,238,242,.22)" stroke-width="1.79"/>
+  <rect x="46.08" y="153.60" width="25.60" height="25.60" fill="url(#cell)"/>
+  <rect x="46.08" y="189.44" width="25.60" height="25.60" fill="url(#cell)"/>
+  <rect x="82.94" y="47.10" width="23.55" height="23.55" fill="none" stroke="rgba(236,238,242,.22)" stroke-width="1.79"/>
+  <rect x="81.92" y="81.92" width="25.60" height="25.60" fill="url(#cell)"/>
+  <rect x="81.92" y="117.76" width="25.60" height="25.60" fill="url(#cell)"/>
+  <rect x="81.92" y="153.60" width="25.60" height="25.60" fill="url(#cell)"/>
+  <rect x="81.92" y="189.44" width="25.60" height="25.60" fill="url(#cell)"/>
+  <circle cx="130.56" cy="58.88" r="33.28" fill="url(#glow)"/>
+  <rect x="117.76" y="46.08" width="25.60" height="25.60" fill="#ff5a1f"/>
+  <rect x="117.76" y="81.92" width="25.60" height="25.60" fill="url(#cell)"/>
+  <rect x="117.76" y="117.76" width="25.60" height="25.60" fill="url(#cell)"/>
+  <rect x="117.76" y="153.60" width="25.60" height="25.60" fill="url(#cell)"/>
+  <rect x="117.76" y="189.44" width="25.60" height="25.60" fill="url(#cell)"/>
+  <rect x="154.62" y="47.10" width="23.55" height="23.55" fill="none" stroke="rgba(236,238,242,.22)" stroke-width="1.79"/>
+  <rect x="154.62" y="82.94" width="23.55" height="23.55" fill="none" stroke="rgba(236,238,242,.22)" stroke-width="1.79"/>
+  <rect x="153.60" y="117.76" width="25.60" height="25.60" fill="url(#cell)"/>
+  <rect x="153.60" y="153.60" width="25.60" height="25.60" fill="url(#cell)"/>
+  <rect x="153.60" y="189.44" width="25.60" height="25.60" fill="url(#cell)"/>
+  <rect x="190.46" y="47.10" width="23.55" height="23.55" fill="none" stroke="rgba(236,238,242,.22)" stroke-width="1.79"/>
+  <rect x="190.46" y="82.94" width="23.55" height="23.55" fill="none" stroke="rgba(236,238,242,.22)" stroke-width="1.79"/>
+  <rect x="190.46" y="118.78" width="23.55" height="23.55" fill="none" stroke="rgba(236,238,242,.22)" stroke-width="1.79"/>
+  <rect x="190.46" y="154.62" width="23.55" height="23.55" fill="none" stroke="rgba(236,238,242,.22)" stroke-width="1.79"/>
+  <rect x="189.44" y="189.44" width="25.60" height="25.60" fill="url(#cell)"/>
 </svg>

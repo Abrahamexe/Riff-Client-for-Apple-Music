@@ -1,19 +1,16 @@
 import {
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
   type CSSProperties,
   type KeyboardEvent,
   type ReactNode
 } from 'react'
-import { animate, motion, useMotionValue, type MotionValue } from 'motion/react'
+import { motion } from 'motion/react'
 import {
   Check,
-  ChevronsLeft,
   Info,
   ListMusic,
-  Menu,
   MessageSquareQuote,
   PictureInPicture2,
   Pause,
@@ -49,8 +46,7 @@ import { useTrackActions } from '../hooks/useTrackActions'
 import { useApp, useSettings } from '../context'
 import { stepVolume } from '../theme/tweaks'
 import { Glass } from '../glass/Glass'
-import { PLAYER_NARROW_BELOW, type Rect } from './layout'
-import { dropletTransition, shownWhen } from './motion'
+import type { Rect } from './layout'
 import { NP_ART_LAYOUT_ID } from '../nowplaying/ids'
 import { prefetchArtistImage } from '../nowplaying/artistImage'
 import { openSongArtist } from './artistLink'
@@ -58,52 +54,11 @@ import { useOverlays } from '../overlays/Overlays'
 import { useGo } from './scroll'
 import { QualityBadge } from './QualityBadge'
 
-// Alt oynatıcı (B3): referans cam çubuk (Desktop/tasarım örneği.png) + Apple Music'teki düğmeler.
-// Kullanıcı basınca sol alttaki baloncuğa küçülür (ilerleme halkalı); baloncuğa basınca soldan
-// sağa açılır. AirPlay MusicKit JS'te olmadığı için yok.
-// 2026-11-23 (geliştirici): çalma tuşları şarkı kutusunun içine, kapak + adın altına indi; sol uçta
-// sağdaki panel tuşlarının aynası olarak sol menü tuşu (sol panel o köşeden açılır).
+// Alt oynatıcı (B3; 2026-11-27 tek tasarım): alt kenarda tam genişlik şerit. Solda şarkı + arşive
+// ekle / favori, ortada çalma tuşları ve ilerleme (pencerenin ortası), sağda panel tuşları ve ses.
+// Düzen CSS ızgarasında (observatory.css). AirPlay MusicKit JS'te olmadığı için yok.
 
-const RING = 2 * Math.PI * 27
 const REPEAT_ORDER = ['none', 'all', 'one'] as const
-
-function Bubble({
-  art,
-  progress,
-  visible,
-  onExpand
-}: {
-  art: string | null
-  progress: number
-  visible: boolean
-  onExpand: () => void
-}) {
-  return (
-    <motion.button
-      type="button"
-      className="bubble"
-      aria-label={i18n.t('player.expand')}
-      title={i18n.t('player.expand')}
-      onClick={onExpand}
-      inert={!visible}
-      initial={false}
-      animate={shownWhen(visible)}
-    >
-      {art ? <img src={art} alt="" draggable={false} /> : <span className="bubble__art" />}
-      <svg className="bubble__ring" viewBox="0 0 60 60" aria-hidden="true">
-        <circle cx="30" cy="30" r="27" className="bubble__ring-track" />
-        <circle
-          cx="30"
-          cy="30"
-          r="27"
-          className="bubble__ring-fill"
-          strokeDasharray={RING}
-          strokeDashoffset={RING * (1 - progress)}
-        />
-      </svg>
-    </motion.button>
-  )
-}
 
 function IconButton({
   label,
@@ -155,24 +110,16 @@ function preloadLargeArt(template: string | null | undefined): void {
 
 export function PlayerDock({
   rect,
-  contentWidth,
-  expanded,
+  narrow,
   rightPanel,
-  sidebarOpen,
-  onSidebarToggle,
-  onExpandedChange,
   onRightPanel,
   nowPlayingOpen,
   onOpenNowPlaying
 }: {
   rect: Rect
-  /** İçeriğin sabit genişliği (layout.ts `playerContentWidth`). */
-  contentWidth: number
-  expanded: boolean
+  /** Dar pencere: tuşlar küçülür, kalite rozeti gizlenir (`.player--narrow`). */
+  narrow: boolean
   rightPanel: RightPanel
-  sidebarOpen: boolean
-  onSidebarToggle: () => void
-  onExpandedChange: (expanded: boolean) => void
   onRightPanel: (panel: RightPanel) => void
   /** Büyük oynatıcı açıkken küçük kapak gizlenir (kapak oraya uçmuş durumda). */
   nowPlayingOpen: boolean
@@ -222,8 +169,6 @@ export function PlayerDock({
   }
   const [lastVolume, setLastVolume] = useState(1)
   const playing = snapshot?.state === 'playing' || pending !== null
-  // Baloncuğun halkası: bildirilen konum yeter (küçük; saniyede bir güncellenir).
-  const progress = duration > 0 ? Math.min(1, currentTime / duration) : 0
   const volume = snapshot?.volume ?? 1
   const repeat = snapshot?.repeat ?? 'none'
   const art = cachedArtworkUrl(now?.artworkTemplate, 96)
@@ -235,62 +180,12 @@ export function PlayerDock({
   const togglePanel = (panel: Exclude<RightPanel, 'none'>) => (): void =>
     onRightPanel(rightPanel === panel ? 'none' : panel)
 
-  // Pencere boyutu değişince (2026-10-19, geliştirici: "büyütüp küçültünce tuşlar kayıyor, ses çubuğu
-  // çubuktan çıkıyor"): içerik genişliği anında değişiyor, kap ise yayla / sonraki karede geriden
-  // geliyordu; içerik kırpılıp kayıyordu. Yay yalnızca açılıp kapanma ve sağ panel değişiminde; yalnızca
-  // boyut değişirse kap, içerikle aynı işlemde `jump` ile (düzen efektinde, boyamadan önce) hizalanır.
-  const stateKey = `${expanded}|${rightPanel}`
-  const lastKey = useRef(stateKey)
-  const left = useMotionValue(rect.x)
-  const top = useMotionValue(rect.y)
-  const width = useMotionValue(rect.width)
-  const height = useMotionValue(rect.height)
-  const radius = useMotionValue(expanded ? 22 : rect.height / 2)
-  useLayoutEffect(() => {
-    const springing = lastKey.current !== stateKey
-    lastKey.current = stateKey
-    const targets: [MotionValue<number>, number][] = [
-      [left, rect.x],
-      [top, rect.y],
-      [width, rect.width],
-      [height, rect.height],
-      [radius, expanded ? 22 : rect.height / 2]
-    ]
-    if (!springing) {
-      for (const [value, target] of targets) value.jump(target)
-      return
-    }
-    const runs = targets.map(([value, target]) =>
-      animate(value, target, dropletTransition(expanded))
-    )
-    return () => runs.forEach((run) => run.stop())
-  }, [
-    rect.x,
-    rect.y,
-    rect.width,
-    rect.height,
-    expanded,
-    stateKey,
-    left,
-    top,
-    width,
-    height,
-    radius
-  ])
-
   return (
-    <motion.div
-      className={`glass player${expanded ? '' : ' player--bubble'}${contentWidth < PLAYER_NARROW_BELOW ? ' player--narrow' : ''}`}
-      style={{ left, top, width, height, borderRadius: radius }}
+    <div
+      className={`glass player${narrow ? ' player--narrow' : ''}`}
+      style={{ left: rect.x, top: rect.y, width: rect.width, height: rect.height }}
     >
-      {/* Çubuk ve baloncuk hep takılı (B5 akıcılık): geçişte yalnızca görünürlük değişir. */}
-      <motion.div
-        className="player__content"
-        style={{ width: contentWidth }}
-        inert={!expanded}
-        initial={false}
-        animate={shownWhen(expanded)}
-      >
+      <div className="player__content" style={{ width: rect.width }}>
         <SeekBar
           player={player}
           currentTime={pending ? 0 : currentTime}
@@ -300,20 +195,6 @@ export function PlayerDock({
         />
         <div className="player__row">
           <div className="player__left">
-            <button
-              type="button"
-              className={`icon-button sidebar__toggle${sidebarOpen ? ' icon-button--on' : ''}`}
-              aria-label={i18n.t(sidebarOpen ? 'nav.closeMenu' : 'nav.openMenu')}
-              title={i18n.t(sidebarOpen ? 'nav.closeMenu' : 'nav.openMenu')}
-              aria-expanded={sidebarOpen}
-              onClick={onSidebarToggle}
-            >
-              <Menu size={18} strokeWidth={1.8} aria-hidden="true" />
-            </button>
-            <IconButton label={i18n.t('player.collapse')} onClick={() => onExpandedChange(false)}>
-              <ChevronsLeft size={18} strokeWidth={1.9} aria-hidden="true" />
-            </IconButton>
-            <span className="player__divider" aria-hidden="true" />
             <IconButton
               label={i18n.t(actions.inLibrary ? 'player.inLibrary' : 'player.addToLibrary')}
               on={actions.inLibrary}
@@ -494,14 +375,8 @@ export function PlayerDock({
             <VolumeSlider player={player} volume={volume} />
           </div>
         </div>
-      </motion.div>
-      <Bubble
-        art={art}
-        progress={progress}
-        visible={!expanded}
-        onExpand={() => onExpandedChange(true)}
-      />
-    </motion.div>
+      </div>
+    </div>
   )
 }
 

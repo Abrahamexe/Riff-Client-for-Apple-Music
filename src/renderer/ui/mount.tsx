@@ -1,6 +1,12 @@
-import '@fontsource-variable/inter'
+// Arayüz yazı tipleri: Geist + Geist Mono (2026-11-27); dosyalar yalnızca kullanılınca yüklenir.
+import '@fontsource/geist/300.css'
+import '@fontsource/geist/400.css'
+import '@fontsource/geist/500.css'
+import '@fontsource/geist-mono/300.css'
+import '@fontsource/geist-mono/400.css'
 import './styles/ui.css'
 import './styles/shell.css'
+import './styles/observatory.css'
 import { StrictMode, useEffect, useLayoutEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import { MotionConfig } from 'motion/react'
@@ -11,14 +17,14 @@ import { AppProvider, useSettings } from './context'
 import { useLocale } from './hooks/useLocale'
 import { Shell } from './shell/Shell'
 import { applyAppearance } from './theme/theme'
-import { applyTweaks, motionConfigMode, NO_BLUR_MIN_ALPHA } from './theme/tweaks'
+import { applyTweaks, motionConfigMode } from './theme/tweaks'
 
 // Arayüz kökü (PLAN_v5 B1). React + Motion; Windows "animasyon efektleri" kapalıysa Motion
 // animasyonları sadeleştirir (`reducedMotion="user"` → prefers-reduced-motion).
 
 const darkQuery = (): MediaQueryList => window.matchMedia('(prefers-color-scheme: dark)')
 
-/** Tema / saydamlık ayarını ve Windows temasını kök öğeye uygular. */
+/** Tema ayarını ve Windows temasını kök öğeye uygular. */
 function useAppearance(): void {
   const settings = useSettings()
   const [systemDark, setSystemDark] = useState(() => darkQuery().matches)
@@ -30,10 +36,9 @@ function useAppearance(): void {
   }, [])
   const appearance = settings?.appearance ?? defaultSettings().appearance
   const tweaks = settings?.tweaks ?? defaultSettings().tweaks
-  const minAlpha = tweaks.glassBlur ? 0 : NO_BLUR_MIN_ALPHA
   useEffect(() => {
-    applyAppearance(document.documentElement, appearance, systemDark, minAlpha)
-  }, [appearance, systemDark, minAlpha])
+    applyAppearance(document.documentElement, appearance, systemDark)
+  }, [appearance, systemDark])
   useEffect(() => {
     applyTweaks(document.documentElement, tweaks)
   }, [tweaks])
